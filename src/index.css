@@ -1,0 +1,41 @@
+/*
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+*/
+a:active {
+  text-decoration: none;
+}
+.toastify.on.error {
+  background: #844;
+}
+.toast-close {
+  color: white;
+  opacity: 1;
+}
+.toastify.on.success {
+  background: #484;
+}
+.toastify.on.info {
+  background: #448;
+}
+.tableHeader {
+  color: #0000FF;
+  font-weight: 700;
+}
+.MuiDataGrid-columnHeaders {
+  border-bottom: 1px solid #aae !important;
+}
+.tableRow {
+  border-bottom: 2px solid #eee;
+}
