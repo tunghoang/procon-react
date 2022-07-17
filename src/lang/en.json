@@ -1,5 +1,10 @@
 {
-  "Tournaments": "Schools",
+  "Tournaments": "Tournaments",
+  "Matches": "Matches",
+  "Rounds": "Rounds",
+  "Teams": "Teams",
+  "Questions": "Questions",
+  "Answers": "Answers",
   "Admins": "Admins",
   "Email Address": "Email Address",
   "Password": "Password",
@@ -13,6 +18,8 @@
   "Create School": "Create School",
   "Save": "Save",
   "Cancel": "Cancel",
-  "Password": "Password",
-  "Change Password": "Change Passwd"
+  "Change Password": "Change Passwd",
+  "Add Team": "Add Team",
+  "Account": "Account",
+  "Close": "Close"
 }

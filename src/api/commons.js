@@ -1,84 +1,88 @@
-import axios from 'axios';
-import Toastify from 'toastify-js';
+import axios from "axios";
+import Toastify from "toastify-js";
 const defaultHeaders = {
-  'Content-Type': 'application/json'
-}
+  "Content-Type": "application/json",
+};
 export const doGet = async (route, headers, mockResponse) => {
   try {
-    return (await axios({
-      method: 'GET',
-      url: route,
-      headers: {...defaultHeaders, ...headers}
-    })).data.data.rows;
-  }
-  catch(e) {
+    return (
+      await axios({
+        method: "GET",
+        url: route,
+        headers: { ...defaultHeaders, ...headers },
+      })
+    ).data.data;
+  } catch (e) {
     if (mockResponse) {
       return mockResponse;
     }
     throw e;
   }
-}
+};
 export const doDelete = async (route, headers, mockResponse) => {
   try {
-    return (await axios({
-      method: 'DELETE',
-      url: route,
-      headers: {...defaultHeaders, ...headers}, 
-    })).data;
-  }
-  catch(e) {
+    return (
+      await axios({
+        method: "DELETE",
+        url: route,
+        headers: { ...defaultHeaders, ...headers },
+      })
+    ).data;
+  } catch (e) {
     if (mockResponse) {
       return mockResponse;
     }
     throw e;
   }
-}
+};
 export const doPost = async (route, headers, payload, mockResponse) => {
   try {
-    return (await axios({
-      method: 'POST',
-      url: route,
-      headers: {...defaultHeaders, ...headers}, 
-      data: payload
-    })).data;
-  }
-  catch(e) {
+    return (
+      await axios({
+        method: "POST",
+        url: route,
+        headers: { ...defaultHeaders, ...headers },
+        data: payload,
+      })
+    ).data;
+  } catch (e) {
     if (mockResponse) {
       return mockResponse;
     }
     throw e;
   }
-}
+};
 export const doPut = async (route, headers, payload, mockResponse) => {
   try {
-    return (await axios({
-      method: 'PUT',
-      url: route,
-      headers: {...defaultHeaders, ...headers}, 
-      data: payload
-    })).data;
-  }
-  catch(e) {
+    return (
+      await axios({
+        method: "PUT",
+        url: route,
+        headers: { ...defaultHeaders, ...headers },
+        data: payload,
+      })
+    ).data;
+  } catch (e) {
     if (mockResponse) {
       return mockResponse;
     }
     throw e;
   }
-}
+};
 export function showMessage(msg, severity, duration) {
   let t = Toastify({
     text: msg,
     duration: duration || 5000,
     close: false,
-    gravity: 'bottom',
-    position: 'left',
+    gravity: "bottom",
+    position: "left",
     stopOnFocus: true,
-    className: severity || 'info',
-    onClick: function() {
+    className: severity || "info",
+    onClick: function () {
       t.hideToast();
-    }
+    },
   });
   t.showToast();
 }
 
-export const PREFIX = "/api/v1";
+export const PREFIX = "http://localhost:3001";

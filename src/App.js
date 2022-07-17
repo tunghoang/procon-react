@@ -1,31 +1,40 @@
-import './App.css';
-import {useRoutes, usePath } from 'hookrouter';
-import React from 'react';
-import {useEffect, useState, useContext } from 'react';
-import Tournaments from './pages/tournaments.js';
-import Teams from './pages/teams.js';
-import Login from './pages/login.js';
+import "./App.css";
+import { useRoutes, usePath } from "hookrouter";
+import React from "react";
+import { useEffect, useState, useContext } from "react";
+import Tournaments from "./pages/tournaments.js";
+import Matches from "./pages/matches";
+import Teams from "./pages/teams.js";
+import Rounds from "./pages/rounds";
+import Questions from "./pages/questions";
+import Answers from "./pages/answers";
+import Login from "./pages/login.js";
 
-import Context from './context';
+import Context from "./context";
 
-import { IntlProvider } from 'react-intl';
-import { CssBaseline } from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
-import { ConfirmProvider } from 'material-ui-confirm';
+import { IntlProvider } from "react-intl";
+import { CssBaseline } from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
+import { ConfirmProvider } from "material-ui-confirm";
 
-import themeFn from './theme';
+import themeFn from "./theme";
 
-import viVN from './lang/vi.json';
-import enUS from './lang/en.json';
+import viVN from "./lang/vi.json";
+import enUS from "./lang/en.json";
+
+import { navigate } from "hookrouter";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+
 const routes = {
-  '/': () => ({
-    component: Teams, 
-    props: {}
-  }),
-  '/login': () => ({component: Login, props: {}}),
-  '/tournaments': () => ({component: Tournaments, props: {}})
-}
-
+  "/login": () => ({ component: Login, props: {} }),
+  "/teams": () => ({ component: Teams, props: {} }),
+  "/": () => ({ component: Tournaments, props: {} }),
+  "/matches": () => ({ component: Matches, props: {} }),
+  "/rounds": () => ({ component: Rounds, props: {} }),
+  "/questions": () => ({ component: Questions, props: {} }),
+  "/answers": () => ({ component: Answers, props: {} }),
+};
 
 function loadMessages(locale) {
   switch (locale) {
@@ -40,52 +49,71 @@ function loadMessages(locale) {
 
 export function App() {
   const [token, setToken] = useState(null);
-  const [idTournament, setIdTournament] = useState(null);
-  const [tournamentName, setTournamentName] = useState(null);
-  const [title, setTitle] = useState(null);
+  const [tournament, setTournament] = useState(null);
+  const [round, setRound] = useState(null);
   useEffect(() => {
     if (!token) {
-      setToken(window.localStorage.getItem('token'));
+      setToken(window.localStorage.getItem("token"));
     }
   }, [token]);
 
   return (
-    <Context.Provider value={{
-      token,
-      locale:'vi-VN',
-      username: "Peter Parker",
-      idTournament: idTournament,
-      tournamentName: tournamentName,
-      title: title,
-      updateContext: ({token, idTournament, tournamentName, title}) => {
-        if (token !== undefined) {
-          if (token) localStorage.setItem('token', token);
-          else localStorage.removeItem('token');
-          setToken(token);
-        }
-        if (idTournament !== undefined) setIdTournament(idTournament);
-        if (tournamentName !== undefined) setTournamentName(tournamentName);
-        if (title !== undefined) setTitle(title);
-      }
-    }}>
+    <Context.Provider
+      value={{
+        token,
+        locale: "vi-VN",
+        username: "Peter Parker",
+        tournament,
+        round,
+        updateContext: ({ token, tournament, round }) => {
+          if (token !== undefined) {
+            if (token) localStorage.setItem("token", token);
+            else localStorage.removeItem("token");
+            setToken(token);
+          }
+          if (tournament !== undefined) setTournament(tournament);
+          if (round !== undefined) setRound(round);
+        },
+      }}
+    >
       <AppInternal />
     </Context.Provider>
-  )
+  );
 }
 function AppInternal() {
-  const {token, locale, username, isAdmin, idTournament} = useContext(Context);
-  let match = useRoutes(routes);
-  usePath();
-  let getLayout = match.component.getLayout ?? ((page) => page);
+  const { token, locale, tournament } = useContext(Context);
+  const match = useRoutes(routes);
+  const getLayout = match.component.getLayout ?? ((page) => page);
+
+  const path = usePath();
+  if (!token) {
+    if (path !== "/login") {
+      setTimeout(() => navigate("/login"), 300);
+    }
+  } else {
+    if (path === "/login") {
+      setTimeout(() => navigate("/"), 300);
+    }
+  }
 
   return (
-    <IntlProvider locale={locale} messages={loadMessages(locale)} >
-      <ThemeProvider theme={themeFn(locale)}>
-        <ConfirmProvider>
-          <CssBaseline />
-          { token ? ( idTournament ? getLayout(React.createElement(match.component, match.props)) : <Tournaments />) : <Login /> }
-        </ConfirmProvider>
-      </ThemeProvider>
+    <IntlProvider locale={locale} messages={loadMessages(locale)}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <ThemeProvider theme={themeFn(locale)}>
+          <ConfirmProvider>
+            <CssBaseline />
+            {token ? (
+              tournament ? (
+                getLayout(React.createElement(match.component, match.props))
+              ) : (
+                <Tournaments />
+              )
+            ) : (
+              <Login />
+            )}
+          </ConfirmProvider>
+        </ThemeProvider>
+      </LocalizationProvider>
     </IntlProvider>
   );
 }

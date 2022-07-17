@@ -1,6 +1,10 @@
 {
   "Tournaments": "Giải đấu",
+  "Matches": "Trận đấu",
+  "Rounds": "Vòng đấu",
   "Teams": "Đội chơi",
+  "Questions": "Câu hỏi",
+  "Answers": "Câu trả lời",
   "Admins": "Quản trị viên",
   "Email Address": "Địa chỉ email",
   "Password": "Mật khẩu",
@@ -14,6 +18,8 @@
   "Create School": "Thêm trường học",
   "Save": "Lưu",
   "Cancel": "Huỷ bỏ",
-  "Password": "Mật khẩu",
-  "Change Password": "Đổi mật khẩu"
+  "Change Password": "Đổi mật khẩu",
+  "Add Team": "Thêm đội",
+  "Account": "Tài khoản",
+  "Close": "Đóng"
 }

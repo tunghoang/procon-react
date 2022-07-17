@@ -8,23 +8,19 @@ import {
   Button,
 } from "@mui/material";
 import { useIntl } from "react-intl";
-const TournamentDialog = ({ open, tournament, close, save, handleChange }) => {
+const RoundDialog = ({ open, round, close, save, handleChange }) => {
   const { formatMessage: tr } = useIntl();
   return (
     <Dialog open={open} onClose={close}>
       <DialogTitle>
-        {(tournament || {}).id ? "Edit Tournament" : "Create Tournament"}
+        {(round || {}).id ? "Edit Round" : "Create Round"}
       </DialogTitle>
       <form>
         <DialogContent>
           <DialogContentText>
             {/* ADD CONTENT HERE IF NECESSARY */}
           </DialogContentText>
-          <input
-            type="hidden"
-            name="idTournament"
-            value={(tournament || {}).id}
-          />
+          <input type="hidden" name="idRound" value={(round || {}).id} />
           <TextField
             margin="dense"
             label="Name"
@@ -32,7 +28,7 @@ const TournamentDialog = ({ open, tournament, close, save, handleChange }) => {
             fullWidth
             variant="standard"
             name="name"
-            value={(tournament || {}).name}
+            value={(round || {}).name}
             onChange={(evt) => {
               handleChange({ name: evt.target.value });
             }}
@@ -44,7 +40,7 @@ const TournamentDialog = ({ open, tournament, close, save, handleChange }) => {
             fullWidth
             variant="standard"
             name="description"
-            value={(tournament || {}).description}
+            value={(round || {}).description}
             onChange={(evt) => {
               handleChange({ description: evt.target.value });
             }}
@@ -59,4 +55,4 @@ const TournamentDialog = ({ open, tournament, close, save, handleChange }) => {
   );
 };
 
-export default TournamentDialog;
+export default RoundDialog;

@@ -1,91 +1,74 @@
-import { usePath, navigate } from 'hookrouter';
-import { useIntl } from 'react-intl';
-import { useFormik } from 'formik';
-import { A } from 'hookrouter';
-import { useContext } from 'react';
-import * as Yup from 'yup';
-import { Box, Button, Container, Link, TextField, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Context from '../context';
+import { usePath, navigate } from "hookrouter";
+import { useIntl } from "react-intl";
+import { useFormik } from "formik";
+import { A } from "hookrouter";
+import { useContext } from "react";
+import * as Yup from "yup";
+import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Context from "../context";
 
 const Login = () => {
-  const {formatMessage} = useIntl();
+  const { formatMessage } = useIntl();
   const contextObj = useContext(Context);
   const formik = useFormik({
     initialValues: {
-      email: 'demo@devias.io',
-      password: 'Password123'
+      account: "",
+      password: "",
     },
     validationSchema: Yup.object({
-      email: Yup
-        .string()
-        .email(
-          'Must be a valid email')
-        .max(255)
-        .required(
-          'Email is required'),
-      password: Yup
-        .string()
-        .max(255)
-        .required(
-          'Password is required')
+      account: Yup.string().max(255).required("Account is required"),
+      password: Yup.string().max(255).required("Password is required"),
     }),
     onSubmit: () => {
-      contextObj.updateContext({ token: 'abcdef' });
-      navigate('/');
-    }
+      contextObj.updateContext({ token: "abcdef" });
+      navigate("/");
+    },
   });
-
-  const path = usePath();
-  if (!contextObj.token) {
-    if (path !== '/login') {
-      setTimeout(() => navigate('/login'), 300);
-    }
-  }
-  else {
-    if (path === '/login') {
-      setTimeout(() => navigate('/'), 300);
-    }
-  }
 
   return (
     <Box
       component="main"
       sx={{
-        alignItems: 'center',
-        display: 'flex',
+        alignItems: "center",
+        display: "flex",
         flexGrow: 1,
-        minHeight: '100%'
+        minHeight: "100%",
       }}
     >
       <Container maxWidth="sm">
-        <A href="/" >
-          <Button component="span" startIcon={<ArrowBackIcon fontSize="small" />} >
+        {/* <A href="/">
+          <Button
+            component="span"
+            startIcon={<ArrowBackIcon fontSize="small" />}
+          >
             Home
           </Button>
-        </A>
-        <form onSubmit={formik.handleSubmit} >
+        </A> */}
+        <form onSubmit={formik.handleSubmit}>
           <Box sx={{ my: 3 }}>
-            <Typography color="textPrimary" variant="h4" >{formatMessage({ id: "Sign In"})}</Typography>
+            <Typography color="textPrimary" variant="h4">
+              {formatMessage({ id: "Sign In" })}
+            </Typography>
           </Box>
           <TextField
-            error={Boolean(formik.touched.email && formik.errors.email)}
+            error={Boolean(formik.touched.account && formik.errors.account)}
             fullWidth
-            helperText={formik.touched.email && formik.errors.email}
-            label={formatMessage({id: "Email Address"})}
+            helperText={formik.touched.account && formik.errors.account}
+            label={formatMessage({ id: "Account" })}
             margin="normal"
-            name="email"
+            name="account"
+            type="account"
             onBlur={formik.handleBlur}
             onChange={formik.handleChange}
-            type="email"
-            value={formik.values.email}
+            value={formik.values.account}
             variant="outlined"
           />
           <TextField
             error={Boolean(formik.touched.password && formik.errors.password)}
             fullWidth
             helperText={formik.touched.password && formik.errors.password}
-            label={formatMessage({ id: "Password"})}
+            label={formatMessage({ id: "Password" })}
             margin="normal"
             name="password"
             onBlur={formik.handleBlur}
@@ -95,17 +78,30 @@ const Login = () => {
             variant="outlined"
           />
           <Box sx={{ py: 2 }}>
-            <Button color="primary" disabled={formik.isSubmitting} fullWidth size="large" type="submit" variant="contained" >
-              {formatMessage({id: "Sign In"})}
+            <Button
+              color="primary"
+              disabled={formik.isSubmitting}
+              fullWidth
+              size="large"
+              type="submit"
+              variant="contained"
+            >
+              {formatMessage({ id: "Sign In" })}
             </Button>
           </Box>
-          <Typography color="textSecondary" variant="body2">
-              Don&apos;t have an account? {' '}
-              <Link to="/register" variant="subtitle2" underline="hover" sx={{
-                  cursor: 'pointer'
-                }}
-              >{formatMessage({id: "Sign Up"})}</Link>
-          </Typography>
+          {/* <Typography color="textSecondary" variant="body2">
+            Don&apos;t have an account?{" "}
+            <Link
+              to="/register"
+              variant="subtitle2"
+              underline="hover"
+              sx={{
+                cursor: "pointer",
+              }}
+            >
+              {formatMessage({ id: "Sign Up" })}
+            </Link>
+          </Typography> */}
         </form>
       </Container>
     </Box>
