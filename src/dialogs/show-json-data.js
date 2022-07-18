@@ -24,7 +24,7 @@ const ShowJsonDataDialog = ({ open, instance, close }) => {
     >
       <DialogTitle>Data</DialogTitle>
       <form>
-        <DialogContent className={classes.root}>
+        <DialogContent className={classes.root} style={{ minWidth: 500 }}>
           <JSONPretty id="json-pretty" data={instance}></JSONPretty>
         </DialogContent>
         <DialogActions>

@@ -23,7 +23,11 @@ const Rounds = () => {
   const { formatMessage: tr } = useIntl();
   const doInit = () => {
     (async () => {
-      const results = await apiGetAll();
+      const results = await apiGetAll({
+        params: {
+          match_tournament_id: tournament.id,
+        },
+      });
       if (results) setRounds(results);
     })();
   };

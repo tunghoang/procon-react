@@ -12,7 +12,7 @@ const PasswordDialog = ({ open, instance, close, save, handleChange }) => {
   const { formatMessage: tr } = useIntl();
   return (
     <Dialog open={open} onClose={close}>
-      <DialogTitle>Edit Admin Role</DialogTitle>
+      <DialogTitle>Edit Password</DialogTitle>
       <form>
         <DialogContent>
           <DialogContentText>{(instance || {}).name}</DialogContentText>

@@ -89,7 +89,7 @@ const TeamDialog = ({
             type="text"
             fullWidth
             variant="standard"
-            disabled={!!(instance || {}).id}
+            // disabled={!!(instance || {}).id}
             name="account"
             value={(instance || {}).account}
             onChange={(evt) => {

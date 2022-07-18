@@ -1,4 +1,4 @@
-import { IconButton, Paper } from "@mui/material";
+import { Button, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useEffect, useState } from "react";
@@ -6,7 +6,6 @@ import { useApi } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import AnswerDialog from "../dialogs/answer";
-import { formatDateTime } from "../utils/commons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ShowJsonDataDialog from "../dialogs/show-json-data";
 
@@ -23,6 +22,7 @@ const Answers = () => {
   const doInit = () => {
     (async () => {
       const results = await apiGetAll();
+      console.log(results);
       if (results) setAnswers(results);
     })();
   };
@@ -34,45 +34,42 @@ const Answers = () => {
       headerClassName: "tableHeader",
     },
     {
-      field: "start_time",
-      headerName: "Start Time",
-      flex: 1,
-      headerClassName: "tableHeader",
-      valueGetter: (params) => {
-        return formatDateTime(params.row.start_time);
-      },
-    },
-    {
-      field: "end_time",
-      headerName: "End Time",
-      flex: 1,
-      headerClassName: "tableHeader",
-      valueGetter: (params) => {
-        return formatDateTime(params.row.end_time);
-      },
-    },
-    {
-      field: "question_id",
+      field: "question",
       headerName: "Question",
       flex: 1,
       headerClassName: "tableHeader",
+      renderCell: ({ row }) => {
+        return (
+          <Button
+            onClick={() => {
+              setJsonData(row.question.question_data);
+              setDialogName("ShowJsonDataDialog");
+            }}
+          >
+            {row.question.name}
+          </Button>
+        );
+      },
     },
     {
-      field: "team_id",
-      headerName: "Team",
+      field: "team",
+      headerName: "Team Id",
       flex: 1,
       headerClassName: "tableHeader",
+      valueGetter: ({ row }) => {
+        return row.team?.name;
+      },
     },
     {
       field: "score",
-      headerName: "Score",
+      headerName: "Score Data",
       flex: 1,
       headerClassName: "tableHeader",
       renderCell: ({ row }) => {
         return (
           <IconButton
             onClick={() => {
-              setJsonData(row.answer_data);
+              setJsonData(row.score_data);
               setDialogName("ShowJsonDataDialog");
             }}
           >
@@ -90,7 +87,7 @@ const Answers = () => {
         return (
           <IconButton
             onClick={() => {
-              setJsonData(row.score);
+              setJsonData(row.answer_data);
               setDialogName("ShowJsonDataDialog");
             }}
           >
@@ -104,7 +101,7 @@ const Answers = () => {
   const [currentItem, setCurrentItem] = useState({});
 
   const clickNew = () => {
-    setCurrentItem({ start_time: "", end_time: "", match_id: "" });
+    setCurrentItem({ question_id: "", team_id: "", answer_data: {} });
     setDialogName("AnswerDialog");
   };
   const openDialog = (name) => {

@@ -26,7 +26,12 @@ const Matches = () => {
   const apiDeleteMatch = useConfirmDelete();
   const doInit = () => {
     (async () => {
-      const results = await apiGetAll(round.id);
+      const results = await apiGetAll({
+        params: {
+          match_round_id: round.id,
+        },
+      });
+      console.log(results);
       if (results) setMatches(results);
     })();
   };

@@ -3,13 +3,15 @@ import Toastify from "toastify-js";
 const defaultHeaders = {
   "Content-Type": "application/json",
 };
-export const doGet = async (route, headers, mockResponse) => {
+export const doGet = async (route, headers, mockResponse, config) => {
   try {
+    defaultHeaders.Authorization = localStorage.getItem("token");
     return (
       await axios({
         method: "GET",
         url: route,
         headers: { ...defaultHeaders, ...headers },
+        ...config,
       })
     ).data.data;
   } catch (e) {
@@ -21,6 +23,7 @@ export const doGet = async (route, headers, mockResponse) => {
 };
 export const doDelete = async (route, headers, mockResponse) => {
   try {
+    defaultHeaders.Authorization = localStorage.getItem("token");
     return (
       await axios({
         method: "DELETE",
@@ -37,6 +40,7 @@ export const doDelete = async (route, headers, mockResponse) => {
 };
 export const doPost = async (route, headers, payload, mockResponse) => {
   try {
+    defaultHeaders.Authorization = localStorage.getItem("token");
     return (
       await axios({
         method: "POST",
@@ -54,6 +58,7 @@ export const doPost = async (route, headers, payload, mockResponse) => {
 };
 export const doPut = async (route, headers, payload, mockResponse) => {
   try {
+    defaultHeaders.Authorization = localStorage.getItem("token");
     return (
       await axios({
         method: "PUT",

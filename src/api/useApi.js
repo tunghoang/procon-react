@@ -5,9 +5,9 @@ import { useCallback } from "react";
 export const useApi = (pathName, apiName) => {
   const URL = PREFIX + pathName;
   const apiGetAll = useCallback(
-    async (headers) => {
+    async (config, headers) => {
       try {
-        const results = await doGet(URL, headers);
+        const results = await doGet(URL, headers, null, config);
         // showMessage(`Get ${apiName} succeeded`, "success", 1000);
         return results;
       } catch (e) {

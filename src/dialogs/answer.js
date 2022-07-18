@@ -10,6 +10,9 @@ import {
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
+import SelectData from "../components/select-data";
+import { useFetchData } from "../api/useFetchData";
+import DynamicInput from "../components/dynamic-input";
 
 const useStyles = makeStyles({
   root: {
@@ -19,6 +22,13 @@ const useStyles = makeStyles({
 const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+
+  const { data: questions } = useFetchData({
+    path: "/question",
+    name: "Question",
+  });
+  const { data: teams } = useFetchData({ path: "/team", name: "Team" });
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -31,7 +41,7 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
       <form>
         <DialogContent className={classes.root}>
           <Stack spacing={3} width={500}>
-            <DateTimePicker
+            {/* <DateTimePicker
               renderInput={(props) => (
                 <TextField variant="standard" {...props} />
               )}
@@ -50,41 +60,33 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
               onChange={(newValue) => {
                 handleChange({ end_time: newValue });
               }}
+            /> */}
+            <SelectData
+              label={"Question"}
+              onChange={(item) => handleChange({ question_id: item.value })}
+              data={questions?.map((question) => ({
+                key: question.id,
+                value: question.name,
+              }))}
             />
-            <TextField
-              margin="dense"
-              label="Question ID"
-              type="number"
-              fullWidth
-              variant="standard"
-              name="question"
-              value={instance?.question_id}
-              onChange={(evt) => {
-                handleChange({ question_id: evt.target.value });
-              }}
+            <SelectData
+              label={"Team"}
+              onChange={(item) => handleChange({ team_id: item.value })}
+              data={teams?.map((team) => ({ key: team.id, value: team.name }))}
             />
-            <TextField
-              margin="dense"
-              label="Team ID"
-              type="number"
-              fullWidth
-              variant="standard"
-              name="team"
-              value={instance?.team_id}
-              onChange={(evt) => {
-                handleChange({ team_id: evt.target.value });
-              }}
-            />
-            <TextField
-              margin="dense"
-              label="Answer Data"
-              type="number"
-              fullWidth
-              variant="standard"
-              name="answer"
-              value={instance?.answer_data}
-              onChange={(evt) => {
-                handleChange({ answer_data: evt.target.value });
+            <DynamicInput
+              label={"Answer Data"}
+              data={instance?.answer_data}
+              inputChange={(value) => {
+                console.log(value);
+                const answerData = value.reduce((cur, next) => {
+                  return {
+                    ...cur,
+                    [next.key]: next.name,
+                  };
+                }, {});
+                console.log(answerData);
+                handleChange({ answer_data: answerData });
               }}
             />
           </Stack>

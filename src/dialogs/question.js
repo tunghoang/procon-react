@@ -16,6 +16,7 @@ import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
 import { useApi } from "../api";
 import { useEffect, useState } from "react";
+import SelectData from "../components/select-data";
 
 const useStyles = makeStyles({
   root: {
@@ -70,7 +71,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
                 <TextField variant="standard" error={false} {...props} />
               )}
             />
-            <FormControl variant="standard" sx={{ m: 1 }}>
+            <SelectData
+              label={"Match"}
+              onChange={(value) => handleChange({ match_id: value })}
+              data={matches.map((match) => ({
+                key: match.id,
+                value: match.name,
+              }))}
+            />
+            {/* <FormControl variant="standard" sx={{ m: 1 }}>
               <InputLabel>Match</InputLabel>
               <Select
                 fullWidth
@@ -92,7 +101,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
                   );
                 })}
               </Select>
-            </FormControl>
+            </FormControl> */}
           </Stack>
         </DialogContent>
         <DialogActions>

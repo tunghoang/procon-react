@@ -19,9 +19,10 @@ import makeStyles from "@mui/styles/makeStyles";
 import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
-import { useApi } from "../api";
+import { useApi, useFetchData } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { apiDeleteTeamMatch, useConfirmDeleteTeamMatch } from "../api/match";
+import SelectData from "../components/select-data";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
@@ -144,20 +145,7 @@ const TeamMatchDialog = ({ open, teams, matchId, close, init }) => {
 const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
-  const [teams, setTeams] = useState([]);
-  const { apiGetAll } = useApi("/team", "Teams");
-
-  const doInit = () => {
-    (async () => {
-      const results = await apiGetAll();
-      if (results) setTeams(results);
-    })();
-  };
-
-  useEffect(() => {
-    doInit();
-  }, []);
-
+  const { data: teams } = useFetchData({ path: "/team", name: "Team" });
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -166,30 +154,15 @@ const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
     >
       <DialogTitle>{tr({ id: "Add Team" })}</DialogTitle>
       <form>
-        <DialogContent className={classes.root}>
-          <FormControl variant="standard" sx={{ m: 1, width: 300 }}>
-            <InputLabel>Team</InputLabel>
-            <Select
-              fullWidth
-              variant="standard"
-              value={instance?.team_id || ""}
-              onChange={(evt) => {
-                handleChange({ team_id: evt.target.value });
-              }}
-              label="Teams"
-            >
-              <MenuItem value={""}>
-                <em style={{ opacity: 0.5 }}>None</em>
-              </MenuItem>
-              {teams.map((team) => {
-                return (
-                  <MenuItem value={team.id} key={team.id}>
-                    {team.name}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
+        <DialogContent className={classes.root} sx={{ width: 300 }}>
+          <SelectData
+            label={"Team"}
+            onChange={(value) => handleChange({ team_id: value })}
+            data={teams.map((team) => ({
+              key: team.id,
+              value: team.name,
+            }))}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>

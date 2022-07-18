@@ -34,6 +34,12 @@ const Questions = () => {
       headerClassName: "tableHeader",
     },
     {
+      field: "name",
+      headerName: "Name",
+      flex: 1,
+      headerClassName: "tableHeader",
+    },
+    {
       field: "start_time",
       headerName: "Start Time",
       flex: 1,
