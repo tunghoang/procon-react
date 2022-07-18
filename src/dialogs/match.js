@@ -21,6 +21,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
 import { useApi } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { apiDeleteTeamMatch, useConfirmDeleteTeamMatch } from "../api/match";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
@@ -90,9 +91,16 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
   );
 };
 
-const TeamMatchDialog = ({ open, instance, close }) => {
+const TeamMatchDialog = ({ open, teams, matchId, close, init }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  const apiDeleteDialog = useConfirmDeleteTeamMatch();
+
+  const removeTeamMatch = async (teamId) => {
+    const result = await apiDeleteDialog(matchId, teamId);
+    console.log(result);
+    if (result) init();
+  };
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -103,7 +111,7 @@ const TeamMatchDialog = ({ open, instance, close }) => {
       <form>
         <DialogContent className={classes.root}>
           <Stack spacing={1} width={300}>
-            {instance.map((item, idx) => {
+            {teams?.map((item, idx) => {
               return (
                 <Stack
                   key={item.id}
@@ -114,7 +122,10 @@ const TeamMatchDialog = ({ open, instance, close }) => {
                   <Typography>
                     {idx + 1}. {item.name}
                   </Typography>
-                  <IconButton color="error">
+                  <IconButton
+                    color="error"
+                    onClick={() => removeTeamMatch(item.id)}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Stack>

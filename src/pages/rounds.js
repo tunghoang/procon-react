@@ -14,7 +14,7 @@ const Rounds = () => {
   const [rounds, setRounds] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  const { updateContext } = useContext(Context);
+  const { updateContext, tournament } = useContext(Context);
   const { apiGetAll, apiCreate, useConfirmDelete, apiEdit } = useApi(
     "/round",
     "Round"
@@ -87,7 +87,10 @@ const Rounds = () => {
         close={() => setShowDialog(false)}
         save={async () => {
           if (currentItem.id) await apiEdit(currentItem.id, currentItem);
-          else await apiCreate(currentItem);
+          else {
+            currentItem.tournament_id = tournament.id;
+            await apiCreate(currentItem);
+          }
           setShowDialog(false);
           doInit();
         }}

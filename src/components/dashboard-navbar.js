@@ -12,14 +12,13 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
-import { Bell as BellIcon } from "../icons/bell";
 import { UserCircle as UserCircleIcon } from "../icons/user-circle";
-import { Users as UsersIcon } from "../icons/users";
 import LogoutIcon from "@mui/icons-material/MeetingRoom";
 import { useContext } from "react";
 import Context from "../context";
 import { useIntl } from "react-intl";
 import { A } from "hookrouter";
+import LanguageTrans from "./language-trans";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -28,7 +27,8 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 
 export const DashboardNavbar = (props) => {
   const { onSidebarOpen, ...other } = props;
-  const { username, updateContext, tournament, round } = useContext(Context);
+  const { teamname, updateLocalStorage, tournament, round } =
+    useContext(Context);
   const { formatMessage: tr } = useIntl();
 
   return (
@@ -73,7 +73,8 @@ export const DashboardNavbar = (props) => {
                 }}
                 href="/"
               >
-                {tr({ id: "Tournaments" })}
+                {tr({ id: "Tournaments" })}{" "}
+                {tournament && !round && `(${tournament.name})`}
               </A>
               {tournament && (
                 <A
@@ -87,10 +88,10 @@ export const DashboardNavbar = (props) => {
                   {tr({ id: "Rounds" })}
                 </A>
               )}
-              {tournament && (
+              {tournament && round && (
                 <Typography color="text.primary" fontWeight={"500"}>
                   {tournament.name}
-                  {round && " & " + round.name}
+                  {" & "} {round.name}
                 </Typography>
               )}
             </Breadcrumbs>
@@ -100,7 +101,8 @@ export const DashboardNavbar = (props) => {
               <SearchIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title={username}>
+          <LanguageTrans />
+          <Tooltip title={teamname}>
             <Avatar
               style={{ cursor: "pointer" }}
               sx={{
@@ -116,7 +118,7 @@ export const DashboardNavbar = (props) => {
           <Tooltip title={tr({ id: "Sign Out" })}>
             <IconButton
               sx={{ ml: 1 }}
-              onClick={() => updateContext({ token: null })}
+              onClick={() => updateLocalStorage({ token: null })}
             >
               <LogoutIcon fontSize="small" />
             </IconButton>

@@ -1,16 +1,14 @@
-import { usePath, navigate } from "hookrouter";
 import { useIntl } from "react-intl";
 import { useFormik } from "formik";
-import { A } from "hookrouter";
 import { useContext } from "react";
 import * as Yup from "yup";
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Context from "../context";
+import { apiSignIn } from "../api";
 
 const Login = () => {
   const { formatMessage } = useIntl();
-  const contextObj = useContext(Context);
+  const { updateLocalStorage } = useContext(Context);
   const formik = useFormik({
     initialValues: {
       account: "",
@@ -20,9 +18,14 @@ const Login = () => {
       account: Yup.string().max(255).required("Account is required"),
       password: Yup.string().max(255).required("Password is required"),
     }),
-    onSubmit: () => {
-      contextObj.updateContext({ token: "abcdef" });
-      navigate("/");
+    onSubmit: async (data) => {
+      const result = await apiSignIn(data);
+      console.log(result);
+      updateLocalStorage({
+        token: result.token,
+        teamname: result.name,
+        locale: "vi-VN",
+      });
     },
   });
 

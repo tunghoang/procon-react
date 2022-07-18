@@ -25,6 +25,7 @@ import enUS from "./lang/en.json";
 import { navigate } from "hookrouter";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
+import { setLocalStorage } from "./utils/commons";
 
 const routes = {
   "/login": () => ({ component: Login, props: {} }),
@@ -49,30 +50,47 @@ function loadMessages(locale) {
 
 export function App() {
   const [token, setToken] = useState(null);
+  const [teamname, setTeamname] = useState(null);
+  const [locale, setLocale] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [round, setRound] = useState(null);
   useEffect(() => {
     if (!token) {
-      setToken(window.localStorage.getItem("token"));
+      setToken(localStorage.getItem("token"));
     }
-  }, [token]);
+    if (!teamname) {
+      setTeamname(localStorage.getItem("teamname"));
+    }
+    if (!locale) {
+      setLocale(localStorage.getItem("locale"));
+    }
+  }, [token, teamname, locale]);
 
   return (
     <Context.Provider
       value={{
         token,
-        locale: "vi-VN",
-        username: "Peter Parker",
+        locale: localStorage.getItem("locale") || "vi-VN",
+        teamname,
         tournament,
         round,
-        updateContext: ({ token, tournament, round }) => {
-          if (token !== undefined) {
-            if (token) localStorage.setItem("token", token);
-            else localStorage.removeItem("token");
-            setToken(token);
-          }
+        updateContext: ({ tournament, round }) => {
           if (tournament !== undefined) setTournament(tournament);
           if (round !== undefined) setRound(round);
+        },
+        updateLocalStorage: ({ token, teamname, locale }) => {
+          if (token !== undefined) {
+            setLocalStorage(token, "token");
+            setToken(token);
+          }
+          if (teamname !== undefined) {
+            setLocalStorage(teamname, "teamname");
+            setTeamname(teamname);
+          }
+          if (locale !== undefined) {
+            setLocalStorage(locale, "locale");
+            setLocale(locale);
+          }
         },
       }}
     >

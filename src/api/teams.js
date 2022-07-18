@@ -43,28 +43,28 @@ export const useConfirmDeleteTeam = () => {
     }
   };
 };
-export const apiNewTeam = async (school) => {
+export const apiNewTeam = async (team) => {
   let mockResponse = isMocking ? { success: true } : undefined;
   try {
-    const result = await doPost(TEAMS_URL, null, school, mockResponse);
-    showMessage("Success create new school", "success", 1000);
+    const result = await doPost(TEAMS_URL, null, team, mockResponse);
+    showMessage("Success create new team", "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error creating new school: ${e.message}`, "error");
+    showMessage(`Error creating new team: ${e.message}`, "error");
   }
 };
-export const apiEditTeam = async (idTeam, school) => {
+export const apiEditTeam = async (idTeam, team) => {
   let mockResponse = isMocking ? { success: true } : undefined;
   try {
     const result = await doPut(
       `${TEAMS_URL}/${idTeam}`,
       null,
-      school,
+      team,
       mockResponse
     );
-    showMessage("Success edit school " + idTeam, "success", 1000);
+    showMessage("Success edit team " + idTeam, "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error edit school: ${e.message}`, "error");
+    showMessage(`Error edit team: ${e.message}`, "error");
   }
 };

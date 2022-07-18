@@ -13,3 +13,4 @@ export {
   useConfirmDeleteTeam,
 } from "./teams";
 export { useApi } from "./useApi";
+export { apiSignIn, apiSignUp } from "./auth";

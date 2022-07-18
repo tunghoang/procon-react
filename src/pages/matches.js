@@ -17,7 +17,7 @@ const Matches = () => {
   const { formatMessage: tr } = useIntl();
   const [matches, setMatches] = useState([]);
   const { round } = useContext(Context);
-  const [teams, setTeams] = useState([]);
+  const [matchTeams, setMatchTeams] = useState({});
   const [selectedMatchIds, setSelectedMatchIds] = useState([]);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/match",
@@ -70,7 +70,10 @@ const Matches = () => {
             <IconButton
               disabled={!row.teams.length}
               onClick={() => {
-                setTeams(row.teams);
+                setMatchTeams({
+                  id: row.id,
+                  teams: row.teams,
+                });
                 setDialogName("TeamMatchDialog");
               }}
             >
@@ -106,15 +109,12 @@ const Matches = () => {
     if (result) doInit();
   };
   const saveInstance = async () => {
-    console.log("Save instance");
     let result;
     if (currentMatch.id) {
       result = await apiEdit(currentMatch.id, currentMatch);
-      console.log(result);
     } else {
       currentMatch.round_id = round.id;
       result = await apiCreate(currentMatch);
-      console.log(result);
     }
     if (result) doInit();
     setDialogName("");
@@ -173,10 +173,10 @@ const Matches = () => {
       />
       <TeamMatchDialog
         open={dialogName === "TeamMatchDialog"}
-        instance={teams}
+        teams={matchTeams.teams}
+        matchId={matchTeams.id}
         close={closeDialog}
-        save={saveInstance}
-        handleChange={changeInstance}
+        init={doInit}
       />
     </>
   );
