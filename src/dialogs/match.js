@@ -10,9 +10,10 @@ import {
   FormControlLabel,
   Select,
   MenuItem,
-  Box,
   Typography,
   IconButton,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useEffect, useState } from "react";
@@ -155,27 +156,29 @@ const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogTitle>{tr({ id: "Add Team" })}</DialogTitle>
       <form>
         <DialogContent className={classes.root}>
-          <Select
-            fullWidth
-            sx={{ width: 500 }}
-            variant="standard"
-            value={instance?.team_id}
-            onChange={(evt) => {
-              handleChange({ team_id: evt.target.value });
-            }}
-            label="Teams"
-          >
-            <MenuItem value="">
-              <em style={{ opacity: 0.5 }}>None</em>
-            </MenuItem>
-            {teams.map((team) => {
-              return (
-                <MenuItem value={team.id} key={team.id}>
-                  {team.name}
-                </MenuItem>
-              );
-            })}
-          </Select>
+          <FormControl variant="standard" sx={{ m: 1, width: 300 }}>
+            <InputLabel>Team</InputLabel>
+            <Select
+              fullWidth
+              variant="standard"
+              value={instance?.team_id || ""}
+              onChange={(evt) => {
+                handleChange({ team_id: evt.target.value });
+              }}
+              label="Teams"
+            >
+              <MenuItem value={""}>
+                <em style={{ opacity: 0.5 }}>None</em>
+              </MenuItem>
+              {teams.map((team) => {
+                return (
+                  <MenuItem value={team.id} key={team.id}>
+                    {team.name}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>

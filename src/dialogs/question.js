@@ -7,9 +7,15 @@ import {
   DialogActions,
   Button,
   Stack,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
+import { useApi } from "../api";
+import { useEffect, useState } from "react";
 
 const useStyles = makeStyles({
   root: {
@@ -19,6 +25,19 @@ const useStyles = makeStyles({
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  const [matches, setMatches] = useState([]);
+  const { apiGetAll } = useApi("/match", "Match");
+
+  const doInit = () => {
+    (async () => {
+      const results = await apiGetAll();
+      if (results) setMatches(results);
+    })();
+  };
+
+  useEffect(() => {
+    doInit();
+  }, []);
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -51,18 +70,29 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
                 <TextField variant="standard" error={false} {...props} />
               )}
             />
-            <TextField
-              margin="dense"
-              label="Match ID"
-              type="number"
-              fullWidth
-              variant="standard"
-              name="account"
-              value={instance?.match_id}
-              onChange={(evt) => {
-                handleChange({ match_id: evt.target.value });
-              }}
-            />
+            <FormControl variant="standard" sx={{ m: 1 }}>
+              <InputLabel>Match</InputLabel>
+              <Select
+                fullWidth
+                sx={{ width: 500 }}
+                variant="standard"
+                value={instance?.match_id}
+                onChange={(evt) => {
+                  handleChange({ match_id: evt.target.value });
+                }}
+              >
+                <MenuItem value="">
+                  <em style={{ opacity: 0.5 }}>None</em>
+                </MenuItem>
+                {matches.map((match) => {
+                  return (
+                    <MenuItem value={match.id} key={match.id}>
+                      {match.name}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions>

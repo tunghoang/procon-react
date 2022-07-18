@@ -89,7 +89,7 @@ const Matches = () => {
       name: "",
       description: "",
       is_active: false,
-      team_id: [],
+      team_id: "",
     });
     setDialogName("MatchDialog");
   };
@@ -166,7 +166,7 @@ const Matches = () => {
       />
       <AddTeamMatchDialog
         open={dialogName === "AddTeamMatchDialog"}
-        instance={teams}
+        instance={currentMatch}
         close={closeDialog}
         save={saveInstance}
         handleChange={changeInstance}
