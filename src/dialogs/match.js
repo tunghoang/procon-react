@@ -8,10 +8,18 @@ import {
   Stack,
   Switch,
   FormControlLabel,
+  Select,
+  MenuItem,
+  Box,
+  Typography,
+  IconButton,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
+import { useApi } from "../api";
+import DeleteIcon from "@mui/icons-material/Delete";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
@@ -89,14 +97,27 @@ const TeamMatchDialog = ({ open, instance, close }) => {
       classes={{ paperScrollPaper: classes.root }}
       open={open}
       onClose={close}
-      fullWidth
     >
       <DialogTitle>{tr({ id: "Teams" })}</DialogTitle>
       <form>
         <DialogContent className={classes.root}>
-          <Stack spacing={2}>
-            {instance.map((item) => {
-              <div key={item.id}>{item.name}</div>;
+          <Stack spacing={1} width={300}>
+            {instance.map((item, idx) => {
+              return (
+                <Stack
+                  key={item.id}
+                  direction={"row"}
+                  alignItems="center"
+                  justifyContent={"space-between"}
+                >
+                  <Typography>
+                    {idx + 1}. {item.name}
+                  </Typography>
+                  <IconButton color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </Stack>
+              );
             })}
           </Stack>
         </DialogContent>
@@ -111,6 +132,19 @@ const TeamMatchDialog = ({ open, instance, close }) => {
 const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  const [teams, setTeams] = useState([]);
+  const { apiGetAll } = useApi("/team", "Teams");
+
+  const doInit = () => {
+    (async () => {
+      const results = await apiGetAll();
+      if (results) setTeams(results);
+    })();
+  };
+
+  useEffect(() => {
+    doInit();
+  }, []);
 
   return (
     <Dialog
@@ -118,21 +152,30 @@ const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
       open={open}
       onClose={close}
     >
-      <DialogTitle></DialogTitle>
+      <DialogTitle>{tr({ id: "Add Team" })}</DialogTitle>
       <form>
         <DialogContent className={classes.root}>
-          <TextField
-            margin="dense"
-            label="Teams"
-            type="text"
+          <Select
             fullWidth
+            sx={{ width: 500 }}
             variant="standard"
-            name="teams"
             value={instance?.team_id}
             onChange={(evt) => {
               handleChange({ team_id: evt.target.value });
             }}
-          />
+            label="Teams"
+          >
+            <MenuItem value="">
+              <em style={{ opacity: 0.5 }}>None</em>
+            </MenuItem>
+            {teams.map((team) => {
+              return (
+                <MenuItem value={team.id} key={team.id}>
+                  {team.name}
+                </MenuItem>
+              );
+            })}
+          </Select>
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>

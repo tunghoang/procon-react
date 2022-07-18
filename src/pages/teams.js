@@ -1,14 +1,13 @@
-import { Box, Container, Paper } from "@mui/material";
+import { Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useConfirmDeleteTeam,
   apiGetTeams,
   apiNewTeam,
   apiEditTeam,
 } from "../api";
-import Context from "../context";
 import TeamDialog from "../dialogs/team";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -17,13 +16,11 @@ import TeamPasswordDialog from "../dialogs/password";
 const Teams = () => {
   const { formatMessage: tr } = useIntl();
   const [teams, setTeams] = useState([]);
-  const { idTournament, tournamentName } = useContext(Context);
   const [selectedTeamIds, setSelectedTeamIds] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const apiDeleteTeam = useConfirmDeleteTeam();
   const doInit = () => {
     (async () => {
-      let results = await apiGetTeams(idTournament);
+      let results = await apiGetTeams();
       if (results) setTeams(results);
     })();
   };
@@ -82,13 +79,12 @@ const Teams = () => {
     if (result) doInit();
   };
   const saveInstance = async () => {
-    console.log("Save instance");
     let result;
     if (currentTeam.id) {
       result = await apiEditTeam(currentTeam.id, currentTeam);
       console.log(result);
     } else {
-      currentTeam.tournament_id = idTournament;
+      // currentTeam.tournament_id = idTournament;
       result = await apiNewTeam(currentTeam);
       console.log(result);
     }
@@ -100,28 +96,7 @@ const Teams = () => {
     setCurrentTeam(newInst);
   };
 
-  const updateTeamSubject = async (subjects) => {
-    console.log("Update team subject ", subjects, currentTeam.id);
-    await apiEditTeam(currentTeam.id, {
-      subject_ids: subjects.map((s) => s.id),
-    });
-    setDialogName("");
-    doInit();
-  };
-
-  const doCheckExistedSubject = () => {
-    const currentTeam = teams.find((c) => c.id === selectedTeamIds[0]);
-    if (!currentTeam) return subjects;
-    const team_subjects_ids = currentTeam.subjects.map((s) => s.id);
-    if (!team_subjects_ids) return subjects;
-    const rs = subjects.map((subject) => {
-      if (team_subjects_ids.includes(subject.id))
-        return { ...subject, selected: true };
-      return { ...subject, selected: false };
-    });
-    return rs;
-  };
-  useEffect(doInit, [idTournament]);
+  useEffect(doInit, []);
   return (
     <>
       <PageToolbar
@@ -141,9 +116,6 @@ const Teams = () => {
           },
         ]}
         handleDelete={clickDelete}
-        // showSelect={(selectedTeamIds || null).length === 1}
-        // handleSelect={() => openDialog("SelectDialog")}
-        // selectTitle="Teaching Subjects"
       />
       <Paper
         component="main"

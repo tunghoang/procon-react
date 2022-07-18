@@ -57,7 +57,6 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
               type="number"
               fullWidth
               variant="standard"
-              disabled={!!instance?.id}
               name="account"
               value={instance?.match_id}
               onChange={(evt) => {

@@ -6,14 +6,17 @@ import { useApi } from "../api";
 import Context from "../context";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
-import { MatchDialog, TeamMatchDialog } from "../dialogs/match";
+import {
+  AddTeamMatchDialog,
+  MatchDialog,
+  TeamMatchDialog,
+} from "../dialogs/match";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Box } from "@mui/system";
 
 const Matches = () => {
   const { formatMessage: tr } = useIntl();
   const [matches, setMatches] = useState([]);
-  const { tournament, round } = useContext(Context);
+  const { round } = useContext(Context);
   const [teams, setTeams] = useState([]);
   const [selectedMatchIds, setSelectedMatchIds] = useState([]);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
@@ -23,7 +26,7 @@ const Matches = () => {
   const apiDeleteMatch = useConfirmDelete();
   const doInit = () => {
     (async () => {
-      const results = await apiGetAll(tournament.id);
+      const results = await apiGetAll(round.id);
       if (results) setMatches(results);
     })();
   };
@@ -82,7 +85,12 @@ const Matches = () => {
   const [currentMatch, setCurrentMatch] = useState({});
 
   const clickNew = () => {
-    setCurrentMatch({ name: "", description: "" });
+    setCurrentMatch({
+      name: "",
+      description: "",
+      is_active: false,
+      team_id: [],
+    });
     setDialogName("MatchDialog");
   };
   const openDialog = (name) => {
@@ -115,7 +123,7 @@ const Matches = () => {
     setCurrentMatch({ ...currentMatch, ...changes });
   };
 
-  useEffect(doInit, []);
+  useEffect(doInit, [round.id]);
 
   return (
     <>
@@ -132,7 +140,7 @@ const Matches = () => {
           },
           {
             label: "Add Team",
-            fn: () => openDialog("MatchDialog"),
+            fn: () => openDialog("AddTeamMatchDialog"),
           },
         ]}
         handleDelete={clickDelete}
@@ -152,6 +160,13 @@ const Matches = () => {
       <MatchDialog
         open={dialogName === "MatchDialog"}
         instance={currentMatch}
+        close={closeDialog}
+        save={saveInstance}
+        handleChange={changeInstance}
+      />
+      <AddTeamMatchDialog
+        open={dialogName === "AddTeamMatchDialog"}
+        instance={teams}
         close={closeDialog}
         save={saveInstance}
         handleChange={changeInstance}
