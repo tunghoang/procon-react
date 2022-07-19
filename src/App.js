@@ -28,9 +28,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { setLocalStorage } from "./utils/commons";
 
 const routes = {
+  "/": () => ({ component: Tournaments, props: {} }),
   "/login": () => ({ component: Login, props: {} }),
   "/teams": () => ({ component: Teams, props: {} }),
-  "/": () => ({ component: Tournaments, props: {} }),
   "/matches": () => ({ component: Matches, props: {} }),
   "/rounds": () => ({ component: Rounds, props: {} }),
   "/questions": () => ({ component: Questions, props: {} }),

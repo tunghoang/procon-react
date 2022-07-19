@@ -14,22 +14,32 @@ import RemoveIcon from "@mui/icons-material/Remove";
 export default function DynamicInput({ data, inputChange, label }) {
   const [fields, setFields] = useState([]);
 
+  const defaultField = {
+    key: "",
+    name: "",
+    nameType: "object",
+  };
+
   useEffect(() => {
     const arr = [];
-    for (const key in data) {
+    const jsonData = typeof data === "string" ? JSON.parse(data) : data;
+    for (const key in jsonData) {
       arr.push({
         key,
-        name: data[key],
-        nameType: typeof data[key],
+        name: Array.isArray(jsonData[key])
+          ? jsonData[key].join(",")
+          : jsonData[key],
+        nameType: typeof jsonData[key],
       });
     }
-    arr.push({
-      key: "",
-      name: "",
-      nameType: "string",
-    });
+    arr.push(defaultField);
     setFields(arr);
-  }, [data]);
+  }, []);
+
+  const sendValue = () => {
+    inputChange(fields.filter((field) => field.key));
+    setFields([...fields]);
+  };
 
   return (
     <FormControl>
@@ -43,8 +53,7 @@ export default function DynamicInput({ data, inputChange, label }) {
               value={field.key}
               onChange={(evt) => {
                 field.key = evt.target.value;
-                inputChange(fields.filter((field) => field.key));
-                setFields([...fields]);
+                sendValue();
               }}
             />
             <span> = </span>
@@ -53,13 +62,8 @@ export default function DynamicInput({ data, inputChange, label }) {
               label="Name"
               value={field.name}
               onChange={(evt) => {
-                field.name =
-                  field.nameType === "object"
-                    ? evt.target.value.split(",")
-                    : evt.target.value;
-                console.log(field);
-                inputChange(fields.filter((field) => field.key));
-                setFields([...fields]);
+                field.name = evt.target.value;
+                sendValue();
               }}
             />
             <FormControl sx={{ width: 120 }}>
@@ -69,7 +73,7 @@ export default function DynamicInput({ data, inputChange, label }) {
                 label="Type"
                 onChange={(evt) => {
                   field.nameType = evt.target.value;
-                  setFields([...fields]);
+                  sendValue();
                 }}
               >
                 <MenuItem value={"string"}>String</MenuItem>
@@ -77,11 +81,11 @@ export default function DynamicInput({ data, inputChange, label }) {
               </Select>
             </FormControl>
 
-            <Box display={"flex"}>
+            <Box display={"flex"} sx={{ bgcolor: "#e5e7eb", borderRadius: 15 }}>
               <IconButton
                 onClick={() => {
                   if (fields.length >= 5) return;
-                  setFields([...fields, { key: "", name: "" }]);
+                  setFields([...fields, defaultField]);
                 }}
                 size="small"
               >

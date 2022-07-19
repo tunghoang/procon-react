@@ -8,21 +8,16 @@ import {
   Stack,
   Switch,
   FormControlLabel,
-  Select,
-  MenuItem,
   Typography,
   IconButton,
-  InputLabel,
-  FormControl,
+  Autocomplete,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
-import { useApi, useFetchData } from "../api";
+import { useFetchData } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { apiDeleteTeamMatch, useConfirmDeleteTeamMatch } from "../api/match";
-import SelectData from "../components/select-data";
+import { useState } from "react";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
@@ -92,16 +87,10 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
   );
 };
 
-const TeamMatchDialog = ({ open, teams, matchId, close, init }) => {
+const TeamMatchDialog = ({ open, teams, close, handleDelete }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
-  const apiDeleteDialog = useConfirmDeleteTeamMatch();
 
-  const removeTeamMatch = async (teamId) => {
-    const result = await apiDeleteDialog(matchId, teamId);
-    console.log(result);
-    if (result) init();
-  };
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -125,7 +114,7 @@ const TeamMatchDialog = ({ open, teams, matchId, close, init }) => {
                   </Typography>
                   <IconButton
                     color="error"
-                    onClick={() => removeTeamMatch(item.id)}
+                    onClick={() => handleDelete(item.id)}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -142,10 +131,11 @@ const TeamMatchDialog = ({ open, teams, matchId, close, init }) => {
   );
 };
 
-const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
+const AddTeamMatchDialog = ({ open, close, handleAdd }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
   const { data: teams } = useFetchData({ path: "/team", name: "Team" });
+  const [teamId, setTeamId] = useState(null);
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -155,18 +145,23 @@ const AddTeamMatchDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogTitle>{tr({ id: "Add Team" })}</DialogTitle>
       <form>
         <DialogContent className={classes.root} sx={{ width: 300 }}>
-          <SelectData
-            label={"Team"}
-            onChange={(value) => handleChange({ team_id: value })}
-            data={teams.map((team) => ({
-              key: team.id,
-              value: team.name,
-            }))}
+          <Autocomplete
+            options={teams}
+            getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={(params) => (
+              <TextField {...params} label={"Team"} variant="standard" />
+            )}
+            onChange={(evt, v) => {
+              setTeamId(v.id);
+            }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-          <Button onClick={save}>{tr({ id: "Save" })}</Button>
+          <Button onClick={() => handleAdd(teamId)}>
+            {tr({ id: "Save" })}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

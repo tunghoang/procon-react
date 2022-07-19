@@ -6,9 +6,10 @@ const MATCH_URL = PREFIX + "/match";
 export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
   try {
     const result = await doDelete(`${MATCH_URL}/${idMatch}/team/${idTeam}`);
+    showMessage(`Delete team from match succeeded`, "success");
     return result;
   } catch (e) {
-    showMessage(`Delete team error: ${e.message}`, "error");
+    showMessage(`Delete team from match error: ${e.message}`, "error");
   }
   return false;
 };
@@ -23,12 +24,12 @@ export const useConfirmDeleteTeamMatch = () => {
     }
   };
 };
-export const apiNewTeamMatch = async (team) => {
+export const apiNewTeamMatch = async (idMatch, idTeam) => {
   try {
-    const result = await doPost(MATCH_URL, null, team);
-    showMessage("Success create new school", "success", 1000);
+    const result = await doPost(`${MATCH_URL}/${idMatch}/team/${idTeam}`, null);
+    showMessage("Success add team to match", "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error creating new school: ${e.message}`, "error");
+    showMessage(`Error add team to matc: ${e.message}`, "error");
   }
 };

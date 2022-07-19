@@ -1,7 +1,7 @@
 import { IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useApi } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -9,12 +9,14 @@ import QuestionDialog from "../dialogs/question";
 import { formatDateTime } from "../utils/commons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ShowJsonDataDialog from "../dialogs/show-json-data";
+import Context from "../context";
 
 const Questions = () => {
   const { formatMessage: tr } = useIntl();
   const [questions, setQuestions] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [questionData, setQuestionData] = useState();
+  const { round } = useContext(Context);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/question",
     "Question"
@@ -23,7 +25,10 @@ const Questions = () => {
   const doInit = () => {
     (async () => {
       const results = await apiGetAll();
-      if (results) setQuestions(results);
+      if (results)
+        setQuestions(
+          results.filter((item) => item.match.round_id === round.id)
+        );
     })();
   };
   const columns = [
@@ -89,7 +94,7 @@ const Questions = () => {
   const [currentItem, setCurrentItem] = useState({});
 
   const clickNew = () => {
-    setCurrentItem({ start_time: "", end_time: "", match_id: "" });
+    setCurrentItem({ name: "", start_time: "", end_time: "", match_id: "" });
     setDialogName("QuestionDialog");
   };
   const openDialog = (name) => {

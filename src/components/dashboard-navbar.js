@@ -96,33 +96,34 @@ export const DashboardNavbar = (props) => {
               )}
             </Breadcrumbs>
           </Stack>
-          <Tooltip title="Search">
-            <IconButton sx={{ ml: 1 }}>
-              <SearchIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <LanguageTrans />
-          <Tooltip title={teamname}>
-            <Avatar
-              style={{ cursor: "pointer" }}
-              sx={{
-                height: 40,
-                width: 40,
-                ml: 1,
-              }}
-              src="/static/images/avatars/avatar_1.png"
-            >
-              <UserCircleIcon fontSize="small" />
-            </Avatar>
-          </Tooltip>
-          <Tooltip title={tr({ id: "Sign Out" })}>
-            <IconButton
-              sx={{ ml: 1 }}
-              onClick={() => updateLocalStorage({ token: null })}
-            >
-              <LogoutIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <Stack direction={"row"} spacing={3} alignItems="center">
+            <Tooltip title="Search">
+              <IconButton sx={{ ml: 1 }}>
+                <SearchIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <LanguageTrans />
+            <Tooltip title={teamname}>
+              <Avatar
+                style={{ cursor: "pointer" }}
+                sx={{
+                  height: 40,
+                  width: 40,
+                }}
+                src="/static/images/avatars/avatar_1.png"
+              >
+                <UserCircleIcon fontSize="small" />
+              </Avatar>
+            </Tooltip>
+            <Tooltip title={tr({ id: "Sign Out" })}>
+              <IconButton
+                sx={{ ml: 1 }}
+                onClick={() => updateLocalStorage({ token: null })}
+              >
+                <LogoutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Toolbar>
       </DashboardNavbarRoot>
     </>

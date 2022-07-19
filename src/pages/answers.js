@@ -16,7 +16,7 @@ const Answers = () => {
   const [jsonData, setJsonData] = useState();
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/answer",
-    "Question"
+    "Answer"
   );
   const apiDeleteDialog = useConfirmDelete();
   const doInit = () => {

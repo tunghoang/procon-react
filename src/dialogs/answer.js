@@ -1,4 +1,3 @@
-import { DateTimePicker } from "@mui/x-date-pickers";
 import {
   Dialog,
   DialogTitle,
@@ -7,10 +6,10 @@ import {
   DialogActions,
   Button,
   Stack,
+  Autocomplete,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
-import SelectData from "../components/select-data";
 import { useFetchData } from "../api/useFetchData";
 import DynamicInput from "../components/dynamic-input";
 
@@ -28,7 +27,6 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
     name: "Question",
   });
   const { data: teams } = useFetchData({ path: "/team", name: "Team" });
-
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -36,64 +34,72 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
       onClose={close}
     >
       <DialogTitle>
-        {(instance || {}).id ? "Edit Answer" : "Create Answer"}
+        {instance?.id ? "Edit Answer" : "Create Answer"}
       </DialogTitle>
       <form>
         <DialogContent className={classes.root}>
           <Stack spacing={3} width={500}>
-            {/* <DateTimePicker
-              renderInput={(props) => (
-                <TextField variant="standard" {...props} />
+            <Autocomplete
+              options={questions}
+              value={
+                questions.find((item) => item.id === instance.question_id) ||
+                null
+              }
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField {...params} label={"Question"} variant="standard" />
               )}
-              label="Start time"
-              value={instance?.start_time || null}
-              onChange={(newValue) => {
-                handleChange({ start_time: newValue });
-              }}
+              onChange={(evt, v) => handleChange({ question_id: v.id })}
             />
-            <DateTimePicker
-              renderInput={(props) => (
-                <TextField variant="standard" {...props} />
+
+            <Autocomplete
+              options={teams}
+              value={teams.find((item) => item.id === instance.team_id) || null}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField {...params} label={"Team"} variant="standard" />
               )}
-              label="End time"
-              value={instance?.end_time || null}
-              onChange={(newValue) => {
-                handleChange({ end_time: newValue });
-              }}
-            /> */}
-            <SelectData
-              label={"Question"}
-              onChange={(item) => handleChange({ question_id: item.value })}
-              data={questions?.map((question) => ({
-                key: question.id,
-                value: question.name,
-              }))}
-            />
-            <SelectData
-              label={"Team"}
-              onChange={(item) => handleChange({ team_id: item.value })}
-              data={teams?.map((team) => ({ key: team.id, value: team.name }))}
+              onChange={(evt, v) => handleChange({ team_id: v.id })}
             />
             <DynamicInput
               label={"Answer Data"}
               data={instance?.answer_data}
               inputChange={(value) => {
-                console.log(value);
-                const answerData = value.reduce((cur, next) => {
-                  return {
-                    ...cur,
-                    [next.key]: next.name,
-                  };
-                }, {});
-                console.log(answerData);
-                handleChange({ answer_data: answerData });
+                handleChange({ answer_data: value });
               }}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-          <Button onClick={save}>{tr({ id: "Save" })}</Button>
+          <Button
+            onClick={async () => {
+              if (Array.isArray(instance.answer_data)) {
+                instance.answer_data = instance.answer_data.reduce(
+                  (cur, next) => {
+                    return {
+                      ...cur,
+                      [next.key]:
+                        next.nameType === "object"
+                          ? next.name
+                              .split(",")
+                              .filter((item) => item)
+                              .map((item) => item.trim())
+                          : next.name,
+                    };
+                  },
+                  {}
+                );
+              } else if (typeof instance.answer_data === "string") {
+                instance.answer_data = JSON.parse(instance.answer_data);
+              }
+              await save();
+            }}
+          >
+            {tr({ id: "Save" })}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

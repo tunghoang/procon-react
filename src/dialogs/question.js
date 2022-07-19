@@ -7,16 +7,13 @@ import {
   DialogActions,
   Button,
   Stack,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
+  Autocomplete,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
-import { useApi } from "../api";
-import { useEffect, useState } from "react";
-import SelectData from "../components/select-data";
+import { useFetchData } from "../api";
+import { useContext } from "react";
+import Context from "../context";
 
 const useStyles = makeStyles({
   root: {
@@ -25,20 +22,17 @@ const useStyles = makeStyles({
 });
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
+  const { round } = useContext(Context);
   const { formatMessage: tr } = useIntl();
-  const [matches, setMatches] = useState([]);
-  const { apiGetAll } = useApi("/match", "Match");
+  const { data: matches } = useFetchData({
+    path: "/match",
+    config: {
+      params: {
+        match_round_id: round.id,
+      },
+    },
+  });
 
-  const doInit = () => {
-    (async () => {
-      const results = await apiGetAll();
-      if (results) setMatches(results);
-    })();
-  };
-
-  useEffect(() => {
-    doInit();
-  }, []);
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -51,6 +45,18 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
       <form>
         <DialogContent className={classes.root}>
           <Stack spacing={3} width={500}>
+            <TextField
+              margin="dense"
+              label="Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              name="name"
+              value={instance?.name}
+              onChange={(evt) => {
+                handleChange({ name: evt.target.value });
+              }}
+            />
             <DateTimePicker
               label="Start time"
               value={instance?.start_time || null}
@@ -71,37 +77,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
                 <TextField variant="standard" error={false} {...props} />
               )}
             />
-            <SelectData
-              label={"Match"}
-              onChange={(value) => handleChange({ match_id: value })}
-              data={matches.map((match) => ({
-                key: match.id,
-                value: match.name,
-              }))}
+            <Autocomplete
+              options={matches}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField {...params} label={"Match"} variant="standard" />
+              )}
+              onChange={(evt, v) => handleChange({ match_id: v.id })}
             />
-            {/* <FormControl variant="standard" sx={{ m: 1 }}>
-              <InputLabel>Match</InputLabel>
-              <Select
-                fullWidth
-                sx={{ width: 500 }}
-                variant="standard"
-                value={instance?.match_id}
-                onChange={(evt) => {
-                  handleChange({ match_id: evt.target.value });
-                }}
-              >
-                <MenuItem value="">
-                  <em style={{ opacity: 0.5 }}>None</em>
-                </MenuItem>
-                {matches.map((match) => {
-                  return (
-                    <MenuItem value={match.id} key={match.id}>
-                      {match.name}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl> */}
           </Stack>
         </DialogContent>
         <DialogActions>

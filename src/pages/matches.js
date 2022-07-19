@@ -12,6 +12,7 @@ import {
   TeamMatchDialog,
 } from "../dialogs/match";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
 
 const Matches = () => {
   const { formatMessage: tr } = useIntl();
@@ -31,7 +32,6 @@ const Matches = () => {
           match_round_id: round.id,
         },
       });
-      console.log(results);
       if (results) setMatches(results);
     })();
   };
@@ -128,7 +128,18 @@ const Matches = () => {
     setCurrentMatch({ ...currentMatch, ...changes });
   };
 
-  useEffect(doInit, [round.id]);
+  const handleTeam = async (teamId, action) => {
+    let result;
+    if (action === "delete") {
+      result = await apiDeleteTeamMatch(matchTeams.id, teamId);
+    } else if (action === "add") {
+      result = await apiNewTeamMatch(currentMatch.id, teamId);
+    }
+    if (result) doInit();
+    setDialogName("");
+  };
+
+  useEffect(doInit, []);
 
   return (
     <>
@@ -171,17 +182,14 @@ const Matches = () => {
       />
       <AddTeamMatchDialog
         open={dialogName === "AddTeamMatchDialog"}
-        instance={currentMatch}
         close={closeDialog}
-        save={saveInstance}
-        handleChange={changeInstance}
+        handleAdd={(teamId) => handleTeam(teamId, "add")}
       />
       <TeamMatchDialog
         open={dialogName === "TeamMatchDialog"}
         teams={matchTeams.teams}
-        matchId={matchTeams.id}
         close={closeDialog}
-        init={doInit}
+        handleDelete={(teamId) => handleTeam(teamId, "delete")}
       />
     </>
   );

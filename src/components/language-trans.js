@@ -2,8 +2,13 @@ import { useContext, useState } from "react";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Context from "../context";
-import { IconButton, ListItemText, Tooltip } from "@mui/material";
-import GTranslateIcon from "@mui/icons-material/GTranslate";
+import {
+  Avatar,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Stack,
+} from "@mui/material";
 import { useIntl } from "react-intl";
 
 export default function LanguageTrans() {
@@ -19,12 +24,41 @@ export default function LanguageTrans() {
     setAnchorEl(null);
   };
 
+  const flags = [
+    {
+      imgSrc: "/static/images/flags/vi.png",
+      trans: "vi-VN",
+      title: tr({ id: "Vietnamese" }),
+    },
+    {
+      imgSrc: "/static/images/flags/en.png",
+      trans: "en-US",
+      title: tr({ id: "English" }),
+    },
+  ];
+
+  const currentFlag = flags.find((flag) => flag.trans === locale);
+
   return (
     <>
       <Tooltip title={tr({ id: "Language" })}>
-        <IconButton onClick={handleClick} size={"small"}>
-          <GTranslateIcon sx={{ width: "20px", height: "20px" }} />
-        </IconButton>
+        <Stack
+          direction={"row"}
+          spacing={1}
+          onClick={handleClick}
+          style={{ cursor: "pointer" }}
+        >
+          <Avatar
+            sx={{
+              height: 25,
+              width: 25,
+            }}
+            src={currentFlag.imgSrc}
+          />
+          <span style={{ color: "#000" }}>
+            {currentFlag.trans.split("-")[0]}
+          </span>
+        </Stack>
       </Tooltip>
       <Menu
         anchorEl={anchorEl}
@@ -33,16 +67,26 @@ export default function LanguageTrans() {
           setAnchorEl(null);
         }}
       >
-        <MenuItem onClick={() => selectItem("vi-VN")}>
-          <ListItemText sx={{ color: locale === "vi-VN" && "blue" }}>
-            VN - Tiếng Việt
-          </ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => selectItem("en-US")}>
-          <ListItemText sx={{ color: locale === "en-US" && "blue" }}>
-            EN - English
-          </ListItemText>
-        </MenuItem>
+        {flags.map((flag) => {
+          return (
+            <MenuItem onClick={() => selectItem(flag.trans)} key={flag.trans}>
+              <ListItemIcon>
+                <Avatar
+                  onClick={handleClick}
+                  style={{ cursor: "pointer" }}
+                  sx={{
+                    height: 25,
+                    width: 25,
+                  }}
+                  src={flag.imgSrc}
+                />
+              </ListItemIcon>
+              <ListItemText sx={{ color: locale === flag.trans && "blue" }}>
+                {flag.title}
+              </ListItemText>
+            </MenuItem>
+          );
+        })}
       </Menu>
     </>
   );

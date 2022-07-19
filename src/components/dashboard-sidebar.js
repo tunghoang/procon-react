@@ -11,17 +11,17 @@ import { Logo } from "./logo";
 import { NavItem } from "./nav-item";
 
 import { A } from "hookrouter";
-import { Laboratory as LaboratoryIcon } from "../icons/laboratory";
-import { Book as BookIcon } from "../icons/book";
 import { Child as ChildIcon } from "../icons/child";
 import { Education as EducationIcon } from "../icons/education";
 import { Blackboard as BlackboardIcon } from "../icons/blackboard";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import QuizIcon from "@mui/icons-material/Quiz";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import PeopleIcon from "@mui/icons-material/People";
 
 const items = [
   {
     href: "/teams",
-    icon: <BookIcon fontSize="small" />,
+    icon: <PeopleIcon fontSize="small" />,
     title: "Teams",
   },
   // {
@@ -41,12 +41,12 @@ const items = [
   },
   {
     href: "/questions",
-    icon: <AccountBalanceIcon fontSize="small" />,
+    icon: <QuizIcon fontSize="small" />,
     title: "Questions",
   },
   {
     href: "/answers",
-    icon: <LaboratoryIcon fontSize="small" />,
+    icon: <QuestionAnswerIcon fontSize="small" />,
     title: "Answers",
   },
 ];

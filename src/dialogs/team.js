@@ -1,5 +1,4 @@
 import {
-  Box,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -7,7 +6,6 @@ import {
   TextField,
   DialogActions,
   Button,
-  Autocomplete,
   Select,
   MenuItem,
   InputLabel,
@@ -140,20 +138,6 @@ const TeamDialog = ({
               onChange={(evt) => {
                 handleChange({ password: evt.target.value });
               }}
-            />
-          )}
-          {type === "ADD_STUDENT" && (
-            <Autocomplete
-              sx={{ mt: 2 }}
-              options={selectData}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField {...params} label={selectLabel} />
-              )}
-              onChange={(evt, v) => {
-                handleChange({ class_id: v.id });
-              }}
-              name="class_id"
             />
           )}
         </DialogContent>
