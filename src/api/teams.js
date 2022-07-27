@@ -10,7 +10,7 @@ export const apiGetTeams = async () => {
   let mockResponse = isMocking ? mockTeams : undefined;
   try {
     const results = await doGet(TEAMS_URL, null, mockResponse);
-    showMessage("Get Teams succeeded", "success", 1000);
+    // showMessage("Get Teams succeeded", "success", 1000);
     return results;
   } catch (e) {
     console.log(e);

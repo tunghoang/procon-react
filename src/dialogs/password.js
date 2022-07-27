@@ -13,27 +13,25 @@ const PasswordDialog = ({ open, instance, close, save, handleChange }) => {
   return (
     <Dialog open={open} onClose={close}>
       <DialogTitle>Edit Password</DialogTitle>
-      <form>
-        <DialogContent>
-          <DialogContentText>{(instance || {}).name}</DialogContentText>
-          <TextField
-            margin="dense"
-            label={tr({ id: "Password" })}
-            type="password"
-            fullWidth
-            variant="standard"
-            name="password"
-            value={(instance || {}).password}
-            onChange={(evt) => {
-              handleChange({ password: evt.target.value });
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-          <Button onClick={save}>{tr({ id: "Save" })}</Button>
-        </DialogActions>
-      </form>
+      <DialogContent sx={{ width: 300 }}>
+        <DialogContentText>{(instance || {}).name}</DialogContentText>
+        <TextField
+          margin="dense"
+          label={tr({ id: "Password" })}
+          type="password"
+          fullWidth
+          variant="standard"
+          name="password"
+          value={(instance || {}).password}
+          onChange={(evt) => {
+            handleChange({ password: evt.target.value });
+          }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
+        <Button onClick={save}>{tr({ id: "Save" })}</Button>
+      </DialogActions>
     </Dialog>
   );
 };

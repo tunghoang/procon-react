@@ -1,4 +1,11 @@
-import { IconButton, Paper, Stack, Typography } from "@mui/material";
+import {
+  Badge,
+  Chip,
+  IconButton,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useEffect, useState } from "react";
@@ -56,10 +63,20 @@ const Matches = () => {
     },
     {
       field: "is_active",
-      type: "boolean",
       headerName: "Active",
       flex: 1,
       headerClassName: "tableHeader",
+      renderCell: ({ row }) => {
+        return (
+          <>
+            {row.is_active ? (
+              <Chip label="Active" color="success" />
+            ) : (
+              <Chip label="Inactive" />
+            )}
+          </>
+        );
+      },
     },
     {
       field: "teams",

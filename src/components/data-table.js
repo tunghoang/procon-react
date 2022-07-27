@@ -3,22 +3,29 @@ import { DataGrid } from "@mui/x-data-grid";
 import { NoData } from "../icons/no-data";
 
 const DataTable = (props) => (
-  <DataGrid
-    sx={{
-      boxShadow: 2,
-      borderRadius: 0,
-      borderBottom: 1,
-      borderColor: "#eee",
-    }}
-    components={{
-      NoRowsOverlay: CustomNoRowsOverlay,
-    }}
-    getRowClassName={(params) => "tableRow"}
-    checkboxSelection
-    disableSelectionOnClick
-    {...props}
-  />
+  <>
+    <FilterBar />
+    <DataGrid
+      sx={{
+        boxShadow: 2,
+        borderRadius: 0,
+        borderBottom: 1,
+        borderColor: "#eee",
+      }}
+      components={{
+        NoRowsOverlay: CustomNoRowsOverlay,
+      }}
+      getRowClassName={(params) => "tableRow"}
+      checkboxSelection
+      disableSelectionOnClick
+      {...props}
+    />
+  </>
 );
+
+const FilterBar = () => {
+  return <div>Filter</div>;
+};
 
 function CustomNoRowsOverlay() {
   return (

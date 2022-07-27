@@ -1,4 +1,4 @@
-import { IconButton, Paper } from "@mui/material";
+import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useEffect, useState } from "react";
@@ -67,8 +67,13 @@ const Questions = () => {
       headerName: "Match",
       flex: 1,
       headerClassName: "tableHeader",
-      valueGetter: ({ row }) => {
-        return row.match.name;
+      renderCell: ({ row }) => {
+        return (
+          <Chip
+            label={row.match.name}
+            color={row.match.is_active ? "success" : "default"}
+          />
+        );
       },
     },
     {

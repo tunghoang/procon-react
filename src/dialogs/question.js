@@ -79,12 +79,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
             />
             <Autocomplete
               options={matches}
+              value={
+                matches.find((item) => item.id === instance.match_id) || null
+              }
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => (
                 <TextField {...params} label={"Match"} variant="standard" />
               )}
-              onChange={(evt, v) => handleChange({ match_id: v.id })}
+              onChange={(evt, v) => handleChange({ match_id: v?.id })}
             />
           </Stack>
         </DialogContent>

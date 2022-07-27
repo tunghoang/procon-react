@@ -59,7 +59,7 @@ export const useApi = (pathName, apiName) => {
     async (id, payload, headers) => {
       try {
         const result = await doPut(`${URL}/${id}`, headers, payload);
-        showMessage(`Success edit ${apiName} ${id}`, "success", 1000);
+        showMessage(`Success edit ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
         showMessage(`Error edit ${apiName}: ${e.message}`, "error");

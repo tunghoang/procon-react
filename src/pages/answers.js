@@ -1,19 +1,21 @@
 import { Button, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useApi } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import AnswerDialog from "../dialogs/answer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ShowJsonDataDialog from "../dialogs/show-json-data";
+import Context from "../context";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
   const [answers, setAnswers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [jsonData, setJsonData] = useState();
+  const { round } = useContext(Context);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/answer",
     "Answer"
@@ -22,8 +24,10 @@ const Answers = () => {
   const doInit = () => {
     (async () => {
       const results = await apiGetAll();
-      console.log(results);
-      if (results) setAnswers(results);
+      if (results)
+        setAnswers(
+          results.filter((item) => item.question.match.round_id === round.id)
+        );
     })();
   };
   const columns = [

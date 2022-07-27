@@ -10,7 +10,7 @@ export const apiGetTournaments = async () => {
   let mockResponse = isMocking ? mockTournaments : undefined;
   try {
     const results = await doGet(TOURNAMENTS_URL, null, mockResponse);
-    showMessage("Get Tournaments succeeded", "success", 1000);
+    // showMessage("Get Tournaments succeeded", "success", 1000);
     return results;
   } catch (e) {
     console.log(e);
@@ -44,26 +44,31 @@ export const useConfirmDeleteTournament = () => {
     }
   };
 };
-export const apiNewTournament = async (school) => {
+export const apiNewTournament = async (tournament) => {
   let mockResponse = isMocking ? { success: true } : undefined;
   try {
-    const result = await doPost(TOURNAMENTS_URL, null, school, mockResponse);
+    const result = await doPost(
+      TOURNAMENTS_URL,
+      null,
+      tournament,
+      mockResponse
+    );
     showMessage("Success create new tournament", "success", 1000);
     return result;
   } catch (e) {
     showMessage(`Error creating new tournament: ${e.message}`, "error");
   }
 };
-export const apiEditTournament = async (idTournament, school) => {
+export const apiEditTournament = async (idTournament, tournament) => {
   let mockResponse = isMocking ? { success: true } : undefined;
   try {
     const result = await doPut(
       `${TOURNAMENTS_URL}/${idTournament}`,
       null,
-      school,
+      tournament,
       mockResponse
     );
-    showMessage("Success edit tournament " + idTournament, "success", 1000);
+    showMessage("Success edit " + tournament.name, "success", 1000);
     return result;
   } catch (e) {
     showMessage(`Error edit tournament: ${e.message}`, "error");
