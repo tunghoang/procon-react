@@ -26,6 +26,7 @@ import { navigate } from "hookrouter";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { setLocalStorage } from "./utils/commons";
+import NotFound from "./pages/not-found";
 
 const routes = {
   "/": () => ({ component: Tournaments, props: {} }),
@@ -35,6 +36,7 @@ const routes = {
   "/rounds": () => ({ component: Rounds, props: {} }),
   "/questions": () => ({ component: Questions, props: {} }),
   "/answers": () => ({ component: Answers, props: {} }),
+  "/*": () => ({ component: NotFound, props: {} }),
 };
 
 function loadMessages(locale) {

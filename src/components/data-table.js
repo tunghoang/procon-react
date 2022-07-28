@@ -1,10 +1,16 @@
 import { Box, styled } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { NoData } from "../icons/no-data";
+import FilterBar from "./filter-bar";
 
 const DataTable = (props) => (
   <>
-    <FilterBar />
+    {props.filterOptions && (
+      <FilterBar
+        filterOptions={props.filterOptions}
+        onFilter={props.onFilter || null}
+      />
+    )}
     <DataGrid
       sx={{
         boxShadow: 2,
@@ -22,10 +28,6 @@ const DataTable = (props) => (
     />
   </>
 );
-
-const FilterBar = () => {
-  return <div>Filter</div>;
-};
 
 function CustomNoRowsOverlay() {
   return (

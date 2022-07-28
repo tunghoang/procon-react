@@ -32,20 +32,40 @@ const Matches = () => {
     "Match"
   );
   const apiDeleteMatch = useConfirmDelete();
-  const doInit = () => {
+  const doInit = (params) => {
     (async () => {
       const results = await apiGetAll({
         params: {
           match_round_id: round.id,
+          ...params,
         },
       });
       if (results) setMatches(results);
     })();
   };
+
+  const filterOptions = [
+    {
+      key: "match_id",
+      label: "ID",
+      type: "text",
+    },
+    {
+      key: "match_name",
+      label: "Name",
+      type: "text",
+    },
+    {
+      key: "match_is_active",
+      label: "Status",
+      type: "boolean",
+    },
+  ];
+
   const columns = [
     {
       field: "id",
-      headerName: "Id",
+      headerName: "ID",
       width: 100,
       headerClassName: "tableHeader",
     },
@@ -156,6 +176,10 @@ const Matches = () => {
     setDialogName("");
   };
 
+  const handleFilter = (query) => {
+    doInit(query);
+  };
+
   useEffect(doInit, []);
 
   return (
@@ -183,6 +207,8 @@ const Matches = () => {
         sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}
       >
         <DataTable
+          filterOptions={filterOptions}
+          onFilter={handleFilter}
           rows={matches}
           columns={columns}
           onSelectionModelChange={(ids) => {
