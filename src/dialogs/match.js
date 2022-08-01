@@ -13,7 +13,6 @@ import {
   Autocomplete,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";

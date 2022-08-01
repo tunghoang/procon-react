@@ -7,13 +7,13 @@ import {
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
-import JSONPretty from "react-json-pretty";
+import CodeEditor from "../components/code-editor";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
   },
 });
-const ShowJsonDataDialog = ({ open, instance, close }) => {
+const CodeEditorDialog = ({ open, instance, close }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
   return (
@@ -22,9 +22,9 @@ const ShowJsonDataDialog = ({ open, instance, close }) => {
       open={open}
       onClose={close}
     >
-      <DialogTitle>Data</DialogTitle>
+      <DialogTitle></DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <JSONPretty id="json-pretty" data={instance}></JSONPretty>
+        <CodeEditor title={"Data Editor"} defaultValue={instance} />
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>
@@ -33,4 +33,4 @@ const ShowJsonDataDialog = ({ open, instance, close }) => {
   );
 };
 
-export default ShowJsonDataDialog;
+export default CodeEditorDialog;

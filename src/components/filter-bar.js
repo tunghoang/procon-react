@@ -2,8 +2,6 @@ import {
   Button,
   Checkbox,
   IconButton,
-  ListItemIcon,
-  ListItemText,
   Menu,
   MenuItem,
   Select,
@@ -88,31 +86,30 @@ const FilterBar = ({ onFilter, filterOptions }) => {
           );
         })}
         {isFilter && (
-          <>
-            <IconButton onClick={handleFilter}>
+          <Stack spacing={1} direction="row">
+            <IconButton onClick={handleFilter} size={"small"}>
               <SearchIcon />
             </IconButton>
-            <IconButton onClick={resetFilter}>
+            <IconButton onClick={resetFilter} size={"small"}>
               <ClearIcon />
             </IconButton>
-          </>
+          </Stack>
         )}
       </Stack>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         {filterData.map((filter, idx) => {
           return (
-            <MenuItem key={idx}>
-              <ListItemIcon>
-                <Checkbox
-                  checked={filter.isSelected}
-                  onChange={(e) => {
-                    filter.isSelected = e.target.checked;
-                    if (!filter.isSelected) filter.filterValue = "";
-                    setFilterData([...filterData]);
-                  }}
-                />
-              </ListItemIcon>
-              <ListItemText>{filter.label}</ListItemText>
+            <MenuItem key={idx} sx={{ p: 0, pr: 1 }}>
+              <Checkbox
+                size="small"
+                checked={filter.isSelected}
+                onChange={(e) => {
+                  filter.isSelected = e.target.checked;
+                  if (!filter.isSelected) filter.filterValue = "";
+                  setFilterData([...filterData]);
+                }}
+              />
+              <span style={{ fontSize: "0.9em" }}>{filter.label}</span>
             </MenuItem>
           );
         })}
@@ -123,7 +120,29 @@ const FilterBar = ({ onFilter, filterOptions }) => {
 
 const FilterItem = ({ type, filter, setFilterData }) => {
   switch (type) {
-    case "text":
+    case "boolean":
+      return (
+        <Select
+          value={filter.filterValue}
+          onChange={(evt) => {
+            filter.filterValue = evt.target.value;
+            setFilterData();
+          }}
+          variant="standard"
+          displayEmpty
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value="" sx={{ opacity: 0.6, fontSize: 14 }}>
+            <em>Search by {filter.label}</em>
+          </MenuItem>
+          {filter.options.map((opt, idx) => (
+            <MenuItem key={idx} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </Select>
+      );
+    default:
       return (
         <TextField
           value={filter.filterValue}
@@ -135,24 +154,6 @@ const FilterItem = ({ type, filter, setFilterData }) => {
           variant="standard"
         />
       );
-    case "boolean":
-      return (
-        <Select
-          value={filter.filterValue}
-          label="Age"
-          onChange={(evt) => {
-            filter.filterValue = evt.target.value;
-            setFilterData();
-          }}
-          placeholder={`Search by ${filter.label}`}
-          variant="standard"
-        >
-          <MenuItem value={0}>Inactive</MenuItem>
-          <MenuItem value={1}>Active</MenuItem>
-        </Select>
-      );
-    default:
-      return null;
   }
 };
 

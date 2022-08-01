@@ -40,14 +40,6 @@ const Login = () => {
       }}
     >
       <Container maxWidth="sm">
-        {/* <A href="/">
-          <Button
-            component="span"
-            startIcon={<ArrowBackIcon fontSize="small" />}
-          >
-            Home
-          </Button>
-        </A> */}
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ my: 3 }}>
             <Typography color="textPrimary" variant="h4">
@@ -92,19 +84,6 @@ const Login = () => {
               {formatMessage({ id: "Sign In" })}
             </Button>
           </Box>
-          {/* <Typography color="textSecondary" variant="body2">
-            Don&apos;t have an account?{" "}
-            <Link
-              to="/register"
-              variant="subtitle2"
-              underline="hover"
-              sx={{
-                cursor: "pointer",
-              }}
-            >
-              {formatMessage({ id: "Sign Up" })}
-            </Link>
-          </Typography> */}
         </form>
       </Container>
     </Box>

@@ -30,10 +30,19 @@ const Answers = () => {
         );
     })();
   };
+
+  const filterOptions = [
+    {
+      key: "match_id",
+      label: "ID",
+      type: "text",
+    },
+  ];
+
   const columns = [
     {
       field: "id",
-      headerName: "Id",
+      headerName: "ID",
       width: 100,
       headerClassName: "tableHeader",
     },
@@ -57,7 +66,7 @@ const Answers = () => {
     },
     {
       field: "team",
-      headerName: "Team Id",
+      headerName: "Team Name",
       flex: 1,
       headerClassName: "tableHeader",
       valueGetter: ({ row }) => {
@@ -159,6 +168,8 @@ const Answers = () => {
       >
         <DataTable
           rows={answers}
+          filterOptions={filterOptions}
+          onFilter={(params) => doInit(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);

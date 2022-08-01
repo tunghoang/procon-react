@@ -9,6 +9,7 @@ import QuestionDialog from "../dialogs/question";
 import { formatDateTime } from "../utils/commons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ShowJsonDataDialog from "../dialogs/show-json-data";
+import CodeEditorDialog from "../dialogs/code-editor";
 import Context from "../context";
 
 const Questions = () => {
@@ -22,19 +23,35 @@ const Questions = () => {
     "Question"
   );
   const apiDeleteDialog = useConfirmDelete();
-  const doInit = () => {
+  const doInit = (params) => {
     (async () => {
-      const results = await apiGetAll();
+      const results = await apiGetAll({
+        params,
+      });
       if (results)
         setQuestions(
           results.filter((item) => item.match.round_id === round.id)
         );
     })();
   };
+
+  const filterOptions = [
+    {
+      key: "match_id",
+      label: "ID",
+      type: "text",
+    },
+    {
+      key: "match_name",
+      label: "Question Name",
+      type: "text",
+    },
+  ];
+
   const columns = [
     {
       field: "id",
-      headerName: "Id",
+      headerName: "ID",
       width: 100,
       headerClassName: "tableHeader",
     },
@@ -153,6 +170,8 @@ const Questions = () => {
       >
         <DataTable
           rows={questions}
+          filterOptions={filterOptions}
+          onFilter={(params) => doInit(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);
@@ -166,7 +185,12 @@ const Questions = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />
-      <ShowJsonDataDialog
+      {/* <ShowJsonDataDialog
+        open={dialogName === "ShowJsonDataDialog"}
+        instance={questionData}
+        close={closeDialog}
+      /> */}
+      <CodeEditorDialog
         open={dialogName === "ShowJsonDataDialog"}
         instance={questionData}
         close={closeDialog}

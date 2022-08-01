@@ -59,6 +59,16 @@ const Matches = () => {
       key: "match_is_active",
       label: "Status",
       type: "boolean",
+      options: [
+        {
+          label: "Active",
+          value: 1,
+        },
+        {
+          label: "Inactive",
+          value: 0,
+        },
+      ],
     },
   ];
 
@@ -176,10 +186,6 @@ const Matches = () => {
     setDialogName("");
   };
 
-  const handleFilter = (query) => {
-    doInit(query);
-  };
-
   useEffect(doInit, []);
 
   return (
@@ -208,7 +214,7 @@ const Matches = () => {
       >
         <DataTable
           filterOptions={filterOptions}
-          onFilter={handleFilter}
+          onFilter={(params) => doInit(params)}
           rows={matches}
           columns={columns}
           onSelectionModelChange={(ids) => {

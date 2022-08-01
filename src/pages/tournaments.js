@@ -5,33 +5,34 @@ import { DashboardNavbar } from "../components/dashboard-navbar";
 import Context from "../context";
 import TournamentDialog from "../dialogs/tournament";
 import { useIntl } from "react-intl";
-import {
-  apiGetTournaments,
-  useConfirmDeleteTournament,
-  apiNewTournament,
-  apiEditTournament,
-} from "../api";
+import { useApi } from "../api";
 import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
 import CardData from "../components/card-data";
+import CodeEditor from "../components/code-editor";
 
 const Tournaments = () => {
   const [tournaments, setTournaments] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [currentTournament, setCurrentTournament] = useState(null);
   const { updateContext } = useContext(Context);
-
   const { formatMessage: tr } = useIntl();
+  const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
+    "/tournament",
+    "Tournament"
+  );
+
   const doInit = () => {
-    apiGetTournaments().then((shs) => {
-      if (shs) setTournaments(shs);
-    });
+    (async () => {
+      const res = await apiGetAll();
+      if (res) setTournaments(res);
+    })();
   };
   useEffect(() => {
     doInit();
     updateContext({ tournament: null, round: null });
   }, []);
-  const apiDeleteTournament = useConfirmDeleteTournament();
+  const apiDeleteTournament = useConfirmDelete();
   const handleDelete = async (tournament) => {
     const res = await apiDeleteTournament(tournament.id);
     if (res) doInit();
@@ -81,6 +82,7 @@ const Tournaments = () => {
               ))}
             </Grid>
           </Container>
+          <CodeEditor />
         </Box>
       </DashboardLayoutRoot>
       <TournamentDialog
@@ -89,8 +91,8 @@ const Tournaments = () => {
         close={() => setShowDialog(false)}
         save={async () => {
           if (currentTournament.id)
-            await apiEditTournament(currentTournament.id, currentTournament);
-          else await apiNewTournament(currentTournament);
+            await apiEdit(currentTournament.id, currentTournament);
+          else await apiCreate(currentTournament);
           setShowDialog(false);
           doInit();
         }}

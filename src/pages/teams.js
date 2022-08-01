@@ -2,12 +2,7 @@ import { Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useEffect, useState } from "react";
-import {
-  useConfirmDeleteTeam,
-  apiGetTeams,
-  apiNewTeam,
-  apiEditTeam,
-} from "../api";
+import { useApi } from "../api";
 import TeamDialog from "../dialogs/team";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -17,17 +12,38 @@ const Teams = () => {
   const { formatMessage: tr } = useIntl();
   const [teams, setTeams] = useState([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState([]);
-  const apiDeleteTeam = useConfirmDeleteTeam();
-  const doInit = () => {
+  const { apiGetAll, apiCreate, apiEdit, useConfirmDelete } = useApi(
+    "/team",
+    "Team"
+  );
+
+  const apiDeleteTeam = useConfirmDelete();
+  const doInit = (params) => {
     (async () => {
-      let results = await apiGetTeams();
+      const results = await apiGetAll({
+        params,
+      });
       if (results) setTeams(results);
     })();
   };
+
+  const filterOptions = [
+    {
+      key: "match_id",
+      label: "ID",
+      type: "text",
+    },
+    {
+      key: "match_name",
+      label: "Name",
+      type: "text",
+    },
+  ];
+
   const columns = [
     {
       field: "id",
-      headerName: "Id",
+      headerName: "ID",
       width: 100,
       headerClassName: "tableHeader",
     },
@@ -52,22 +68,16 @@ const Teams = () => {
         return params.row.is_admin ? "Admin" : "User";
       },
     },
-    // {
-    //   field: 'email', headerName: 'Email', flex: 1, headerClassName: 'tableHeader',
-    //   valueGetter: (params) => (params.row.username + "@domain.com")
-    // }
   ];
   const [dialogName, setDialogName] = useState("");
   const [currentTeam, setCurrentTeam] = useState({});
 
   const clickNew = () => {
-    // setCurrentTeam({ username: "", fullName: "", date_of_birth: "2000/01/01" });
     setCurrentTeam({ name: "", account: "", is_admin: false });
     setDialogName("TeamDialog");
   };
   const openDialog = (name) => {
     let selectedTeam = teams.find((c) => c.id === selectedTeamIds[0]);
-    // selectedTeam.date_of_birth = "2020/01/01";
     setCurrentTeam(selectedTeam);
     setDialogName(name);
   };
@@ -75,17 +85,16 @@ const Teams = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
-    let result = await apiDeleteTeam(selectedTeamIds[0]);
+    const result = await apiDeleteTeam(selectedTeamIds[0]);
     if (result) doInit();
   };
   const saveInstance = async () => {
     let result;
     if (currentTeam.id) {
-      result = await apiEditTeam(currentTeam.id, currentTeam);
+      result = await apiEdit(currentTeam.id, currentTeam);
       console.log(result);
     } else {
-      // currentTeam.tournament_id = idTournament;
-      result = await apiNewTeam(currentTeam);
+      result = await apiCreate(currentTeam);
       console.log(result);
     }
     if (result) doInit();
@@ -123,6 +132,8 @@ const Teams = () => {
       >
         <DataTable
           rows={teams}
+          filterOptions={filterOptions}
+          onFilter={(params) => doInit(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedTeamIds(ids);

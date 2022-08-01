@@ -104,8 +104,8 @@ function AppInternal() {
   const { token, locale, tournament } = useContext(Context);
   const match = useRoutes(routes);
   const getLayout = match.component.getLayout ?? ((page) => page);
-
   const path = usePath();
+
   if (!token) {
     if (path !== "/login") {
       setTimeout(() => navigate("/login"), 300);

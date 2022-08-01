@@ -12,29 +12,16 @@ import {
   FormControl,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { useIntl } from "react-intl";
-import { useState } from "react";
+
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
   },
 });
-const TeamDialog = ({
-  open,
-  instance,
-  close,
-  save,
-  handleChange,
-  type,
-  selectData,
-  selectLabel,
-}) => {
-  // const [isOpen, setIsOpen] = useState(false);
+const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
-  // const styles = (theme) => ({ root: { overflow: "visible" } });
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -46,29 +33,6 @@ const TeamDialog = ({
       </DialogTitle>
       <form>
         <DialogContent className={classes.root}>
-          {/* <DialogContentText component="div" style={{ position: "relative" }}>
-            {isOpen && (
-              <div
-                style={{ position: "absolute", right: 0, top: 0, zIndex: 2 }}
-              >
-                <DatePicker
-                  inline
-                  showMonthYearDropdown
-                  onChange={(date) => {
-                    handleChange({ date_of_birth: date.toLocaleDateString() });
-                    setIsOpen(false);
-                  }}
-                  selected={
-                    new Date((instance || {}).date_of_birth || "2000/01/01")
-                  }
-                  showYearDropdown
-                  dateFormatCalendar="MMMM"
-                  yearDropdownItemNumber={25}
-                  scrollableYearDropdown
-                />
-              </div>
-            )}
-          </DialogContentText> */}
           <TextField
             margin="dense"
             label="Name"
