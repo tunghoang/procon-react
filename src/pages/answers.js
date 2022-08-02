@@ -7,8 +7,8 @@ import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import AnswerDialog from "../dialogs/answer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import ShowJsonDataDialog from "../dialogs/show-json-data";
 import Context from "../context";
+import CodeEditorDialog from "../dialogs/code-editor";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
@@ -56,7 +56,7 @@ const Answers = () => {
           <Button
             onClick={() => {
               setJsonData(row.question.question_data);
-              setDialogName("ShowJsonDataDialog");
+              setDialogName("Question Data");
             }}
           >
             {row.question.name}
@@ -83,7 +83,7 @@ const Answers = () => {
           <IconButton
             onClick={() => {
               setJsonData(row.score_data);
-              setDialogName("ShowJsonDataDialog");
+              setDialogName("Score Data");
             }}
           >
             <VisibilityIcon />
@@ -101,7 +101,7 @@ const Answers = () => {
           <IconButton
             onClick={() => {
               setJsonData(row.answer_data);
-              setDialogName("ShowJsonDataDialog");
+              setDialogName("Answer Data");
             }}
           >
             <VisibilityIcon />
@@ -183,8 +183,12 @@ const Answers = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />
-      <ShowJsonDataDialog
-        open={dialogName === "ShowJsonDataDialog"}
+      <CodeEditorDialog
+        title={dialogName}
+        open={["Answer Data", "Score Data", "Question Data"].includes(
+          dialogName
+        )}
+        disabled
         instance={jsonData}
         close={closeDialog}
       />

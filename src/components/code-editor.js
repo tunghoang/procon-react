@@ -3,12 +3,28 @@ import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { Stack, Typography } from "@mui/material";
 
-export default function CodeEditor({ title, onValueChange, defaultValue }) {
+export default function CodeEditor({
+  title,
+  onValueChange,
+  defaultValue = "{}",
+  readOnly = false,
+}) {
   const [code, setCode] = useState("");
   const [validate, setValidate] = useState("");
 
   useEffect(() => {
-    defaultValue && setCode(defaultValue);
+    if (!defaultValue) return;
+    let value = "";
+    switch (typeof defaultValue) {
+      case "string":
+        value = JSON.stringify(JSON.parse(defaultValue), null, 2);
+        break;
+      case "object":
+        value = JSON.stringify(defaultValue, null, 2);
+        break;
+    }
+
+    setCode(value);
   }, []);
 
   const onChange = (code) => {
@@ -27,7 +43,7 @@ export default function CodeEditor({ title, onValueChange, defaultValue }) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h6">{title || "Code editor"}</Typography>
+      <Typography variant="h6">{title}</Typography>
       <div style={{ color: "red" }}>{validate}</div>
       <CodeMirror
         value={code}
@@ -35,6 +51,7 @@ export default function CodeEditor({ title, onValueChange, defaultValue }) {
         extensions={[json()]}
         onChange={onChange}
         placeholder="Please enter JSON code"
+        readOnly={readOnly}
       />
     </Stack>
   );

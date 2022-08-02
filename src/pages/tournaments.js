@@ -9,7 +9,6 @@ import { useApi } from "../api";
 import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
 import CardData from "../components/card-data";
-import CodeEditor from "../components/code-editor";
 
 const Tournaments = () => {
   const [tournaments, setTournaments] = useState([]);
@@ -82,7 +81,6 @@ const Tournaments = () => {
               ))}
             </Grid>
           </Container>
-          <CodeEditor />
         </Box>
       </DashboardLayoutRoot>
       <TournamentDialog

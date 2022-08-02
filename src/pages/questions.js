@@ -8,7 +8,6 @@ import DataTable from "../components/data-table";
 import QuestionDialog from "../dialogs/question";
 import { formatDateTime } from "../utils/commons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import ShowJsonDataDialog from "../dialogs/show-json-data";
 import CodeEditorDialog from "../dialogs/code-editor";
 import Context from "../context";
 
@@ -185,12 +184,8 @@ const Questions = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />
-      {/* <ShowJsonDataDialog
-        open={dialogName === "ShowJsonDataDialog"}
-        instance={questionData}
-        close={closeDialog}
-      /> */}
       <CodeEditorDialog
+        title="Question Data"
         open={dialogName === "ShowJsonDataDialog"}
         instance={questionData}
         close={closeDialog}
