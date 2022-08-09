@@ -7,12 +7,16 @@ import {
   Button,
   Stack,
   Autocomplete,
+  Typography,
+  Box,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useIntl } from "react-intl";
+import { SERVICE_API } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
-import DynamicInput from "../components/dynamic-input";
+import AuthAudio from "../components/auth-audio";
+import CodeEditor from "../components/code-editor";
 import Context from "../context";
 
 const useStyles = makeStyles({
@@ -29,6 +33,8 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
     name: "Question",
   });
   const { data: teams } = useFetchData({ path: "/team", name: "Team" });
+  const answerData = instance.answer_data || [];
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -45,16 +51,27 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
               (item) => item.match.round_id === round.id
             )}
             value={
-              questions.find((item) => item.id === instance.question_id) || null
+              questions.find((item) => item.id === instance?.question_id) ||
+              null
             }
             getOptionLabel={(option) => option.name}
+            renderOption={(props, option) => (
+              <Box {...props}>
+                <Typography>{option.name}</Typography>
+                <Typography fontSize={"0.9rem"} ml={2} sx={{ opacity: 0.5 }}>
+                  card number:{" "}
+                  {JSON.parse(option.question_data || "{}").n_cards}
+                </Typography>
+              </Box>
+            )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             renderInput={(params) => (
               <TextField {...params} label={"Question"} variant="standard" />
             )}
-            onChange={(evt, v) => handleChange({ question_id: v?.id })}
+            onChange={(evt, v) => {
+              handleChange({ question_id: v?.id });
+            }}
           />
-
           <Autocomplete
             options={teams}
             value={teams.find((item) => item.id === instance.team_id) || null}
@@ -65,46 +82,73 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
             )}
             onChange={(evt, v) => handleChange({ team_id: v?.id })}
           />
-          <DynamicInput
-            label={"Answer Data"}
-            data={instance?.answer_data}
-            inputChange={(value) => {
-              handleChange({ answer_data: value });
-            }}
+          <CodeEditor
+            title="Answer Data"
+            defaultValue={answerData}
+            onValueChange={(value) => handleChange({ answer_data: value })}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-        <Button
-          onClick={async () => {
-            if (Array.isArray(instance.answer_data)) {
-              instance.answer_data = instance.answer_data.reduce(
-                (cur, next) => {
-                  return {
-                    ...cur,
-                    [next.key]:
-                      next.nameType === "object"
-                        ? next.name
-                            .split(",")
-                            .filter((item) => item)
-                            .map((item) => item.trim())
-                        : next.name,
-                  };
-                },
-                {}
-              );
-            } else if (typeof instance.answer_data === "string") {
-              instance.answer_data = JSON.parse(instance.answer_data);
-            }
-            await save();
-          }}
-        >
-          {tr({ id: "Save" })}
-        </Button>
+        <Button onClick={save}>{tr({ id: "Save" })}</Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AnswerDialog;
+const ScoreDataDialog = ({
+  open,
+  answerId,
+  questionId,
+  instance,
+  close,
+  title = "Score Data",
+  disabled = false,
+}) => {
+  const classes = useStyles();
+  const { formatMessage: tr } = useIntl();
+  return (
+    <Dialog
+      classes={{ paperScrollPaper: classes.root }}
+      open={open}
+      onClose={close}
+    >
+      <DialogTitle></DialogTitle>
+      <DialogContent className={classes.root} style={{ minWidth: 500 }}>
+        <Stack spacing={3}>
+          <CodeEditor
+            title={title}
+            defaultValue={instance}
+            readOnly={disabled}
+          />
+          <Stack spacing={1}>
+            <Typography ml={1} variant="h6">
+              Problem Audio
+            </Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/question/${questionId}/audio/problem-data`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
+          <Stack spacing={1}>
+            <Typography ml={1} variant="h6">
+              Team Audio
+            </Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/answer/${answerId}/audio`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={close}>{tr({ id: "Close" })}</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export { AnswerDialog, ScoreDataDialog };

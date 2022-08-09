@@ -36,7 +36,7 @@ const Matches = () => {
     (async () => {
       const results = await apiGetAll({
         params: {
-          match_round_id: round.id,
+          eq_round_id: round.id,
           ...params,
         },
       });

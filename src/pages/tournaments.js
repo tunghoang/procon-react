@@ -61,24 +61,38 @@ const Tournaments = () => {
               </Button>
             </Box>
             <Grid container spacing={3}>
-              {tournaments.map((tournament) => (
-                <Grid item key={tournament.id} lg={4} md={6} xs={12}>
-                  <CardData
-                    data={tournament}
-                    handleDelete={() => handleDelete(tournament)}
-                    handleEdit={() => {
-                      setCurrentTournament(tournament);
-                      setShowDialog(true);
-                    }}
-                    handleSelect={() => {
-                      updateContext({
-                        tournament,
-                      });
-                      navigate("/rounds");
-                    }}
-                  />
-                </Grid>
-              ))}
+              {tournaments.length ? (
+                tournaments.map((tournament) => (
+                  <Grid item key={tournament.id} lg={4} md={6} xs={12}>
+                    <CardData
+                      data={tournament}
+                      handleDelete={() => handleDelete(tournament)}
+                      handleEdit={() => {
+                        setCurrentTournament(tournament);
+                        setShowDialog(true);
+                      }}
+                      handleSelect={() => {
+                        updateContext({
+                          tournament,
+                        });
+                        navigate("/rounds");
+                      }}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Typography
+                  variant="h4"
+                  m="auto"
+                  sx={{
+                    opacity: 0.3,
+                    verticalAlign: "middle",
+                    lineHeight: "300px",
+                  }}
+                >
+                  Create new tournament
+                </Typography>
+              )}
             </Grid>
           </Container>
         </Box>

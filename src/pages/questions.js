@@ -5,17 +5,16 @@ import { useContext, useEffect, useState } from "react";
 import { useApi } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
-import QuestionDialog from "../dialogs/question";
+import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
 import { formatDateTime } from "../utils/commons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import CodeEditorDialog from "../dialogs/code-editor";
 import Context from "../context";
 
 const Questions = () => {
   const { formatMessage: tr } = useIntl();
   const [questions, setQuestions] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [questionData, setQuestionData] = useState();
+  const [questionData, setQuestionData] = useState({});
   const { round } = useContext(Context);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/question",
@@ -25,12 +24,12 @@ const Questions = () => {
   const doInit = (params) => {
     (async () => {
       const results = await apiGetAll({
-        params,
+        params: {
+          "match[eq_round_id]": round.id,
+          ...params,
+        },
       });
-      if (results)
-        setQuestions(
-          results.filter((item) => item.match.round_id === round.id)
-        );
+      if (results) setQuestions(results);
     })();
   };
 
@@ -42,8 +41,28 @@ const Questions = () => {
     },
     {
       key: "match_name",
-      label: "Question Name",
+      label: "Question name",
       type: "text",
+    },
+    {
+      key: "match[match_name]",
+      label: "Match name",
+      type: "text",
+    },
+    {
+      key: "match[match_is_active]",
+      label: "Match status",
+      type: "boolean",
+      options: [
+        {
+          label: "Active",
+          value: 1,
+        },
+        {
+          label: "Inactive",
+          value: 0,
+        },
+      ],
     },
   ];
 
@@ -101,8 +120,11 @@ const Questions = () => {
         return (
           <IconButton
             onClick={() => {
-              setQuestionData(row.question_data);
-              setDialogName("ShowJsonDataDialog");
+              setQuestionData({
+                questionId: row.id,
+                questionData: row.question_data,
+              });
+              setDialogName("QuestionDataDialog");
             }}
           >
             <VisibilityIcon />
@@ -115,12 +137,21 @@ const Questions = () => {
   const [currentItem, setCurrentItem] = useState({});
 
   const clickNew = () => {
-    setCurrentItem({ name: "", start_time: "", end_time: "", match_id: "" });
+    setCurrentItem({
+      name: "",
+      match_id: "",
+      start_time: null,
+      end_time: null,
+      n_cards: 0,
+    });
     setDialogName("QuestionDialog");
   };
   const openDialog = (name) => {
     const selected = questions.find((c) => c.id === selectedIds[0]);
-    setCurrentItem(selected);
+    setCurrentItem({
+      ...selected,
+      n_cards: JSON.parse(selected.question_data || "{}").n_cards || 0,
+    });
     setDialogName(name);
   };
   const closeDialog = () => {
@@ -184,11 +215,12 @@ const Questions = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />
-      <CodeEditorDialog
-        title="Question Data"
-        open={dialogName === "ShowJsonDataDialog"}
-        instance={questionData}
+      <QuestionDataDialog
+        open={dialogName === "QuestionDataDialog"}
+        instance={questionData.questionData}
+        questionId={questionData.questionId}
         close={closeDialog}
+        disabled
       />
     </>
   );

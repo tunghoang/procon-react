@@ -42,14 +42,13 @@ const FilterBar = ({ onFilter, filterOptions }) => {
 
   const handleFilter = () => {
     const query = filterData.reduce((cur, next) => {
-      if (next.filterValue) {
+      if (next.filterValue || next.filterValue === 0) {
         return {
           ...cur,
           [next.key]: next.filterValue,
         };
       } else return cur;
     }, {});
-    console.log(query);
     onFilter && onFilter(query);
   };
 
@@ -133,7 +132,7 @@ const FilterItem = ({ type, filter, setFilterData }) => {
           sx={{ minWidth: 120 }}
         >
           <MenuItem value="" sx={{ opacity: 0.6, fontSize: 14 }}>
-            <em>Search by {filter.label}</em>
+            <em style={{ opacity: 0.4 }}>Search by {filter.label}</em>
           </MenuItem>
           {filter.options.map((opt, idx) => (
             <MenuItem key={idx} value={opt.value}>

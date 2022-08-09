@@ -42,17 +42,17 @@ export default function CodeEditor({
   };
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} height="320px">
       <Typography variant="h6">{title}</Typography>
-      <div style={{ color: "red" }}>{validate}</div>
       <CodeMirror
         value={code}
-        height="200px"
+        height="280px"
         extensions={[json()]}
         onChange={onChange}
         placeholder="Please enter JSON code"
         readOnly={readOnly}
       />
+      <div style={{ color: "red" }}>{validate}</div>
     </Stack>
   );
 }

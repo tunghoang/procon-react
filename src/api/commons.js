@@ -3,6 +3,11 @@ import Toastify from "toastify-js";
 const defaultHeaders = {
   "Content-Type": "application/json",
 };
+
+export const getError = (e) => {
+  return e.response.data ? e.response.data.message : e.message;
+};
+
 export const doGet = async (route, headers, mockResponse, config) => {
   try {
     defaultHeaders.Authorization = localStorage.getItem("token");
@@ -90,4 +95,4 @@ export function showMessage(msg, severity, duration) {
   t.showToast();
 }
 
-export const PREFIX = "http://localhost:3001";
+export const SERVICE_API = "http://localhost:3001";

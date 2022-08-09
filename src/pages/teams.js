@@ -38,6 +38,26 @@ const Teams = () => {
       label: "Name",
       type: "text",
     },
+    {
+      key: "match_account",
+      label: "Account",
+      type: "text",
+    },
+    {
+      key: "match_is_admin",
+      label: "Role",
+      type: "boolean",
+      options: [
+        {
+          label: "Admin",
+          value: 1,
+        },
+        {
+          label: "User",
+          value: 0,
+        },
+      ],
+    },
   ];
 
   const columns = [

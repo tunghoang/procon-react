@@ -1,7 +1,7 @@
-import { PREFIX, doPost, doDelete, showMessage } from "./commons";
+import { SERVICE_API, doPost, doDelete, showMessage } from "./commons";
 import { useConfirm } from "material-ui-confirm";
 
-const MATCH_URL = PREFIX + "/match";
+const MATCH_URL = SERVICE_API + "/match";
 
 export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
   try {

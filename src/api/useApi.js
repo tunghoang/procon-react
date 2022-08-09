@@ -1,9 +1,17 @@
-import { PREFIX, doGet, doPost, doPut, doDelete, showMessage } from "./commons";
+import {
+  SERVICE_API,
+  doGet,
+  doPost,
+  doPut,
+  doDelete,
+  showMessage,
+  getError,
+} from "./commons";
 import { useConfirm } from "material-ui-confirm";
 import { useCallback } from "react";
 
 export const useApi = (pathName, apiName) => {
-  const URL = PREFIX + pathName;
+  const URL = SERVICE_API + pathName;
   const apiGetAll = useCallback(
     async (config, headers) => {
       try {
@@ -11,8 +19,7 @@ export const useApi = (pathName, apiName) => {
         // showMessage(`Get ${apiName} succeeded`, "success", 1000);
         return results;
       } catch (e) {
-        console.log(e);
-        showMessage(`Get ${apiName} error: ${e.message}`, "error");
+        showMessage(`Get ${apiName} error: ${getError(e)}`, "error");
       }
       return false;
     },
@@ -25,7 +32,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`Delete ${apiName} succeeded`, "success", 1000);
         return results;
       } catch (e) {
-        showMessage(`Delete ${apiName} error: ${e.message}`, "error");
+        showMessage(`Delete ${apiName} error: ${getError(e)}`, "error");
       }
       return false;
     },
@@ -50,7 +57,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`Success create new ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error creating new ${apiName}: ${e.message}`, "error");
+        showMessage(`Error creating new ${apiName}: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]
@@ -62,7 +69,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`Success edit ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error edit ${apiName}: ${e.message}`, "error");
+        showMessage(`Error edit ${apiName}: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]

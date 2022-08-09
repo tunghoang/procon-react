@@ -8,6 +8,7 @@ import {
   Button,
   Stack,
   Autocomplete,
+  Typography,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -15,6 +16,8 @@ import { useFetchData } from "../api";
 import { useContext } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
+import { SERVICE_API } from "../api/commons";
+import AuthAudio from "../components/auth-audio";
 
 const useStyles = makeStyles({
   root: {
@@ -29,14 +32,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
     path: "/match",
     config: {
       params: {
-        match_round_id: round.id,
+        eq_round_id: round.id,
       },
     },
   });
 
-  const defaultQuestionData = {
-    n_card: 0,
-  };
+  // const questionData = {
+  //   n_cards: JSON.parse(instance.question_data || "{}").n_cards || 0,
+  // };
 
   return (
     <Dialog
@@ -93,7 +96,10 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
           />
           <CodeEditor
             title="Question Data"
-            defaultValue={defaultQuestionData}
+            defaultValue={{
+              n_cards: instance.n_cards,
+            }}
+            onValueChange={(value) => handleChange({ n_cards: value.n_cards })}
           />
         </Stack>
       </DialogContent>
@@ -105,4 +111,47 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
   );
 };
 
-export default QuestionDialog;
+const QuestionDataDialog = ({
+  open,
+  questionId,
+  instance,
+  close,
+  title = "Question Data",
+  disabled = false,
+}) => {
+  const classes = useStyles();
+  const { formatMessage: tr } = useIntl();
+  return (
+    <Dialog
+      classes={{ paperScrollPaper: classes.root }}
+      open={open}
+      onClose={close}
+    >
+      <DialogTitle></DialogTitle>
+      <DialogContent className={classes.root} style={{ minWidth: 500 }}>
+        <Stack spacing={3}>
+          <CodeEditor
+            title={title}
+            defaultValue={instance}
+            readOnly={disabled}
+          />
+          <Stack spacing={1}>
+            <Typography ml={1} variant="h6">
+              Problem Audio
+            </Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/question/${questionId}/audio/problem-data`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={close}>{tr({ id: "Close" })}</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export { QuestionDialog, QuestionDataDialog };

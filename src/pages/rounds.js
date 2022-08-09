@@ -25,7 +25,7 @@ const Rounds = () => {
     (async () => {
       const results = await apiGetAll({
         params: {
-          match_tournament_id: tournament.id,
+          eq_tournament_id: tournament.id,
         },
       });
       if (results) setRounds(results);
@@ -65,22 +65,36 @@ const Rounds = () => {
               </Button>
             </Box>
             <Grid container spacing={3}>
-              {rounds.map((round) => (
-                <Grid item key={round.id} lg={4} md={6} xs={12}>
-                  <CardData
-                    data={round}
-                    handleDelete={() => handleDelete(round)}
-                    handleEdit={() => {
-                      setCurrentItem(round);
-                      setShowDialog(true);
-                    }}
-                    handleSelect={() => {
-                      updateContext({ round });
-                      navigate("/teams");
-                    }}
-                  />
-                </Grid>
-              ))}
+              {rounds.length ? (
+                rounds.map((round) => (
+                  <Grid item key={round.id} lg={4} md={6} xs={12}>
+                    <CardData
+                      data={round}
+                      handleDelete={() => handleDelete(round)}
+                      handleEdit={() => {
+                        setCurrentItem(round);
+                        setShowDialog(true);
+                      }}
+                      handleSelect={() => {
+                        updateContext({ round });
+                        navigate("/teams");
+                      }}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Typography
+                  variant="h4"
+                  m="auto"
+                  sx={{
+                    opacity: 0.3,
+                    verticalAlign: "middle",
+                    lineHeight: "300px",
+                  }}
+                >
+                  Create new round
+                </Typography>
+              )}
             </Grid>
           </Container>
         </Box>

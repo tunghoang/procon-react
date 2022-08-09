@@ -24,16 +24,6 @@ const items = [
     icon: <PeopleIcon fontSize="small" />,
     title: "Teams",
   },
-  // {
-  //   href: "/",
-  //   icon: <EducationIcon fontSize="small" />,
-  //   title: "Tournaments",
-  // },
-  // {
-  //   href: "/rounds",
-  //   icon: <ChildIcon fontSize="small" />,
-  //   title: "Rounds",
-  // },
   {
     href: "/matches",
     icon: <BlackboardIcon fontSize="small" />,

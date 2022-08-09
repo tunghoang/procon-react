@@ -1,33 +1,34 @@
-import { Button, IconButton, Paper } from "@mui/material";
+import { Button, Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useEffect, useState } from "react";
 import { useApi } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
-import AnswerDialog from "../dialogs/answer";
+import { AnswerDialog, ScoreDataDialog } from "../dialogs/answer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
-import CodeEditorDialog from "../dialogs/code-editor";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
   const [answers, setAnswers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [jsonData, setJsonData] = useState();
+  const [scoreData, setScoreData] = useState({});
   const { round } = useContext(Context);
   const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/answer",
     "Answer"
   );
   const apiDeleteDialog = useConfirmDelete();
-  const doInit = () => {
+  const doInit = (params) => {
     (async () => {
-      const results = await apiGetAll();
-      if (results)
-        setAnswers(
-          results.filter((item) => item.question.match.round_id === round.id)
-        );
+      const results = await apiGetAll({
+        params: {
+          "match[eq_round_id]": round.id,
+          ...params,
+        },
+      });
+      if (results) setAnswers(results);
     })();
   };
 
@@ -36,6 +37,36 @@ const Answers = () => {
       key: "match_id",
       label: "ID",
       type: "text",
+    },
+    {
+      key: "question[match_name]",
+      label: "Question name",
+      type: "text",
+    },
+    {
+      key: "team[match_name]",
+      label: "Team name",
+      type: "text",
+    },
+    {
+      key: "match[match_name]",
+      label: "Match name",
+      type: "text",
+    },
+    {
+      key: "match[match_is_active]",
+      label: "Match status",
+      type: "boolean",
+      options: [
+        {
+          label: "Active",
+          value: 1,
+        },
+        {
+          label: "Inactive",
+          value: 0,
+        },
+      ],
     },
   ];
 
@@ -47,30 +78,35 @@ const Answers = () => {
       headerClassName: "tableHeader",
     },
     {
-      field: "question",
-      headerName: "Question",
-      flex: 1,
-      headerClassName: "tableHeader",
-      renderCell: ({ row }) => {
-        return (
-          <Button
-            onClick={() => {
-              setJsonData(row.question.question_data);
-              setDialogName("Question Data");
-            }}
-          >
-            {row.question.name}
-          </Button>
-        );
-      },
-    },
-    {
       field: "team",
-      headerName: "Team Name",
+      headerName: "Team",
       flex: 1,
       headerClassName: "tableHeader",
       valueGetter: ({ row }) => {
         return row.team?.name;
+      },
+    },
+    {
+      field: "question",
+      headerName: "Question",
+      flex: 1,
+      headerClassName: "tableHeader",
+      valueGetter: ({ row }) => {
+        return row.question?.name;
+      },
+    },
+    {
+      field: "match",
+      headerName: "Match",
+      flex: 1,
+      headerClassName: "tableHeader",
+      renderCell: ({ row }) => {
+        return (
+          <Chip
+            label={row.match.name}
+            color={row.match.is_active ? "success" : "default"}
+          />
+        );
       },
     },
     {
@@ -82,26 +118,12 @@ const Answers = () => {
         return (
           <IconButton
             onClick={() => {
-              setJsonData(row.score_data);
-              setDialogName("Score Data");
-            }}
-          >
-            <VisibilityIcon />
-          </IconButton>
-        );
-      },
-    },
-    {
-      field: "answer_data",
-      headerName: "Answer Data",
-      flex: 1,
-      headerClassName: "tableHeader",
-      renderCell: ({ row }) => {
-        return (
-          <IconButton
-            onClick={() => {
-              setJsonData(row.answer_data);
-              setDialogName("Answer Data");
+              setScoreData({
+                questionId: row.question_id,
+                answerId: row.id,
+                scoreData: row.score_data,
+              });
+              setDialogName("ScoreDataDialog");
             }}
           >
             <VisibilityIcon />
@@ -114,7 +136,7 @@ const Answers = () => {
   const [currentItem, setCurrentItem] = useState({});
 
   const clickNew = () => {
-    setCurrentItem({ question_id: "", team_id: "", answer_data: {} });
+    setCurrentItem({ question_id: "", team_id: "", answer_data: null });
     setDialogName("AnswerDialog");
   };
   const openDialog = (name) => {
@@ -183,14 +205,13 @@ const Answers = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />
-      <CodeEditorDialog
-        title={dialogName}
-        open={["Answer Data", "Score Data", "Question Data"].includes(
-          dialogName
-        )}
-        disabled
-        instance={jsonData}
+      <ScoreDataDialog
+        open={dialogName === "ScoreDataDialog"}
+        instance={scoreData.scoreData}
+        questionId={scoreData.questionId}
+        answerId={scoreData.answerId}
         close={closeDialog}
+        disabled
       />
     </>
   );
