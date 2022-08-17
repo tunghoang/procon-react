@@ -1,36 +1,32 @@
-import { Button, Chip, IconButton, Paper } from "@mui/material";
+import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useState } from "react";
-import { useApi } from "../api";
+import { useContext, useState } from "react";
+import { useFetchData } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
-import { AnswerDialog, ScoreDataDialog } from "../dialogs/answer";
+import { ScoreDataDialog } from "../dialogs/answer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
-  const [answers, setAnswers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [scoreData, setScoreData] = useState({});
+  const [answer, setAnswer] = useState({});
   const { round } = useContext(Context);
-  const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
-    "/answer",
-    "Answer"
-  );
-  const apiDeleteDialog = useConfirmDelete();
-  const doInit = (params) => {
-    (async () => {
-      const results = await apiGetAll({
-        params: {
-          "match[eq_round_id]": round.id,
-          ...params,
-        },
-      });
-      if (results) setAnswers(results);
-    })();
-  };
+  const {
+    data: answers,
+    refetch,
+    loading,
+  } = useFetchData({
+    path: "/answer",
+    name: "Answer",
+    config: {
+      params: {
+        "match[eq_round_id]": round?.id,
+      },
+    },
+  });
 
   const filterOptions = [
     {
@@ -118,10 +114,9 @@ const Answers = () => {
         return (
           <IconButton
             onClick={() => {
-              setScoreData({
-                questionId: row.question_id,
-                answerId: row.id,
-                scoreData: row.score_data,
+              setAnswer({
+                ...row,
+                question_id: row.question_id,
               });
               setDialogName("ScoreDataDialog");
             }}
@@ -133,55 +128,20 @@ const Answers = () => {
     },
   ];
   const [dialogName, setDialogName] = useState("");
-  const [currentItem, setCurrentItem] = useState({});
 
-  const clickNew = () => {
-    setCurrentItem({ question_id: "", team_id: "", answer_data: null });
-    setDialogName("AnswerDialog");
-  };
-  const openDialog = (name) => {
-    const selected = answers.find((c) => c.id === selectedIds[0]);
-    setCurrentItem(selected);
-    setDialogName(name);
-  };
   const closeDialog = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
     const result = await apiDeleteDialog(selectedIds[0]);
-    if (result) doInit();
+    if (result) refetch();
   };
-  const saveInstance = async () => {
-    let result;
-    if (currentItem.id) {
-      result = await apiEdit(currentItem.id, currentItem);
-    } else {
-      result = await apiCreate(currentItem);
-    }
-    if (result) doInit();
-    setDialogName("");
-  };
-  const changeInstance = (changes) => {
-    let newInst = { ...currentItem, ...changes };
-    setCurrentItem(newInst);
-  };
-
-  useEffect(doInit, []);
 
   return (
     <>
       <PageToolbar
         title={tr({ id: "Answers" })}
-        showNew={true}
-        showEdit={(selectedIds || []).length === 1}
         showDelete={(selectedIds || []).length}
-        handleNew={clickNew}
-        editBtns={[
-          {
-            label: "Edit",
-            fn: () => openDialog("AnswerDialog"),
-          },
-        ]}
         handleDelete={clickDelete}
       />
       <Paper
@@ -191,25 +151,17 @@ const Answers = () => {
         <DataTable
           rows={answers}
           filterOptions={filterOptions}
-          onFilter={(params) => doInit(params)}
+          onFilter={(params) => refetch(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);
           }}
+          loading={loading}
         />
       </Paper>
-      <AnswerDialog
-        open={dialogName === "AnswerDialog"}
-        instance={currentItem}
-        close={closeDialog}
-        save={saveInstance}
-        handleChange={changeInstance}
-      />
       <ScoreDataDialog
         open={dialogName === "ScoreDataDialog"}
-        instance={scoreData.scoreData}
-        questionId={scoreData.questionId}
-        answerId={scoreData.answerId}
+        instance={answer}
         close={closeDialog}
         disabled
       />

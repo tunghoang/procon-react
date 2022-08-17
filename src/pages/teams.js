@@ -1,8 +1,8 @@
 import { Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useEffect, useState } from "react";
-import { useApi } from "../api";
+import { useState } from "react";
+import { useApi, useFetchData } from "../api";
 import TeamDialog from "../dialogs/team";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -10,22 +10,17 @@ import TeamPasswordDialog from "../dialogs/password";
 
 const Teams = () => {
   const { formatMessage: tr } = useIntl();
-  const [teams, setTeams] = useState([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState([]);
-  const { apiGetAll, apiCreate, apiEdit, useConfirmDelete } = useApi(
-    "/team",
-    "Team"
-  );
-
+  const { apiCreate, apiEdit, useConfirmDelete } = useApi("/team", "Team");
   const apiDeleteTeam = useConfirmDelete();
-  const doInit = (params) => {
-    (async () => {
-      const results = await apiGetAll({
-        params,
-      });
-      if (results) setTeams(results);
-    })();
-  };
+  const {
+    data: teams,
+    refetch,
+    loading,
+  } = useFetchData({
+    path: "/team",
+    name: "Team",
+  });
 
   const filterOptions = [
     {
@@ -106,7 +101,7 @@ const Teams = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteTeam(selectedTeamIds[0]);
-    if (result) doInit();
+    if (result) refetch();
   };
   const saveInstance = async () => {
     let result;
@@ -117,7 +112,7 @@ const Teams = () => {
       result = await apiCreate(currentTeam);
       console.log(result);
     }
-    if (result) doInit();
+    if (result) refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
@@ -125,7 +120,6 @@ const Teams = () => {
     setCurrentTeam(newInst);
   };
 
-  useEffect(doInit, []);
   return (
     <>
       <PageToolbar
@@ -153,11 +147,12 @@ const Teams = () => {
         <DataTable
           rows={teams}
           filterOptions={filterOptions}
-          onFilter={(params) => doInit(params)}
+          onFilter={(params) => refetch(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedTeamIds(ids);
           }}
+          loading={loading}
         />
       </Paper>
       <TeamDialog

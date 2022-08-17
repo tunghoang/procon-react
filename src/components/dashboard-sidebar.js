@@ -7,7 +7,7 @@ import {
   useMediaQuery,
   Stack,
 } from "@mui/material";
-import { Logo } from "./logo";
+import Logo from "./logo";
 import { NavItem } from "./nav-item";
 
 import { A } from "hookrouter";
@@ -57,19 +57,7 @@ export const DashboardSidebar = (props) => {
           height: "100%",
         }}
       >
-        <A href="/" style={{ color: "inherit", textDecoration: "none" }}>
-          <Stack direction={"row"} alignItems="center" sx={{ p: 3 }}>
-            <Logo
-              sx={{
-                height: 42,
-                width: 42,
-              }}
-            />
-            <Typography ml={2} variant="h5">
-              PROCON {new Date().getFullYear()}
-            </Typography>
-          </Stack>
-        </A>
+        <Logo sx={{ p: 3 }} />
         <Box sx={{ flexGrow: 1 }}>
           {items.map((item) => (
             <NavItem

@@ -32,14 +32,10 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
     path: "/match",
     config: {
       params: {
-        eq_round_id: round.id,
+        eq_round_id: round?.id,
       },
     },
   });
-
-  // const questionData = {
-  //   n_cards: JSON.parse(instance.question_data || "{}").n_cards || 0,
-  // };
 
   return (
     <Dialog

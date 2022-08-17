@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 
 export default function CodeEditor({
   title,
+  subTitle,
   onValueChange,
   defaultValue = "{}",
   readOnly = false,
@@ -44,6 +45,9 @@ export default function CodeEditor({
   return (
     <Stack spacing={1} height="320px">
       <Typography variant="h6">{title}</Typography>
+      <Typography variant="h6" sx={{ opacity: 0.6, fontSize: "1rem" }}>
+        {subTitle}
+      </Typography>
       <CodeMirror
         value={code}
         height="280px"

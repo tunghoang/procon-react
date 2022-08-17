@@ -27,6 +27,9 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { setLocalStorage } from "./utils/commons";
 import NotFound from "./pages/not-found";
+import Competition from "./pages/user/competition";
+import UserQuestion from "./pages/user/question";
+import jwtDecode from "jwt-decode";
 
 const routes = {
   "/": () => ({ component: Tournaments, props: {} }),
@@ -36,6 +39,11 @@ const routes = {
   "/rounds": () => ({ component: Rounds, props: {} }),
   "/questions": () => ({ component: Questions, props: {} }),
   "/answers": () => ({ component: Answers, props: {} }),
+  "/competition": () => ({ component: Competition, props: {} }),
+  "/competition/question": () => ({
+    component: UserQuestion,
+    props: {},
+  }),
   "/*": () => ({ component: NotFound, props: {} }),
 };
 
@@ -52,43 +60,42 @@ function loadMessages(locale) {
 
 export function App() {
   const [token, setToken] = useState(null);
-  const [teamname, setTeamname] = useState(null);
-  const [locale, setLocale] = useState(null);
+  const [team, setTeam] = useState(null);
+  const [locale, setLocale] = useState(
+    localStorage.getItem("locale") || "vi-VN"
+  );
   const [tournament, setTournament] = useState(null);
   const [round, setRound] = useState(null);
+  const [userMatch, setUserMatch] = useState(null);
   useEffect(() => {
     if (!token) {
       setToken(localStorage.getItem("token"));
+    } else {
+      setTeam(jwtDecode(token));
     }
-    if (!teamname) {
-      setTeamname(localStorage.getItem("teamname"));
-    }
-    if (!locale) {
-      setLocale(localStorage.getItem("locale"));
-    }
-  }, [token, teamname, locale]);
+  }, [token]);
 
   return (
     <Context.Provider
       value={{
         token,
-        locale: localStorage.getItem("locale") || "vi-VN",
-        teamname,
+        locale,
+        team,
         tournament,
         round,
-        updateContext: ({ tournament, round }) => {
+        userMatch,
+        updateContext: ({ tournament, round, team, userMatch }) => {
           if (tournament !== undefined) setTournament(tournament);
           if (round !== undefined) setRound(round);
+          if (team !== undefined) setTeam(team);
+          if (userMatch !== undefined) setUserMatch(userMatch);
         },
-        updateLocalStorage: ({ token, teamname, locale }) => {
+        updateLocalStorage: ({ token, locale }) => {
           if (token !== undefined) {
             setLocalStorage(token, "token");
             setToken(token);
           }
-          if (teamname !== undefined) {
-            setLocalStorage(teamname, "teamname");
-            setTeamname(teamname);
-          }
+
           if (locale !== undefined) {
             setLocalStorage(locale, "locale");
             setLocale(locale);
@@ -101,20 +108,13 @@ export function App() {
   );
 }
 function AppInternal() {
-  const { token, locale, tournament } = useContext(Context);
+  const { token, locale, tournament, round, team } = useContext(Context);
   const match = useRoutes(routes);
   const getLayout = match.component.getLayout ?? ((page) => page);
   const path = usePath();
 
-  if (!token) {
-    if (path !== "/login") {
-      setTimeout(() => navigate("/login"), 300);
-    }
-  } else {
-    if (path === "/login") {
-      setTimeout(() => navigate("/"), 300);
-    }
-  }
+  if (token && !team?.is_admin && !path.includes("/competition"))
+    navigate("/competition");
 
   return (
     <IntlProvider locale={locale} messages={loadMessages(locale)}>
@@ -123,11 +123,7 @@ function AppInternal() {
           <ConfirmProvider>
             <CssBaseline />
             {token ? (
-              tournament ? (
-                getLayout(React.createElement(match.component, match.props))
-              ) : (
-                <Tournaments />
-              )
+              getLayout(React.createElement(match.component, match.props))
             ) : (
               <Login />
             )}

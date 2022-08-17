@@ -9,7 +9,7 @@ import {
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useEffect, useState } from "react";
-import { useApi } from "../api";
+import { useApi, useFetchData } from "../api";
 import Context from "../context";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -23,26 +23,24 @@ import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
 
 const Matches = () => {
   const { formatMessage: tr } = useIntl();
-  const [matches, setMatches] = useState([]);
   const { round } = useContext(Context);
   const [matchTeams, setMatchTeams] = useState({});
   const [selectedMatchIds, setSelectedMatchIds] = useState([]);
-  const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
-    "/match",
-    "Match"
-  );
+  const { useConfirmDelete, apiCreate, apiEdit } = useApi("/match", "Match");
   const apiDeleteMatch = useConfirmDelete();
-  const doInit = (params) => {
-    (async () => {
-      const results = await apiGetAll({
-        params: {
-          eq_round_id: round.id,
-          ...params,
-        },
-      });
-      if (results) setMatches(results);
-    })();
-  };
+  const {
+    data: matches,
+    refetch,
+    loading,
+  } = useFetchData({
+    path: "/match",
+    name: "Match",
+    config: {
+      params: {
+        eq_round_id: round?.id,
+      },
+    },
+  });
 
   const filterOptions = [
     {
@@ -158,7 +156,7 @@ const Matches = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteMatch(selectedMatchIds[0]);
-    if (result) doInit();
+    if (result) refetch();
   };
   const saveInstance = async () => {
     let result;
@@ -168,7 +166,7 @@ const Matches = () => {
       currentMatch.round_id = round.id;
       result = await apiCreate(currentMatch);
     }
-    if (result) doInit();
+    if (result) refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
@@ -182,11 +180,9 @@ const Matches = () => {
     } else if (action === "add") {
       result = await apiNewTeamMatch(currentMatch.id, teamId);
     }
-    if (result) doInit();
+    if (result) refetch();
     setDialogName("");
   };
-
-  useEffect(doInit, []);
 
   return (
     <>
@@ -214,12 +210,13 @@ const Matches = () => {
       >
         <DataTable
           filterOptions={filterOptions}
-          onFilter={(params) => doInit(params)}
+          onFilter={(params) => refetch(params)}
           rows={matches}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedMatchIds(ids);
           }}
+          loading={loading}
         />
       </Paper>
       <MatchDialog

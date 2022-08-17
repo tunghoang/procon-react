@@ -2,10 +2,11 @@ import { createContext } from "react";
 const Context = createContext({
   token: null,
   locale: null,
-  teamname: null,
+  team: null,
   isAdmin: false,
   tournament: null,
   round: null,
+  userMatch: null,
   updateContext: (info) => {},
   updateLocalStorage: (info) => {},
 });

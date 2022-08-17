@@ -2,7 +2,7 @@ import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useEffect, useState } from "react";
-import { useApi } from "../api";
+import { useApi, useFetchData } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
@@ -12,26 +12,27 @@ import Context from "../context";
 
 const Questions = () => {
   const { formatMessage: tr } = useIntl();
-  const [questions, setQuestions] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [questionData, setQuestionData] = useState({});
   const { round } = useContext(Context);
-  const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
+  const { useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/question",
     "Question"
   );
   const apiDeleteDialog = useConfirmDelete();
-  const doInit = (params) => {
-    (async () => {
-      const results = await apiGetAll({
-        params: {
-          "match[eq_round_id]": round.id,
-          ...params,
-        },
-      });
-      if (results) setQuestions(results);
-    })();
-  };
+  const {
+    data: questions,
+    refetch,
+    loading,
+  } = useFetchData({
+    path: "/question",
+    name: "Question",
+    config: {
+      params: {
+        "match[eq_round_id]": round?.id,
+      },
+    },
+  });
 
   const filterOptions = [
     {
@@ -159,7 +160,7 @@ const Questions = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteDialog(selectedIds[0]);
-    if (result) doInit();
+    if (result) refetch();
   };
   const saveInstance = async () => {
     let result;
@@ -168,15 +169,13 @@ const Questions = () => {
     } else {
       result = await apiCreate(currentItem);
     }
-    if (result) doInit();
+    if (result) refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
     let newInst = { ...currentItem, ...changes };
     setCurrentItem(newInst);
   };
-
-  useEffect(doInit, []);
 
   return (
     <>
@@ -201,11 +200,12 @@ const Questions = () => {
         <DataTable
           rows={questions}
           filterOptions={filterOptions}
-          onFilter={(params) => doInit(params)}
+          onFilter={(params) => refetch(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);
           }}
+          loading={loading}
         />
       </Paper>
       <QuestionDialog

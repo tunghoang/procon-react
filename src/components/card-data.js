@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -13,24 +13,31 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useIntl } from "react-intl";
 
 const CardData = ({
-  data,
   handleDelete,
   handleEdit,
   handleSelect,
+  showAction = true,
+  name,
+  description,
+  header,
+  disabled = false,
+  action,
   ...rest
 }) => {
   const [zDepth, setZDepth] = useState(false);
-  const [color, setColor] = useState("#FFFFFF");
+  const [color, setColor] = useState(!disabled ? "#FFFFFF" : "#F0F0F0");
   const { formatMessage: tr } = useIntl();
   return (
     <>
       <Card
         raised={zDepth}
         onMouseOver={() => {
+          if (disabled) return;
           setZDepth(true);
           setColor("#f5f4e3");
         }}
         onMouseOut={() => {
+          if (disabled) return;
           setZDepth(false);
           setColor("#FFFFFF");
         }}
@@ -42,51 +49,73 @@ const CardData = ({
         }}
         {...rest}
       >
-        <CardContent sx={{ cursor: "pointer" }} onClick={handleSelect}>
+        <CardContent
+          sx={{ cursor: "pointer" }}
+          onClick={!disabled ? handleSelect : () => {}}
+        >
+          <Box display="flex" justifyContent="flex-end">
+            {header}
+          </Box>
           <Typography
             align="center"
             color="textPrimary"
             gutterBottom
             variant="h5"
           >
-            {data.name}
+            {name}
           </Typography>
-          <Typography align="center" color="textPrimary" variant="body1">
-            {data.description}
+          <Typography align="center" color="textPrimary" variant="div">
+            {description}
           </Typography>
         </CardContent>
         <Box sx={{ flexGrow: 1 }} />
-        <Divider />
-        <Box sx={{ p: 2 }}>
-          <Grid container spacing={2} sx={{ justifyContent: "space-between" }}>
-            <Grid item sx={{ alignItems: "center", display: "flex" }}>
-              <Button onClick={handleEdit}>
-                <EditIcon color="action" />
-                <Typography
-                  color="textSecondary"
-                  display="inline"
-                  sx={{ pl: 1 }}
-                  variant="body2"
+        {showAction && (
+          <>
+            <Divider />
+            <Box sx={{ p: 2 }}>
+              {action ? (
+                action
+              ) : (
+                <Grid
+                  container
+                  spacing={2}
+                  sx={{ justifyContent: "space-between" }}
                 >
-                  {tr({ id: "Edit" })}
-                </Typography>
-              </Button>
-            </Grid>
-            <Grid item sx={{ alignItems: "center", display: "flex" }}>
-              <Button onClick={handleDelete}>
-                <DeleteIcon color="action" />
-                <Typography
-                  color="textSecondary"
-                  display="inline"
-                  sx={{ pl: 1 }}
-                  variant="body2"
-                >
-                  {tr({ id: "Remove" })}
-                </Typography>
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
+                  <Grid item sx={{ alignItems: "center", display: "flex" }}>
+                    {handleEdit && (
+                      <Button onClick={handleEdit}>
+                        <EditIcon color="action" />
+                        <Typography
+                          color="textSecondary"
+                          display="inline"
+                          sx={{ pl: 1 }}
+                          variant="body2"
+                        >
+                          {tr({ id: "Edit" })}
+                        </Typography>
+                      </Button>
+                    )}
+                  </Grid>
+                  <Grid item sx={{ alignItems: "center", display: "flex" }}>
+                    {handleDelete && (
+                      <Button onClick={handleDelete}>
+                        <DeleteIcon color="action" />
+                        <Typography
+                          color="textSecondary"
+                          display="inline"
+                          sx={{ pl: 1 }}
+                          variant="body2"
+                        >
+                          {tr({ id: "Remove" })}
+                        </Typography>
+                      </Button>
+                    )}
+                  </Grid>
+                </Grid>
+              )}
+            </Box>
+          </>
+        )}
       </Card>
     </>
   );

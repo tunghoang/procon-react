@@ -1,4 +1,10 @@
-import { SERVICE_API, doPost, doDelete, showMessage } from "./commons";
+import {
+  SERVICE_API,
+  doPost,
+  doDelete,
+  showMessage,
+  getError,
+} from "./commons";
 import { useConfirm } from "material-ui-confirm";
 
 const MATCH_URL = SERVICE_API + "/match";
@@ -9,7 +15,7 @@ export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
     showMessage(`Delete team from match succeeded`, "success");
     return result;
   } catch (e) {
-    showMessage(`Delete team from match error: ${e.message}`, "error");
+    showMessage(`Delete team from match error: ${getError(e)}`, "error");
   }
   return false;
 };
@@ -30,6 +36,6 @@ export const apiNewTeamMatch = async (idMatch, idTeam) => {
     showMessage("Success add team to match", "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error add team to matc: ${e.message}`, "error");
+    showMessage(`Error add team to match: ${getError(e)}`, "error");
   }
 };

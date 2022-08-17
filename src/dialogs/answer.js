@@ -11,7 +11,7 @@ import {
   Box,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { useIntl } from "react-intl";
 import { SERVICE_API } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
@@ -33,7 +33,7 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
     name: "Question",
   });
   const { data: teams } = useFetchData({ path: "/team", name: "Team" });
-  const answerData = instance.answer_data || [];
+  const answerData = instance?.answer_data || [];
 
   return (
     <Dialog
@@ -48,7 +48,7 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
         <Stack spacing={3} width={500}>
           <Autocomplete
             options={questions.filter(
-              (item) => item.match.round_id === round.id
+              (item) => item.match.round_id === round?.id
             )}
             value={
               questions.find((item) => item.id === instance?.question_id) ||
@@ -59,8 +59,9 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
               <Box {...props}>
                 <Typography>{option.name}</Typography>
                 <Typography fontSize={"0.9rem"} ml={2} sx={{ opacity: 0.5 }}>
-                  card number:{" "}
-                  {JSON.parse(option.question_data || "{}").n_cards}
+                  {`card number: ${
+                    JSON.parse(option.question_data || "{}").n_cards
+                  }`}
                 </Typography>
               </Box>
             )}
@@ -97,10 +98,48 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
   );
 };
 
+const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
+  const classes = useStyles();
+  const { formatMessage: tr } = useIntl();
+  const answerData = instance?.answer_data || [];
+  if (!instance) return null;
+  return (
+    <Dialog
+      classes={{ paperScrollPaper: classes.root }}
+      open={open}
+      onClose={close}
+    >
+      <DialogTitle>
+        {instance?.id ? "Edit Answer" : "Create Answer"}
+      </DialogTitle>
+      <DialogContent className={classes.root}>
+        <Stack spacing={3} width={500}>
+          <Stack spacing={1}>
+            <Typography variant="h6">Problem Audio</Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
+          <CodeEditor
+            title="Answer Data"
+            subTitle={'Example: ["E01", "E02", "E03"]'}
+            defaultValue={answerData}
+            onValueChange={(value) => handleChange({ answer_data: value })}
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
+        <Button onClick={save}>{tr({ id: "Save" })}</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const ScoreDataDialog = ({
   open,
-  answerId,
-  questionId,
   instance,
   close,
   title = "Score Data",
@@ -108,6 +147,7 @@ const ScoreDataDialog = ({
 }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  if (!instance) return null;
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -117,31 +157,27 @@ const ScoreDataDialog = ({
       <DialogTitle></DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
+          <Stack spacing={1}>
+            <Typography variant="h6">Problem Audio</Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
+          <Stack spacing={1}>
+            <Typography variant="h6">Team Audio</Typography>
+            <AuthAudio
+              src={`${SERVICE_API}/answer/${instance.id}/audio`}
+              type="audio/wav"
+              controls
+            />
+          </Stack>
           <CodeEditor
             title={title}
-            defaultValue={instance}
+            defaultValue={instance.score_data}
             readOnly={disabled}
           />
-          <Stack spacing={1}>
-            <Typography ml={1} variant="h6">
-              Problem Audio
-            </Typography>
-            <AuthAudio
-              src={`${SERVICE_API}/question/${questionId}/audio/problem-data`}
-              type="audio/wav"
-              controls
-            />
-          </Stack>
-          <Stack spacing={1}>
-            <Typography ml={1} variant="h6">
-              Team Audio
-            </Typography>
-            <AuthAudio
-              src={`${SERVICE_API}/answer/${answerId}/audio`}
-              type="audio/wav"
-              controls
-            />
-          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -151,4 +187,4 @@ const ScoreDataDialog = ({
   );
 };
 
-export { AnswerDialog, ScoreDataDialog };
+export { AnswerDialog, ScoreDataDialog, UserAnswerDialog };

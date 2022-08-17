@@ -3,12 +3,10 @@ import styled from "@emotion/styled";
 import {
   AppBar,
   Avatar,
-  Breadcrumbs,
   IconButton,
   Stack,
   Toolbar,
   Tooltip,
-  Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -17,8 +15,10 @@ import LogoutIcon from "@mui/icons-material/MeetingRoom";
 import { useContext } from "react";
 import Context from "../context";
 import { useIntl } from "react-intl";
-import { A } from "hookrouter";
 import LanguageTrans from "./language-trans";
+import Logo from "./logo";
+import Breadcrumb from "./breadcrumb";
+import { Box } from "@mui/system";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -26,9 +26,8 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 }));
 
 export const DashboardNavbar = (props) => {
-  const { onSidebarOpen, ...other } = props;
-  const { teamname, updateLocalStorage, tournament, round } =
-    useContext(Context);
+  const { onSidebarOpen, isSidebarOpen, ...other } = props;
+  const { team, updateLocalStorage } = useContext(Context);
   const { formatMessage: tr } = useIntl();
 
   return (
@@ -63,38 +62,18 @@ export const DashboardNavbar = (props) => {
           >
             <MenuIcon fontSize="small" />
           </IconButton>
-          <Stack spacing={2} flexGrow={1}>
-            <Breadcrumbs separator="›" aria-label="breadcrumb">
-              <A
-                style={{
-                  color: "inherit",
-                  textDecoration: "none",
-                  "&:hover": { textDecoration: "underline" },
-                }}
-                href="/"
-              >
-                {tr({ id: "Tournaments" })}{" "}
-                {tournament && !round && `(${tournament.name})`}
-              </A>
-              {tournament && (
-                <A
-                  style={{
-                    color: "inherit",
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                  href="/rounds"
-                >
-                  {tr({ id: "Rounds" })}
-                </A>
-              )}
-              {tournament && round && (
-                <Typography color="text.primary" fontWeight={"500"}>
-                  {tournament.name}
-                  {" & "} {round.name}
-                </Typography>
-              )}
-            </Breadcrumbs>
+          <Stack direction={"row"} flexGrow={1} alignItems="center" spacing={2}>
+            <Box
+              sx={{
+                display: {
+                  xs: "none",
+                  lg: isSidebarOpen ? "none" : "inline-flex",
+                },
+              }}
+            >
+              <Logo sx={{ color: "#000" }} />
+            </Box>
+            <Breadcrumb />
           </Stack>
           <Stack direction={"row"} spacing={3} alignItems="center">
             <Tooltip title="Search">
@@ -103,7 +82,7 @@ export const DashboardNavbar = (props) => {
               </IconButton>
             </Tooltip>
             <LanguageTrans />
-            <Tooltip title={teamname}>
+            <Tooltip title={team?.name || ""}>
               <Avatar
                 style={{ cursor: "pointer" }}
                 sx={{

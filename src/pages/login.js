@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
 import Context from "../context";
 import { apiSignIn } from "../api";
+import jwtDecode from "jwt-decode";
 
 const Login = () => {
   const { formatMessage } = useIntl();
@@ -20,10 +21,8 @@ const Login = () => {
     }),
     onSubmit: async (data) => {
       const result = await apiSignIn(data);
-      console.log(result);
       updateLocalStorage({
         token: result.token,
-        teamname: result.name,
         locale: "vi-VN",
       });
     },

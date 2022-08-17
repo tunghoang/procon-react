@@ -15,15 +15,22 @@ export function useFetchData({
   const { apiGetAll } = useApi(path, name);
 
   useEffect(() => {
-    if (isFetch) {
-      fetch();
-    }
+    isFetch && fetch();
   }, []);
 
-  const fetch = async () => {
+  const fetch = async (params) => {
     try {
       load();
-      const result = await apiGetAll(config, headers);
+      const result = await apiGetAll(
+        {
+          ...config,
+          params: {
+            ...config?.params,
+            ...params,
+          },
+        },
+        headers
+      );
       if (result) {
         setData(result);
         onSuccess && onSuccess(result);
@@ -39,8 +46,8 @@ export function useFetchData({
     setLoading(true);
   };
 
-  const refetch = async () => {
-    await fetch();
+  const refetch = async (params) => {
+    await fetch(params);
   };
 
   return { data, loading, refetch };

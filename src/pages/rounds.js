@@ -1,44 +1,45 @@
 import { useState, useContext, useEffect } from "react";
-import { Box, Container, Grid, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Container,
+  Grid,
+  Button,
+  Typography,
+  Toolbar,
+} from "@mui/material";
 import { DashboardLayoutRoot } from "../components/dashboard-layout";
 import { DashboardNavbar } from "../components/dashboard-navbar";
 import Context from "../context";
 import RoundDialog from "../dialogs/round";
 import { useIntl } from "react-intl";
-import { useApi } from "../api";
+import { useApi, useFetchData } from "../api";
 import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
 import CardData from "../components/card-data";
 
 const Rounds = () => {
-  const [rounds, setRounds] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const { updateContext, tournament } = useContext(Context);
-  const { apiGetAll, apiCreate, useConfirmDelete, apiEdit } = useApi(
-    "/round",
-    "Round"
-  );
+  const { apiCreate, useConfirmDelete, apiEdit } = useApi("/round", "Round");
 
   const { formatMessage: tr } = useIntl();
-  const doInit = () => {
-    (async () => {
-      const results = await apiGetAll({
-        params: {
-          eq_tournament_id: tournament.id,
-        },
-      });
-      if (results) setRounds(results);
-    })();
-  };
+  const { data: rounds, refetch } = useFetchData({
+    path: "/round",
+    name: "Round",
+    config: {
+      params: {
+        eq_tournament_id: tournament.id,
+      },
+    },
+  });
   useEffect(() => {
-    doInit();
     updateContext({ round: null });
   }, []);
   const apiDeleteDialog = useConfirmDelete();
   const handleDelete = async (item) => {
     const res = await apiDeleteDialog(item.id);
-    if (res) doInit();
+    if (res) refetch();
   };
   return (
     <>
@@ -53,7 +54,7 @@ const Rounds = () => {
         >
           <Container maxWidth="lg">
             <Typography variant="h5">{tr({ id: "Rounds" })}</Typography>
-            <Box sx={{ width: "100%", textAlign: "right" }} mb={1}>
+            <Toolbar sx={{ justifyContent: "flex-end" }}>
               <Button
                 onClick={() => {
                   setCurrentItem({ name: "", description: "" });
@@ -63,13 +64,14 @@ const Rounds = () => {
                 <AddIcon />
                 {tr({ id: "Create" })}
               </Button>
-            </Box>
+            </Toolbar>
             <Grid container spacing={3}>
               {rounds.length ? (
                 rounds.map((round) => (
                   <Grid item key={round.id} lg={4} md={6} xs={12}>
                     <CardData
-                      data={round}
+                      name={round.name}
+                      description={round.description}
                       handleDelete={() => handleDelete(round)}
                       handleEdit={() => {
                         setCurrentItem(round);
@@ -110,7 +112,7 @@ const Rounds = () => {
             await apiCreate(currentItem);
           }
           setShowDialog(false);
-          doInit();
+          refetch();
         }}
         handleChange={(change) => {
           setCurrentItem({ ...currentItem, ...change });
@@ -123,7 +125,7 @@ const Rounds = () => {
             lg: "100%",
           },
         }}
-      />{" "}
+      />
     </>
   );
 };

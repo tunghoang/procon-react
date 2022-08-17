@@ -1,40 +1,43 @@
 import { useState, useContext, useEffect } from "react";
-import { Box, Container, Grid, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Container,
+  Grid,
+  Button,
+  Typography,
+  Toolbar,
+} from "@mui/material";
 import { DashboardLayoutRoot } from "../components/dashboard-layout";
 import { DashboardNavbar } from "../components/dashboard-navbar";
 import Context from "../context";
 import TournamentDialog from "../dialogs/tournament";
 import { useIntl } from "react-intl";
-import { useApi } from "../api";
+import { useApi, useFetchData } from "../api";
 import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
 import CardData from "../components/card-data";
 
 const Tournaments = () => {
-  const [tournaments, setTournaments] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [currentTournament, setCurrentTournament] = useState(null);
   const { updateContext } = useContext(Context);
   const { formatMessage: tr } = useIntl();
-  const { apiGetAll, useConfirmDelete, apiCreate, apiEdit } = useApi(
+  const { useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/tournament",
     "Tournament"
   );
-
-  const doInit = () => {
-    (async () => {
-      const res = await apiGetAll();
-      if (res) setTournaments(res);
-    })();
-  };
+  const { data: tournaments, refetch } = useFetchData({
+    path: "/tournament",
+    name: "Tournament",
+  });
   useEffect(() => {
-    doInit();
+    refetch();
     updateContext({ tournament: null, round: null });
   }, []);
   const apiDeleteTournament = useConfirmDelete();
   const handleDelete = async (tournament) => {
     const res = await apiDeleteTournament(tournament.id);
-    if (res) doInit();
+    if (res) refetch();
   };
   return (
     <>
@@ -49,7 +52,7 @@ const Tournaments = () => {
         >
           <Container maxWidth="lg">
             <Typography variant="h5">{tr({ id: "Tournaments" })}</Typography>
-            <Box sx={{ width: "100%", textAlign: "right" }} mb={1}>
+            <Toolbar sx={{ justifyContent: "flex-end" }}>
               <Button
                 onClick={() => {
                   setCurrentTournament({ name: "", description: "" });
@@ -59,13 +62,14 @@ const Tournaments = () => {
                 <AddIcon />
                 {tr({ id: "Create" })}
               </Button>
-            </Box>
+            </Toolbar>
             <Grid container spacing={3}>
               {tournaments.length ? (
                 tournaments.map((tournament) => (
                   <Grid item key={tournament.id} lg={4} md={6} xs={12}>
                     <CardData
-                      data={tournament}
+                      name={tournament.name}
+                      description={tournament.description}
                       handleDelete={() => handleDelete(tournament)}
                       handleEdit={() => {
                         setCurrentTournament(tournament);
@@ -106,7 +110,7 @@ const Tournaments = () => {
             await apiEdit(currentTournament.id, currentTournament);
           else await apiCreate(currentTournament);
           setShowDialog(false);
-          doInit();
+          refetch();
         }}
         handleChange={(change) => {
           let s = { ...currentTournament, ...change };
@@ -120,7 +124,7 @@ const Tournaments = () => {
             lg: "100%",
           },
         }}
-      />{" "}
+      />
     </>
   );
 };
