@@ -17,7 +17,7 @@ import { useContext } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
 import { SERVICE_API } from "../api/commons";
-import AuthAudio from "../components/auth-audio";
+import AudioAuth from "../components/audio-auth";
 
 const useStyles = makeStyles({
   root: {
@@ -135,7 +135,7 @@ const QuestionDataDialog = ({
             <Typography ml={1} variant="h6">
               Problem Audio
             </Typography>
-            <AuthAudio
+            <AudioAuth
               src={`${SERVICE_API}/question/${questionId}/audio/problem-data`}
               type="audio/wav"
               controls

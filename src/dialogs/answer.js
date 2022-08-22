@@ -9,16 +9,19 @@ import {
   Autocomplete,
   Typography,
   Box,
+  Chip,
+  Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useIntl } from "react-intl";
 import { SERVICE_API } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
-import AuthAudio from "../components/auth-audio";
+import AudioAuth from "../components/audio-auth";
 import CodeEditor from "../components/code-editor";
 import Context from "../context";
-
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import AudioController from "../components/audio-controller";
 const useStyles = makeStyles({
   root: {
     overflow: "visible",
@@ -101,8 +104,34 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
 const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  const audioRef = useRef();
   const answerData = instance?.answer_data || [];
+
   if (!instance) return null;
+
+  const readingCards = (() => {
+    const arr = [];
+    for (let i = 0; i < 88; i++) {
+      let card = i + 1;
+      if (card <= 44) {
+        card = "E" + (card < 10 ? `0${card}` : card);
+      } else {
+        card -= 44;
+        card = "J" + (card < 10 ? `0${card}` : card);
+      }
+      arr.push(card);
+    }
+
+    return arr;
+  })();
+
+  const handleClick = (card) => {
+    // audioRef.current.paused();
+    audioRef.current.src = `${SERVICE_API}/question/download/resource/${card}.wav`;
+    console.log(audioRef);
+    audioRef.current.play();
+  };
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -115,15 +144,43 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogContent className={classes.root}>
         <Stack spacing={3} width={500}>
           <Stack spacing={1}>
-            <Typography variant="h6">Problem Audio</Typography>
-            <AuthAudio
+            <Typography variant="h6">Problem Data</Typography>
+            <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
               controls
             />
           </Stack>
+          <Stack spacing={1}>
+            <Typography variant="h6">Reading Cards</Typography>
+            <Grid
+              container
+              sx={{ height: "250px", overflowY: "scroll" }}
+              spacing={1}
+            >
+              {readingCards.map((card, idx) => {
+                return (
+                  <Grid item key={idx} xs={2}>
+                    {/* <Chip
+                      label={card}
+                      onClick={() => handleClick(card)}
+                      onDelete={() => handleClick(card)}
+                      deleteIcon={<PlayCircleIcon />}
+                    /> */}
+                    <AudioController
+                      src={`${SERVICE_API}/question/download/resource/${card}.wav`}
+                      label={card}
+                      type="audio/wav"
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+            {/* <audio ref={audioRef} type="audio/wav" preload="metadata" /> */}
+          </Stack>
           <CodeEditor
             title="Answer Data"
+            height="180px"
             subTitle={'Example: ["E01", "E02", "E03"]'}
             defaultValue={answerData}
             onValueChange={(value) => handleChange({ answer_data: value })}
@@ -159,7 +216,7 @@ const ScoreDataDialog = ({
         <Stack spacing={3}>
           <Stack spacing={1}>
             <Typography variant="h6">Problem Audio</Typography>
-            <AuthAudio
+            <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
               controls
@@ -167,7 +224,7 @@ const ScoreDataDialog = ({
           </Stack>
           <Stack spacing={1}>
             <Typography variant="h6">Team Audio</Typography>
-            <AuthAudio
+            <AudioAuth
               src={`${SERVICE_API}/answer/${instance.id}/audio`}
               type="audio/wav"
               controls

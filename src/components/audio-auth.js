@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef } from "react";
 import Context from "../context";
 
-export default function AuthAudio({
+export default function AudioAuth({
   src,
   type = "audio/wav",
   controls = true,

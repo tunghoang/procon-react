@@ -89,7 +89,7 @@ const UserQuestion = () => {
                 target="_blank"
               >
                 <Button>
-                  <DownloadIcon /> Download ZIP
+                  <DownloadIcon /> Download Reading Cards
                 </Button>
               </a>
             </Toolbar>

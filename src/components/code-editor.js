@@ -9,6 +9,7 @@ export default function CodeEditor({
   onValueChange,
   defaultValue = "{}",
   readOnly = false,
+  height = "280px",
 }) {
   const [code, setCode] = useState("");
   const [validate, setValidate] = useState("");
@@ -50,7 +51,7 @@ export default function CodeEditor({
       </Typography>
       <CodeMirror
         value={code}
-        height="280px"
+        height={height}
         extensions={[json()]}
         onChange={onChange}
         placeholder="Please enter JSON code"
