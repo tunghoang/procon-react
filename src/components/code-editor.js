@@ -7,6 +7,7 @@ export default function CodeEditor({
   title,
   subTitle,
   onValueChange,
+  onError,
   defaultValue = "{}",
   readOnly = false,
   height = "280px",
@@ -20,6 +21,7 @@ export default function CodeEditor({
     switch (typeof defaultValue) {
       case "string":
         value = JSON.stringify(JSON.parse(defaultValue), null, 2);
+        onValueChange && onValueChange(JSON.parse(defaultValue));
         break;
       case "object":
         value = JSON.stringify(defaultValue, null, 2);
@@ -38,6 +40,7 @@ export default function CodeEditor({
       setValidate("");
     } catch (err) {
       setValidate(err.message);
+      onError(err.message);
     } finally {
       setCode(code);
     }

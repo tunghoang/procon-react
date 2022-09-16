@@ -13,7 +13,7 @@ import {
   Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 import { SERVICE_API } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
@@ -104,12 +104,10 @@ const AnswerDialog = ({ open, instance, close, save, handleChange }) => {
 const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
-  const audioRef = useRef();
+  const [isDisabled, setIsDisabled] = useState(true);
   const answerData = instance?.answer_data || [];
 
-  if (!instance) return null;
-
-  const readingCards = (() => {
+  const formatReadingCards = () => {
     const arr = [];
     for (let i = 0; i < 88; i++) {
       let card = i + 1;
@@ -123,14 +121,11 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
     }
 
     return arr;
-  })();
-
-  const handleClick = (card) => {
-    // audioRef.current.paused();
-    audioRef.current.src = `${SERVICE_API}/question/download/resource/${card}.wav`;
-    console.log(audioRef);
-    audioRef.current.play();
   };
+
+  const readingCards = useMemo(() => formatReadingCards(), []);
+
+  if (!instance) return null;
 
   return (
     <Dialog
@@ -144,7 +139,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogContent className={classes.root}>
         <Stack spacing={3} width={500}>
           <Stack spacing={1}>
-            <Typography variant="h6">Problem Data</Typography>
+            <Typography variant="h6">Problem Card</Typography>
             <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
@@ -161,12 +156,6 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
               {readingCards.map((card, idx) => {
                 return (
                   <Grid item key={idx} xs={2}>
-                    {/* <Chip
-                      label={card}
-                      onClick={() => handleClick(card)}
-                      onDelete={() => handleClick(card)}
-                      deleteIcon={<PlayCircleIcon />}
-                    /> */}
                     <AudioController
                       src={`${SERVICE_API}/question/download/resource/${card}.wav`}
                       label={card}
@@ -176,20 +165,25 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
                 );
               })}
             </Grid>
-            {/* <audio ref={audioRef} type="audio/wav" preload="metadata" /> */}
           </Stack>
           <CodeEditor
             title="Answer Data"
             height="180px"
             subTitle={'Example: ["E01", "E02", "E03"]'}
             defaultValue={answerData}
-            onValueChange={(value) => handleChange({ answer_data: value })}
+            onValueChange={(value) => {
+              handleChange({ answer_data: value });
+              setIsDisabled(false);
+            }}
+            onError={() => setIsDisabled(true)}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-        <Button onClick={save}>{tr({ id: "Save" })}</Button>
+        <Button onClick={save} disabled={isDisabled}>
+          {tr({ id: "Save" })}
+        </Button>
       </DialogActions>
     </Dialog>
   );

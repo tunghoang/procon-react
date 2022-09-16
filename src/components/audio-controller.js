@@ -8,9 +8,9 @@ export default function AudioController({ src, label, type = "audio/wav" }) {
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    audioRef.current.addEventListener("ended", () => setPlaying(false));
+    audioRef.current?.addEventListener("ended", () => setPlaying(false));
     return () => {
-      audioRef.current.removeEventListener("ended", () => setPlaying(false));
+      audioRef.current?.removeEventListener("ended", () => setPlaying(false));
     };
   }, []);
 
@@ -42,7 +42,7 @@ export default function AudioController({ src, label, type = "audio/wav" }) {
         onDelete={handleClick}
         deleteIcon={<Icon color={"rgba(18, 24, 40, 0.26)"} />}
       />
-      <audio ref={audioRef} src={src} type={type} preload="metadata" />
+      <audio ref={audioRef} src={src} type={type} preload="none" />
     </>
   );
 }

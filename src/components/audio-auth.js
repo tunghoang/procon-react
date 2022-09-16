@@ -28,7 +28,7 @@ export default function AudioAuth({
   };
   return (
     <>
-      <audio ref={audioRef} type={type} controls={controls} />
+      <audio ref={audioRef} type={type} controls={controls} preload="none" />
     </>
   );
 }
