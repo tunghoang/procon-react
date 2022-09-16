@@ -95,4 +95,4 @@ export function showMessage(msg, severity, duration) {
   t.showToast();
 }
 
-export const SERVICE_API = "http://localhost:3001";
+export const SERVICE_API = "";
