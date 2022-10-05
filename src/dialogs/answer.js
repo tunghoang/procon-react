@@ -24,7 +24,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import AudioController from "../components/audio-controller";
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const AnswerDialog = ({ open, instance, close, save, handleChange }) => {

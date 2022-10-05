@@ -16,7 +16,7 @@ import { useIntl } from "react-intl";
 
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
