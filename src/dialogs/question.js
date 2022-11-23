@@ -91,11 +91,21 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
             onChange={(evt, v) => handleChange({ match_id: v?.id })}
           />
           <CodeEditor
-            title="Question Data"
+            title="Question Dataaaa"
             defaultValue={{
               n_cards: instance.n_cards,
+              n_parts: instance.n_parts,
+              bonus_factor: instance.bonus_factor,
+              penalty_per_change: instance.penalty_per_change,
+              point_per_correct: instance.point_per_correct
             }}
-            onValueChange={(value) => handleChange({ n_cards: value.n_cards })}
+            onValueChange={(value) => handleChange({ 
+              n_cards: value.n_cards,
+              n_parts: value.n_parts,
+              bonus_factor: value.bonus_factor,
+              penalty_per_change: value.penalty_per_change,
+              point_per_correct: value.point_per_correct
+            })}
           />
         </Stack>
       </DialogContent>

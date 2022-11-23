@@ -1,3 +1,4 @@
+import "./question.css"
 import { useContext, useState } from "react";
 import {
   Box,
@@ -72,7 +73,7 @@ const UserQuestion = () => {
 
   return (
     <>
-      <DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }}>
+      <DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }} className="UserQuestion">
         <Box
           sx={{
             display: "flex",
@@ -100,17 +101,29 @@ const UserQuestion = () => {
                   const answer = answers.find(
                     (item) => item.question_id === question.id
                   );
+                  const question_data = JSON.parse(question.question_data || "{}");
                   return (
                     <Grid item key={question.id} lg={4} md={6} xs={12}>
                       <CardData
                         name={question.name}
                         description={
                           <Stack alignItems={"flex-start"}>
-                            <div>
-                              {`Card Number: ${
-                                JSON.parse(question.question_data || "{}")
-                                  .n_cards
-                              }`}
+                            <div style={{textAlign: 'left', marginBottom: '12px'}}>
+                              <div className="data-item">
+                                <span>Cards:</span> {question_data.n_cards}
+                              </div>
+                              <div className="data-item">
+                                <span>Parts:</span> {question_data.n_parts || 2}
+                              </div>
+                              <div className="data-item">
+                                <span>Bonus factor:</span> {question_data.bonus_factor || 1.0}
+                              </div>
+                              <div className="data-item">
+                                <span>Penalty per change:</span> {question_data.penalty_per_change || 2.0}
+                              </div>
+                              <div className="data-item">
+                                <span>Point per card:</span> {question_data.point_per_correct || 10}
+                              </div>
                             </div>
                             <div>
                               Start Time: {formatDateTime(question.start_time)}
@@ -172,19 +185,19 @@ const UserQuestion = () => {
           </Container>
         </Box>
       </DashboardLayoutRoot>
-      <UserAnswerDialog
+      {dialogName === "UserAnswerDialog"?<UserAnswerDialog
         open={dialogName === "UserAnswerDialog"}
         instance={currentItem}
         close={closeDialog}
         save={saveInstance}
         handleChange={changeInstance}
-      />
-      <ScoreDataDialog
+      />:""}
+      {dialogName === "UserAnswerDialog"?<ScoreDataDialog
         open={dialogName === "ScoreDataDialog"}
         instance={currentItem}
         close={closeDialog}
         disabled
-      />
+      />:""}
       <DashboardNavbar
         sx={{
           left: 0,

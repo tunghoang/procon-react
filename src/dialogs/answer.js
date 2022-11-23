@@ -15,7 +15,7 @@ import {
 import makeStyles from "@mui/styles/makeStyles";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useIntl } from "react-intl";
-import { SERVICE_API } from "../api/commons";
+import { SERVICE_API, doGet, doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
 import AudioAuth from "../components/audio-auth";
 import CodeEditor from "../components/code-editor";
@@ -106,6 +106,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const { formatMessage: tr } = useIntl();
   const [isDisabled, setIsDisabled] = useState(true);
   const answerData = instance?.answer_data || [];
+  const [segments, setSegments] = useState([]);
 
   const formatReadingCards = () => {
     const arr = [];
@@ -122,10 +123,34 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 
     return arr;
   };
+  function getRequestedSegments() {
+    console.log(instance, open);
+    if (!open) return;
+    if (!instance?.question_id) return;
 
+    doPost(`${SERVICE_API}/question/${instance.question_id}/divided-data`, {}, {new: false}).then(({ data: segmentUUIDs }) => {
+      console.log(segmentUUIDs);
+      setSegments(segmentUUIDs);
+    }).catch(e => {
+      console.error(e);
+    })
+  }
+  const requestNewSegment = async () => {
+    console.log(instance, open);
+    if (!open) return;
+    if (!instance?.question_id) return;
+
+    doPost(`${SERVICE_API}/question/${instance.question_id}/divided-data`, {}, {new: true}).then(({ data: segmentUUIDs }) => {
+      console.log(segmentUUIDs);
+      setSegments(segmentUUIDs);
+    }).catch(e => {
+      console.error(e);
+    })
+  };
   const readingCards = useMemo(() => formatReadingCards(), []);
-
   if (!instance) return null;
+
+  useEffect(() => getRequestedSegments(), [ instance.question_id ])
 
   return (
     <Dialog
@@ -139,7 +164,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogContent className={classes.root}>
         <Stack spacing={3} width={500}>
           <Stack spacing={1}>
-            <Typography variant="h6">Problem Card</Typography>
+            <Typography variant="h6">Problem Data</Typography>
             <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
@@ -147,10 +172,26 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
             />
           </Stack>
           <Stack spacing={1}>
+            <Typography variant="h6">Divided Data 
+              <Button onClick={getRequestedSegments}>Refresh</Button>
+              <Button onClick={requestNewSegment}>Retrieve</Button>
+            </Typography>
+            <Grid container spacing={1}>
+              {segments.map((s, idx) => (
+                <div key={s} style={{display:"inline-block", width: '49%', marginRight: '5px'}}>
+                  <AudioAuth src={`${SERVICE_API}/question/${instance.question_id}/audio/divided-data?uuid=${s}`}
+                      type="audio/wav"
+                      controls
+                  />
+                </div>
+              ))}
+            </Grid>
+          </Stack>
+          <Stack spacing={1}>
             <Typography variant="h6">Reading Cards</Typography>
             <Grid
               container
-              sx={{ height: "250px", overflowY: "scroll" }}
+              sx={{ height: "180px", overflowY: "scroll" }}
               spacing={1}
             >
               {readingCards.map((card, idx) => {

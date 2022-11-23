@@ -47,7 +47,7 @@ export default function CodeEditor({
   };
 
   return (
-    <Stack spacing={1} height="320px">
+    <Stack spacing={1}>
       <Typography variant="h6">{title}</Typography>
       <Typography variant="h6" sx={{ opacity: 0.6, fontSize: "1rem" }}>
         {subTitle}

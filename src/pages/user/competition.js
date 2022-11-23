@@ -36,6 +36,7 @@ const Competition = () => {
         >
           <Container maxWidth="lg">
             <Typography variant="h5">{tr({ id: "Matches" })}</Typography>
+            <Typography variant="subtitle2">token: {localStorage.getItem('token')}</Typography>
             <Toolbar />
             <Grid container spacing={3}>
               {matches.length ? (

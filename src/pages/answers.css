@@ -1,0 +1,18 @@
+.Answer .scores span {
+  font-style: italic;
+  margin-right: 10px;
+}
+
+.Answer .scores .final-score {
+  color: green;
+  font-weight: 600;
+}
+.Answer .scores .raw-score {
+  color: green;
+}
+.Answer .scores .penalty-score {
+  color: red;
+}
+.Answer .scores .max-score {
+  color: brown;
+}

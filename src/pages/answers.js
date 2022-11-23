@@ -1,3 +1,4 @@
+import './answers.css'
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
@@ -66,6 +67,21 @@ const Answers = () => {
     },
   ];
 
+  const getScores = (answerData) => {
+    const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
+    return scores.final_score || -10000000000;
+  }
+  const renderScores = (answerData) => {
+    const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
+    return (
+      <span className="scores">
+        <span className="final-score">{scores.final_score || 'NA'}</span>
+        <span className="raw-score">{scores.raw_score || 'NA'}</span>
+        <span className="penalty-score">{scores.penalties || 'NA'}</span>
+        <span className="max-score">{scores.max_score || 'NA'}</span>
+      </span>
+    )
+  }
   const columns = [
     {
       field: "id",
@@ -111,7 +127,7 @@ const Answers = () => {
       flex: 1,
       headerClassName: "tableHeader",
       renderCell: ({ row }) => {
-        return (
+        return (<>
           <IconButton
             onClick={() => {
               setAnswer({
@@ -123,8 +139,10 @@ const Answers = () => {
           >
             <VisibilityIcon />
           </IconButton>
-        );
+          <span>{renderScores(row.score_data)}</span>
+        </>);
       },
+      valueGetter: ({row}) => getScores(row.score_data)
     },
   ];
   const [dialogName, setDialogName] = useState("");
@@ -144,7 +162,7 @@ const Answers = () => {
         showDelete={(selectedIds || []).length}
         handleDelete={clickDelete}
       />
-      <Paper
+      <Paper className="Answer"
         component="main"
         sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}
       >

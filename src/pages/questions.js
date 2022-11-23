@@ -144,14 +144,20 @@ const Questions = () => {
       start_time: null,
       end_time: null,
       n_cards: 0,
+      n_parts: 2,
+      bonus_factor: 1.,
+      penalty_per_change: 2.0,
+      point_per_correct: 10
     });
     setDialogName("QuestionDialog");
   };
   const openDialog = (name) => {
     const selected = questions.find((c) => c.id === selectedIds[0]);
+    console.log(selected);
+    const question_data = JSON.parse(selected.question_data || "{}");
     setCurrentItem({
       ...selected,
-      n_cards: JSON.parse(selected.question_data || "{}").n_cards || 0,
+      ...question_data,
     });
     setDialogName(name);
   };
