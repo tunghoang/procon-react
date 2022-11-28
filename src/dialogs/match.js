@@ -19,7 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const MatchDialog = ({ open, instance, close, save, handleChange }) => {

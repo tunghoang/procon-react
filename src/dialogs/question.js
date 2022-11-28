@@ -21,7 +21,7 @@ import AudioAuth from "../components/audio-auth";
 
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {

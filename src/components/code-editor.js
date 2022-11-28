@@ -40,7 +40,7 @@ export default function CodeEditor({
       setValidate("");
     } catch (err) {
       setValidate(err.message);
-      onError(err.message);
+      onError && onError(err.message);
     } finally {
       setCode(code);
     }

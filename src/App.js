@@ -116,6 +116,11 @@ function AppInternal() {
   if (token && !team?.is_admin && !path.includes("/competition"))
     navigate("/competition");
 
+  useEffect(() => {
+    if (team?.is_admin) navigate("/");
+    else navigate("/competition");
+  }, []);
+
   return (
     <IntlProvider locale={locale} messages={loadMessages(locale)}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>

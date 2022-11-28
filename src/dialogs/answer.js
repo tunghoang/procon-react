@@ -13,18 +13,17 @@ import {
   Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useIntl } from "react-intl";
 import { SERVICE_API, doGet, doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
 import AudioAuth from "../components/audio-auth";
 import CodeEditor from "../components/code-editor";
 import Context from "../context";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import AudioController from "../components/audio-controller";
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const AnswerDialog = ({ open, instance, close, save, handleChange }) => {

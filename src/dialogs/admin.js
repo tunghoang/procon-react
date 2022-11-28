@@ -14,7 +14,7 @@ import { useIntl } from "react-intl";
 import { useState } from "react";
 const useStyles = makeStyles({
   root: {
-    overflow: "visible",
+    // overflow: "visible",
   },
 });
 const AdminDialog = ({ open, instance, close, save, handleChange }) => {
