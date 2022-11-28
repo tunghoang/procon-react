@@ -75,10 +75,10 @@ const Answers = () => {
     const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
     return (
       <span className="scores">
-        <span className="final-score">{scores.final_score || 'NA'}</span>
-        <span className="raw-score">{scores.raw_score || 'NA'}</span>
-        <span className="penalty-score">{scores.penalties || 'NA'}</span>
-        <span className="max-score">{scores.max_score || 'NA'}</span>
+        <span className="final-score">{ !isNaN(scores?.final_score) ? scores.final_score :  'NA'}</span>
+        <span className="raw-score">{!isNaN(scores?.raw_score) ? scores?.raw_score : 'NA'}</span>
+        <span className="penalty-score">{!isNaN(scores?.penalties) ? scores?.penalties : 'NA'}</span>
+        <span className="max-score">{!isNaN(scores?.max_score) ? scores?.max_score : 'NA'}</span>
       </span>
     )
   }

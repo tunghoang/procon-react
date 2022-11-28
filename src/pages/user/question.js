@@ -110,6 +110,9 @@ const UserQuestion = () => {
                           <Stack alignItems={"flex-start"}>
                             <div style={{textAlign: 'left', marginBottom: '12px'}}>
                               <div className="data-item">
+                                <span>Id:</span> {question.id}
+                              </div>
+                              <div className="data-item">
                                 <span>Cards:</span> {question_data.n_cards}
                               </div>
                               <div className="data-item">
@@ -192,7 +195,7 @@ const UserQuestion = () => {
         save={saveInstance}
         handleChange={changeInstance}
       />:""}
-      {dialogName === "UserAnswerDialog"?<ScoreDataDialog
+      {dialogName === "ScoreDataDialog"?<ScoreDataDialog
         open={dialogName === "ScoreDataDialog"}
         instance={currentItem}
         close={closeDialog}
