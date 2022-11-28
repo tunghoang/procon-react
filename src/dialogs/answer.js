@@ -13,7 +13,7 @@ import {
   Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useIntl } from "react-intl";
 import { SERVICE_API, doGet, doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
