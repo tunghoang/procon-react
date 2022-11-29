@@ -2,7 +2,7 @@ import './answers.css'
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useFetchData } from "../api";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
@@ -15,6 +15,7 @@ const Answers = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [answer, setAnswer] = useState({});
   const { round } = useContext(Context);
+  const [filterParams, setFilterParams] = useState({});
   const {
     data: answers,
     refetch,
@@ -27,7 +28,12 @@ const Answers = () => {
         "match[eq_round_id]": round?.id,
       },
     },
+    isFetch: false,
   });
+
+  useEffect(() => {
+    refetch(filterParams);
+  }, [filterParams]);
 
   const filterOptions = [
     {
@@ -69,7 +75,7 @@ const Answers = () => {
 
   const getScores = (answerData) => {
     const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
-    return scores.final_score || -10000000000;
+    return isNaN(scores?.final_score) ? Number.NEGATIVE_INFINITY : scores.final_score;
   }
   const renderScores = (answerData) => {
     const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
@@ -168,13 +174,19 @@ const Answers = () => {
       >
         <DataTable
           rows={answers}
+          onRefresh={() => refetch(filterParams)}
           filterOptions={filterOptions}
-          onFilter={(params) => refetch(params)}
+          onFilter={(params) => setFilterParams(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);
           }}
           loading={loading}
+          initialState={{
+            sorting: {
+              sortModel: [{field: 'score', sort: 'desc'}]
+            }
+          }}
         />
       </Paper>
       <ScoreDataDialog

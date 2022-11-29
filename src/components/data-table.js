@@ -1,16 +1,24 @@
-import { Box, styled } from "@mui/material";
+import { Stack, IconButton, Box, styled } from "@mui/material";
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { DataGrid } from "@mui/x-data-grid";
 import { NoData } from "../icons/no-data";
 import FilterBar from "./filter-bar";
 
 const DataTable = (props) => (
   <>
-    {props.filterOptions && (
-      <FilterBar
-        filterOptions={props.filterOptions}
-        onFilter={props.onFilter || null}
-      />
-    )}
+    <Stack direction={"row"} spacing={2} justifyContent="space-between">
+      {props.filterOptions && (
+        <FilterBar
+          filterOptions={props.filterOptions}
+          onFilter={props.onFilter || null}
+        />
+      )}
+      {props.onRefresh && (
+        <IconButton onClick={props.onRefresh} size={"small"}>
+          <RefreshIcon />
+        </IconButton>
+      )}
+    </Stack>
     <DataGrid
       sx={{
         boxShadow: 2,
