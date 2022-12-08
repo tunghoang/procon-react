@@ -119,10 +119,10 @@ const UserQuestion = () => {
                                 <span>Parts:</span> {question_data.n_parts || 2}
                               </div>
                               <div className="data-item">
-                                <span>Bonus factor:</span> {question_data.bonus_factor || 1.0}
+                                <span>Bonus factor:</span> {question_data.bonus_factor}
                               </div>
                               <div className="data-item">
-                                <span>Penalty per change:</span> {question_data.penalty_per_change || 2.0}
+                                <span>Penalty per change:</span> {question_data.penalty_per_change}
                               </div>
                               <div className="data-item">
                                 <span>Point per card:</span> {question_data.point_per_correct || 10}

@@ -239,13 +239,30 @@ const ScoreDataDialog = ({
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
   if (!instance) return null;
+
+  const _getScoreData = () => {
+    if (!instance.score_data) {
+      return instance.score_data;
+    }
+    const scoreData = JSON.parse(instance.score_data);
+    const question = instance.question;
+    const startTime = new Date(question.start_time);
+    const submitTime = new Date(instance.updatedAt);
+    const duration = (submitTime - startTime);
+    scoreData.duration = duration;
+    scoreData.start_time = startTime;
+    scoreData.submit_time = submitTime;
+
+    return JSON.stringify(scoreData);
+  }
+  
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
       open={open}
       onClose={close}
     >
-      <DialogTitle></DialogTitle>
+      <DialogTitle>{instance.team?.name}</DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
           <Stack spacing={1}>
@@ -266,7 +283,7 @@ const ScoreDataDialog = ({
           </Stack>
           <CodeEditor
             title={title}
-            defaultValue={instance.score_data}
+            defaultValue={_getScoreData()}
             readOnly={disabled}
           />
         </Stack>

@@ -89,12 +89,12 @@ const Answers = () => {
     )
   }
   const columns = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 100,
-      headerClassName: "tableHeader",
-    },
+    // {
+    //   field: "id",
+    //   headerName: "ID",
+    //   width: 100,
+    //   headerClassName: "tableHeader",
+    // },
     {
       field: "team",
       headerName: "Team",

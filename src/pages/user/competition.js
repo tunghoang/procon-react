@@ -40,7 +40,7 @@ const Competition = () => {
             <Toolbar />
             <Grid container spacing={3}>
               {matches.length ? (
-                matches.map((match) => (
+                matches.filter(e => e.is_active).map((match) => (
                   <Grid item key={match.id} lg={4} md={6} xs={12}>
                     <CardData
                       header={
