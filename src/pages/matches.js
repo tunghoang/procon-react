@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useApi, useFetchData } from "../api";
 import Context from "../context";
 import PageToolbar from "../components/page-toolbar";

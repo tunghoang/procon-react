@@ -95,4 +95,5 @@ export function showMessage(msg, severity, duration) {
   t.showToast();
 }
 
-export const SERVICE_API = "";
+export const SERVICE_API = "http://127.0.0.1:8000";
+export const GAME_API = "http://127.0.0.1:5173";
