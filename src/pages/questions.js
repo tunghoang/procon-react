@@ -143,11 +143,14 @@ const Questions = () => {
       match_id: "",
       start_time: null,
       end_time: null,
-      n_cards: 0,
-      n_parts: 2,
-      bonus_factor: 1.,
-      penalty_per_change: 2.0,
-      point_per_correct: 10
+      width: 32,
+      height: 32,
+      p:2
+      //n_cards: 0,
+      //n_parts: 2,
+      //bonus_factor: 1.,
+      //penalty_per_change: 2.0,
+      //point_per_correct: 10
     });
     setDialogName("QuestionDialog");
   };

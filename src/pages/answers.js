@@ -74,11 +74,11 @@ const Answers = () => {
   ];
 
   const getScores = (answerData) => {
-    const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
+    const scores = (JSON.parse(answerData || "{}").score_data || {});
     return isNaN(scores?.final_score) ? Number.NEGATIVE_INFINITY : scores.final_score;
   }
   const renderScores = (answerData) => {
-    const scores = (JSON.parse(answerData || "{}").score_data || {}).score || {};
+    const scores = (JSON.parse(answerData || "{}").score_data || {});
     return (
       <span className="scores">
         <span className="final-score">{ !isNaN(scores?.final_score) ? scores.final_score :  'NA'}</span>

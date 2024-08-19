@@ -264,29 +264,11 @@ const ScoreDataDialog = ({
     >
       <DialogTitle>{instance.team?.name}</DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <Stack spacing={3}>
-          <Stack spacing={1}>
-            <Typography variant="h6">Problem Audio</Typography>
-            <AudioAuth
-              src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
-              type="audio/wav"
-              controls
-            />
-          </Stack>
-          <Stack spacing={1}>
-            <Typography variant="h6">Team Audio</Typography>
-            <AudioAuth
-              src={`${SERVICE_API}/answer/${instance.id}/audio`}
-              type="audio/wav"
-              controls
-            />
-          </Stack>
-          <CodeEditor
-            title={title}
-            defaultValue={_getScoreData()}
-            readOnly={disabled}
-          />
-        </Stack>
+        <CodeEditor
+          title={title}
+          defaultValue={_getScoreData()}
+          readOnly={disabled}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>

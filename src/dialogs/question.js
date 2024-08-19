@@ -91,21 +91,28 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
             onChange={(evt, v) => handleChange({ match_id: v?.id })}
           />
           <CodeEditor
-            title="Question Dataaaa"
+            title="Question Data"
             defaultValue={{
-              n_cards: instance.n_cards,
-              n_parts: instance.n_parts,
-              bonus_factor: instance.bonus_factor,
-              penalty_per_change: instance.penalty_per_change,
-              point_per_correct: instance.point_per_correct
+              width: 32,
+              height: 32,
+              p: 2,
+              //n_cards: instance.n_cards,
+              //n_parts: instance.n_parts,
+              //bonus_factor: instance.bonus_factor,
+              //penalty_per_change: instance.penalty_per_change,
+              //point_per_correct: instance.point_per_correct
             }}
-            onValueChange={(value) => handleChange({ 
-              n_cards: value.n_cards,
-              n_parts: value.n_parts,
-              bonus_factor: value.bonus_factor,
-              penalty_per_change: value.penalty_per_change,
-              point_per_correct: value.point_per_correct
-            })}
+            onValueChange={(value) => handleChange(value)}
+            //onValueChange={(value) => handleChange({ 
+              //width: value.width,
+              //height: value.height,
+              //p: 2,
+              //n_cards: value.n_cards,
+              //n_parts: value.n_parts,
+              //bonus_factor: value.bonus_factor,
+              //penalty_per_change: value.penalty_per_change,
+              //point_per_correct: value.point_per_correct
+            //})}
           />
         </Stack>
       </DialogContent>
@@ -135,23 +142,11 @@ const QuestionDataDialog = ({
     >
       <DialogTitle></DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <Stack spacing={3}>
-          <CodeEditor
-            title={title}
-            defaultValue={instance}
-            readOnly={disabled}
-          />
-          <Stack spacing={1}>
-            <Typography ml={1} variant="h6">
-              Problem Audio
-            </Typography>
-            <AudioAuth
-              src={`${SERVICE_API}/question/${questionId}/audio/problem-data`}
-              type="audio/wav"
-              controls
-            />
-          </Stack>
-        </Stack>
+        <CodeEditor
+          title={title}
+          defaultValue={instance}
+          readOnly={disabled}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>
