@@ -21,7 +21,7 @@ export const apiSignUp = async (payload, headers) => {
     showMessage("Sign up succeeded", "success", 1000);
     return results;
   } catch (e) {
-    showMessage(`Sign u error: ${getError(e)}`, "error");
+    showMessage(`Sign up error: ${getError(e)}`, "error");
   }
   return false;
 };

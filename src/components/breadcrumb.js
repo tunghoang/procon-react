@@ -1,13 +1,13 @@
+import React, { useContext } from "react";
 import { Breadcrumbs, Typography } from "@mui/material";
 import { usePath } from "hookrouter";
 import { A } from "hookrouter";
-import React, { useContext, useEffect } from "react";
 import { useIntl } from "react-intl";
 import Context from "../context";
 
 export default function Breadcrumb() {
-  const { tournament, round, userMatch } = useContext(Context);
   const path = usePath();
+  const { tournament, round, userMatch } = useContext(Context);
   const { formatMessage: tr } = useIntl();
 
   if (path.includes("/competition")) {

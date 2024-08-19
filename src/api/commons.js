@@ -8,17 +8,45 @@ export const getError = (e) => {
   return e.response.data ? e.response.data.message : e.message;
 };
 
+const createAPI = () => {
+  const api = axios.create();
+
+  api.interceptors.request.use(async (config) => {
+    const accessToken = localStorage.getItem("token");
+
+    if (accessToken && config.headers)
+      config.headers.Authorization = accessToken;
+
+    return config;
+  });
+
+  api.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  );
+
+  return api;
+};
+
+const api = createAPI();
+
 export const doGet = async (route, headers, mockResponse, config) => {
   try {
-    defaultHeaders.Authorization = localStorage.getItem("token");
-    return (
-      await axios({
-        method: "GET",
-        url: route,
-        headers: { ...defaultHeaders, ...headers },
-        ...config,
-      })
-    ).data.data;
+    // defaultHeaders.Authorization = localStorage.getItem("token");
+    // return (
+    //   await axios({
+    //     method: "GET",
+    //     url: route,
+    //     headers: { ...defaultHeaders, ...headers },
+    //     ...config,
+    //   })
+    // ).data.data;
+    return api.get(route, { headers, ...config });
   } catch (e) {
     if (mockResponse) {
       return mockResponse;
@@ -82,7 +110,7 @@ export const doPut = async (route, headers, payload, mockResponse) => {
 export function showMessage(msg, severity, duration) {
   let t = Toastify({
     text: msg,
-    duration: duration || 5000,
+    duration: duration * 2 || 5000,
     close: false,
     gravity: "bottom",
     position: "left",
