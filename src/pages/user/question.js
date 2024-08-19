@@ -1,4 +1,4 @@
-import "./question.css"
+import "./question.css";
 import { useContext, useState } from "react";
 import {
   Box,
@@ -13,14 +13,14 @@ import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../../api";
-import CardData from "../../components/card-data";
 import { UserAnswerDialog, ScoreDataDialog } from "../../dialogs/answer";
+// import { SERVICE_API } from "../../api/commons";
+import { formatDateTime } from "../../utils/commons";
+import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import DownloadIcon from "@mui/icons-material/Download";
-import { SERVICE_API } from "../../api/commons";
+// import DownloadIcon from "@mui/icons-material/Download";
 import Context from "../../context";
 import LoadingPage from "../../components/loading-page";
-import { formatDateTime } from "../../utils/commons";
 
 const UserQuestion = () => {
   const { userMatch } = useContext(Context);
@@ -73,7 +73,10 @@ const UserQuestion = () => {
 
   return (
     <>
-      <DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }} className="UserQuestion">
+      <DashboardLayoutRoot
+        style={{ paddingLeft: "0px", marginTop: "20px" }}
+        className="UserQuestion"
+      >
         <Box
           sx={{
             display: "flex",
@@ -84,48 +87,42 @@ const UserQuestion = () => {
         >
           <Container maxWidth="lg">
             <Typography variant="h5">{tr({ id: "Questions" })}</Typography>
-            <Toolbar sx={{ justifyContent: "flex-end" }}>
-              <a
-                style={{ textDecoration: "none" }}
-                href={`${SERVICE_API}/question/download/resource`}
-                target="_blank"
-              >
-                <Button>
-                  <DownloadIcon /> Download Reading Cards
-                </Button>
-              </a>
-            </Toolbar>
+            <Toolbar />
             <Grid container spacing={3}>
               {questions.length ? (
                 questions.map((question) => {
                   const answer = answers.find(
                     (item) => item.question_id === question.id
                   );
-                  const question_data = JSON.parse(question.question_data || "{}");
+                  const question_data = JSON.parse(
+                    question.question_data || "{}"
+                  );
+                  // console.log(question_data);
                   return (
                     <Grid item key={question.id} lg={4} md={6} xs={12}>
                       <CardData
                         name={question.name}
                         description={
                           <Stack alignItems={"flex-start"}>
-                            <div style={{textAlign: 'left', marginBottom: '12px'}}>
+                            <div
+                              style={{
+                                textAlign: "left",
+                                marginBottom: "12px",
+                              }}
+                            >
                               <div className="data-item">
-                                <span>Id:</span> {question.id}
+                                <span>ID:</span> {question.id}
                               </div>
                               <div className="data-item">
-                                <span>Cards:</span> {question_data.n_cards}
+                                <span>Width:</span> {question_data.board.width}
                               </div>
                               <div className="data-item">
-                                <span>Parts:</span> {question_data.n_parts || 2}
+                                <span>Height:</span>{" "}
+                                {question_data.board.height}
                               </div>
                               <div className="data-item">
-                                <span>Bonus factor:</span> {question_data.bonus_factor}
-                              </div>
-                              <div className="data-item">
-                                <span>Penalty per change:</span> {question_data.penalty_per_change}
-                              </div>
-                              <div className="data-item">
-                                <span>Point per card:</span> {question_data.point_per_correct || 10}
+                                <span>General patterns:</span>{" "}
+                                {question_data.general.n}
                               </div>
                             </div>
                             <div>
@@ -188,19 +185,27 @@ const UserQuestion = () => {
           </Container>
         </Box>
       </DashboardLayoutRoot>
-      {dialogName === "UserAnswerDialog"?<UserAnswerDialog
-        open={dialogName === "UserAnswerDialog"}
-        instance={currentItem}
-        close={closeDialog}
-        save={saveInstance}
-        handleChange={changeInstance}
-      />:""}
-      {dialogName === "ScoreDataDialog"?<ScoreDataDialog
-        open={dialogName === "ScoreDataDialog"}
-        instance={currentItem}
-        close={closeDialog}
-        disabled
-      />:""}
+      {dialogName === "UserAnswerDialog" ? (
+        <UserAnswerDialog
+          open={dialogName === "UserAnswerDialog"}
+          instance={currentItem}
+          close={closeDialog}
+          save={saveInstance}
+          handleChange={changeInstance}
+        />
+      ) : (
+        ""
+      )}
+      {dialogName === "ScoreDataDialog" ? (
+        <ScoreDataDialog
+          open={dialogName === "ScoreDataDialog"}
+          instance={currentItem}
+          close={closeDialog}
+          disabled
+        />
+      ) : (
+        ""
+      )}
       <DashboardNavbar
         sx={{
           left: 0,

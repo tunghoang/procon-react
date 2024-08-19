@@ -1,7 +1,7 @@
 import { Stack, Typography } from "@mui/material";
+import { LogoIcon } from "./logo-icon";
 import { A } from "hookrouter";
 import React from "react";
-import { LogoIcon } from "./logo-icon";
 
 export default function Logo({ ...props }) {
   return (

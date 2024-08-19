@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import styled from "@emotion/styled";
+import { navigate } from "hookrouter";
 import {
   AppBar,
   Avatar,
@@ -9,16 +10,17 @@ import {
   Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
-import { UserCircle as UserCircleIcon } from "../icons/user-circle";
 import LogoutIcon from "@mui/icons-material/MeetingRoom";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { UserCircle as UserCircleIcon } from "../icons/user-circle";
 import { useContext } from "react";
-import Context from "../context";
 import { useIntl } from "react-intl";
+import { Box } from "@mui/system";
+import Context from "../context";
 import LanguageTrans from "./language-trans";
 import Logo from "./logo";
 import Breadcrumb from "./breadcrumb";
-import { Box } from "@mui/system";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -76,9 +78,18 @@ export const DashboardNavbar = (props) => {
             <Breadcrumb />
           </Stack>
           <Stack direction={"row"} spacing={3} alignItems="center">
-            <Tooltip title="Search">
-              <IconButton sx={{ ml: 1 }}>
-                <SearchIcon fontSize="small" />
+            <Tooltip title="Time">
+              <IconButton sx={{ ml: 3 }}>
+                <AccessTimeIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Refresh">
+              <IconButton
+                onClick={() => {
+                  navigate("/");
+                }}
+              >
+                <RefreshIcon />
               </IconButton>
             </Tooltip>
             <LanguageTrans />

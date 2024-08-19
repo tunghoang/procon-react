@@ -1,4 +1,4 @@
-import './answers.css'
+import "./answers.css";
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
@@ -74,27 +74,31 @@ const Answers = () => {
   ];
 
   const getScores = (answerData) => {
-    const scores = (JSON.parse(answerData || "{}").score_data || {});
-    return isNaN(scores?.final_score) ? Number.NEGATIVE_INFINITY : scores.final_score;
-  }
+    const scores = JSON.parse(answerData || "{}");
+    return isNaN(scores?.final_score)
+      ? Number.NEGATIVE_INFINITY
+      : scores.final_score;
+  };
   const renderScores = (answerData) => {
-    const scores = (JSON.parse(answerData || "{}").score_data || {});
+    const scores = JSON.parse(answerData || "{}");
     return (
       <span className="scores">
-        <span className="final-score">{ !isNaN(scores?.final_score) ? scores.final_score :  'NA'}</span>
-        <span className="raw-score">{!isNaN(scores?.raw_score) ? scores?.raw_score : 'NA'}</span>
-        <span className="penalty-score">{!isNaN(scores?.penalties) ? scores?.penalties : 'NA'}</span>
-        <span className="max-score">{!isNaN(scores?.max_score) ? scores?.max_score : 'NA'}</span>
+        <span className="final-score">
+          {!isNaN(scores?.final_score) ? scores.final_score : "NA"}
+        </span>
+        <span className="raw-score">
+          {!isNaN(scores?.raw_score) ? scores?.raw_score : "NA"}
+        </span>
+        <span className="penalty-score">
+          {!isNaN(scores?.penalties) ? scores?.penalties : "NA"}
+        </span>
+        <span className="max-score">
+          {!isNaN(scores?.max_score) ? scores?.max_score : "NA"}
+        </span>
       </span>
-    )
-  }
+    );
+  };
   const columns = [
-    // {
-    //   field: "id",
-    //   headerName: "ID",
-    //   width: 100,
-    //   headerClassName: "tableHeader",
-    // },
     {
       field: "team",
       headerName: "Team",
@@ -133,22 +137,24 @@ const Answers = () => {
       flex: 1,
       headerClassName: "tableHeader",
       renderCell: ({ row }) => {
-        return (<>
-          <IconButton
-            onClick={() => {
-              setAnswer({
-                ...row,
-                question_id: row.question_id,
-              });
-              setDialogName("ScoreDataDialog");
-            }}
-          >
-            <VisibilityIcon />
-          </IconButton>
-          <span>{renderScores(row.score_data)}</span>
-        </>);
+        return (
+          <>
+            <IconButton
+              onClick={() => {
+                setAnswer({
+                  ...row,
+                  question_id: row.question_id,
+                });
+                setDialogName("ScoreDataDialog");
+              }}
+            >
+              <VisibilityIcon />
+            </IconButton>
+            <span>{renderScores(row.score_data)}</span>
+          </>
+        );
       },
-      valueGetter: ({row}) => getScores(row.score_data)
+      valueGetter: ({ row }) => getScores(row.score_data),
     },
   ];
   const [dialogName, setDialogName] = useState("");
@@ -168,7 +174,8 @@ const Answers = () => {
         showDelete={(selectedIds || []).length}
         handleDelete={clickDelete}
       />
-      <Paper className="Answer"
+      <Paper
+        className="Answer"
         component="main"
         sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}
       >
@@ -184,8 +191,8 @@ const Answers = () => {
           loading={loading}
           initialState={{
             sorting: {
-              sortModel: [{field: 'score', sort: 'desc'}]
-            }
+              sortModel: [{ field: "score", sort: "desc" }],
+            },
           }}
         />
       </Paper>

@@ -60,12 +60,12 @@ const Competition = () => {
                         description={`${match.round.tournament.name} - ${match.round.name}`}
                         showAction={false}
                         handleSelect={() => {
-                          // navigate(`/competition/question`);
-                          window.open(
-                            `${GAME_API}/compete?token=${localStorage.getItem(
-                              "token"
-                            )}`
-                          );
+                          navigate(`/competition/question`);
+                          // window.open(
+                          //   `${GAME_API}/compete?token=${localStorage.getItem(
+                          //     "token"
+                          //   )}`
+                          // );
                           updateContext({ userMatch: match });
                         }}
                       />

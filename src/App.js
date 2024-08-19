@@ -121,17 +121,21 @@ function AppInternal() {
     else navigate("/competition");
   }, []);
 
+  useEffect(() => {
+    if (!token) navigate("/login");
+  }, [token]);
+
   return (
     <IntlProvider locale={locale} messages={loadMessages(locale)}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <ThemeProvider theme={themeFn(locale)}>
           <ConfirmProvider>
             <CssBaseline />
-            {token ? (
-              getLayout(React.createElement(match.component, match.props))
+            {getLayout(React.createElement(match.component, match.props))}
+            {/* {token ? (
             ) : (
               <Login />
-            )}
+            )} */}
           </ConfirmProvider>
         </ThemeProvider>
       </LocalizationProvider>

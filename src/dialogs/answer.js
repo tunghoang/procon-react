@@ -104,7 +104,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
   const [isDisabled, setIsDisabled] = useState(true);
-  const answerData = instance?.answer_data || [];
+  const answerData = instance?.answer_data || {};
   const [segments, setSegments] = useState([]);
 
   const formatReadingCards = () => {
@@ -127,29 +127,41 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
     if (!open) return;
     if (!instance?.question_id) return;
 
-    doPost(`${SERVICE_API}/question/${instance.question_id}/divided-data`, {}, {new: false}).then(({ data: segmentUUIDs }) => {
-      console.log(segmentUUIDs);
-      setSegments(segmentUUIDs);
-    }).catch(e => {
-      console.error(e);
-    })
+    doPost(
+      `${SERVICE_API}/question/${instance.question_id}/divided-data`,
+      {},
+      { new: false }
+    )
+      .then(({ data: segmentUUIDs }) => {
+        console.log(segmentUUIDs);
+        setSegments(segmentUUIDs);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   }
   const requestNewSegment = async () => {
     console.log(instance, open);
     if (!open) return;
     if (!instance?.question_id) return;
 
-    doPost(`${SERVICE_API}/question/${instance.question_id}/divided-data`, {}, {new: true}).then(({ data: segmentUUIDs }) => {
-      console.log(segmentUUIDs);
-      setSegments(segmentUUIDs);
-    }).catch(e => {
-      console.error(e);
-    })
+    doPost(
+      `${SERVICE_API}/question/${instance.question_id}/divided-data`,
+      {},
+      { new: true }
+    )
+      .then(({ data: segmentUUIDs }) => {
+        console.log(segmentUUIDs);
+        setSegments(segmentUUIDs);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   };
   const readingCards = useMemo(() => formatReadingCards(), []);
   if (!instance) return null;
 
-  useEffect(() => getRequestedSegments(), [ instance.question_id ])
+  useEffect(() => getRequestedSegments(), [instance.question_id]);
 
   return (
     <Dialog
@@ -164,13 +176,13 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
         <Stack spacing={3} width={500}>
           <Stack spacing={1}>
             <Typography variant="h6">Problem Data</Typography>
-            <AudioAuth
+            {/* <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
               controls
-            />
+            /> */}
           </Stack>
-          <Stack spacing={1}>
+          {/* <Stack spacing={1}>
             <Typography variant="h6">Divided Data 
               <Button onClick={getRequestedSegments}>Refresh</Button>
               <Button onClick={requestNewSegment}>Retrieve</Button>
@@ -185,8 +197,8 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
                 </div>
               ))}
             </Grid>
-          </Stack>
-          <Stack spacing={1}>
+          </Stack> */}
+          {/* <Stack spacing={1}>
             <Typography variant="h6">Reading Cards</Typography>
             <Grid
               container
@@ -205,11 +217,11 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
                 );
               })}
             </Grid>
-          </Stack>
+          </Stack> */}
           <CodeEditor
             title="Answer Data"
             height="180px"
-            subTitle={'Example: ["E01", "E02", "E03"]'}
+            // subTitle={'Example: ["E01", "E02", "E03"]'}
             defaultValue={answerData}
             onValueChange={(value) => {
               handleChange({ answer_data: value });
@@ -248,14 +260,14 @@ const ScoreDataDialog = ({
     const question = instance.question;
     const startTime = new Date(question.start_time);
     const submitTime = new Date(instance.updatedAt);
-    const duration = (submitTime - startTime);
+    const duration = submitTime - startTime;
     scoreData.duration = duration;
     scoreData.start_time = startTime;
     scoreData.submit_time = submitTime;
 
     return JSON.stringify(scoreData);
-  }
-  
+  };
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
