@@ -9,13 +9,14 @@ import {
 } from "@mui/material";
 import { DashboardLayoutRoot } from "../components/dashboard-layout";
 import { DashboardNavbar } from "../components/dashboard-navbar";
-import Context from "../context";
-import RoundDialog from "../dialogs/round";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
-import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
+import Context from "../context";
+import RoundDialog from "../dialogs/round";
+import AddIcon from "@mui/icons-material/Add";
 import CardData from "../components/card-data";
+import LoadingPage from "../components/loading-page";
 
 const Rounds = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -24,7 +25,11 @@ const Rounds = () => {
   const { apiCreate, useConfirmDelete, apiEdit } = useApi("/round", "Round");
 
   const { formatMessage: tr } = useIntl();
-  const { data: rounds, refetch } = useFetchData({
+  const {
+    data: rounds,
+    refetch,
+    loading,
+  } = useFetchData({
     path: "/round",
     name: "Round",
     config: {
@@ -41,6 +46,9 @@ const Rounds = () => {
     const res = await apiDeleteDialog(item.id);
     if (res) refetch();
   };
+
+  if (loading) return <LoadingPage />;
+
   return (
     <>
       <DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }}>

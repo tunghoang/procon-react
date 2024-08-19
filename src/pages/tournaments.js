@@ -16,6 +16,7 @@ import { useApi, useFetchData } from "../api";
 import AddIcon from "@mui/icons-material/Add";
 import { navigate } from "hookrouter";
 import CardData from "../components/card-data";
+import LoadingPage from "../components/loading-page";
 
 const Tournaments = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -26,7 +27,11 @@ const Tournaments = () => {
     "/tournament",
     "Tournament"
   );
-  const { data: tournaments, refetch } = useFetchData({
+  const {
+    data: tournaments,
+    refetch,
+    loading,
+  } = useFetchData({
     path: "/tournament",
     name: "Tournament",
   });
@@ -39,6 +44,9 @@ const Tournaments = () => {
     const res = await apiDeleteTournament(tournament.id);
     if (res) refetch();
   };
+
+  if (loading) return <LoadingPage />;
+
   return (
     <>
       <DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }}>

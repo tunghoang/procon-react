@@ -1,12 +1,12 @@
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useApi, useFetchData } from "../api";
-import PageToolbar from "../components/page-toolbar";
-import DataTable from "../components/data-table";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
 import { formatDateTime } from "../utils/commons";
+import PageToolbar from "../components/page-toolbar";
+import DataTable from "../components/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
 
@@ -145,12 +145,7 @@ const Questions = () => {
       end_time: null,
       width: 32,
       height: 32,
-      p:2
-      //n_cards: 0,
-      //n_parts: 2,
-      //bonus_factor: 1.,
-      //penalty_per_change: 2.0,
-      //point_per_correct: 10
+      p: 2,
     });
     setDialogName("QuestionDialog");
   };
@@ -227,7 +222,6 @@ const Questions = () => {
       <QuestionDataDialog
         open={dialogName === "QuestionDataDialog"}
         instance={questionData.questionData}
-        questionId={questionData.questionId}
         close={closeDialog}
         disabled
       />

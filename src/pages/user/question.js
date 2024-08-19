@@ -95,7 +95,6 @@ const UserQuestion = () => {
                   const question_data = JSON.parse(
                     question.question_data || "{}"
                   );
-                  // console.log(question_data);
                   return (
                     <Grid item key={question.id} lg={4} md={6} xs={12}>
                       <CardData

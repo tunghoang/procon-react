@@ -89,27 +89,13 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
           />
           <CodeEditor
             title="Question Data"
+            readOnly={!!instance?.id}
             defaultValue={{
               width: 32,
               height: 32,
               p: 2,
-              //n_cards: instance.n_cards,
-              //n_parts: instance.n_parts,
-              //bonus_factor: instance.bonus_factor,
-              //penalty_per_change: instance.penalty_per_change,
-              //point_per_correct: instance.point_per_correct
             }}
             onValueChange={(value) => handleChange(value)}
-            //onValueChange={(value) => handleChange({
-            //width: value.width,
-            //height: value.height,
-            //p: 2,
-            //n_cards: value.n_cards,
-            //n_parts: value.n_parts,
-            //bonus_factor: value.bonus_factor,
-            //penalty_per_change: value.penalty_per_change,
-            //point_per_correct: value.point_per_correct
-            //})}
           />
         </Stack>
       </DialogContent>
@@ -123,7 +109,6 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 
 const QuestionDataDialog = ({
   open,
-  questionId,
   instance,
   close,
   title = "Question Data",
