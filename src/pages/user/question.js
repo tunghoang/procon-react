@@ -175,7 +175,7 @@ const UserQuestion = () => {
                     lineHeight: "300px",
                   }}
                 >
-                  No question added yet
+                  No questions added yet
                 </Typography>
               )}
             </Grid>

@@ -16,6 +16,9 @@ export function useFetchData({
 
   useEffect(() => {
     isFetch && fetch();
+    return () => {
+      setData([]);
+    };
   }, []);
 
   const fetch = async (params) => {

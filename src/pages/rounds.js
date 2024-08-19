@@ -34,7 +34,7 @@ const Rounds = () => {
     name: "Round",
     config: {
       params: {
-        eq_tournament_id: tournament.id,
+        eq_tournament_id: tournament?.id,
       },
     },
   });

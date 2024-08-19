@@ -16,8 +16,7 @@ export const useApi = (pathName, apiName) => {
   const apiGetAll = useCallback(
     async (config, headers) => {
       try {
-        const results = await doGet(URL, headers, null, config);
-        // showMessage(`Get ${apiName} succeeded`, "success", 1000);
+        const results = await doGet(URL, headers, config);
         return results;
       } catch (e) {
         showMessage(`Get ${apiName} error: ${getError(e)}`, "error");

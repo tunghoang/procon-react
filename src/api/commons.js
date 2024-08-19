@@ -5,7 +5,7 @@ const defaultHeaders = {
 };
 
 export const getError = (e) => {
-  return e.response.data ? e.response.data.message : e.message;
+  return e.response.data?.message || e.message;
 };
 
 const createAPI = () => {
@@ -22,10 +22,15 @@ const createAPI = () => {
 
   api.interceptors.response.use(
     (response) => {
-      return response;
+      return response.data;
     },
     (error) => {
-      console.log(error);
+      if (
+        error.response.status == 401 &&
+        error.response.statusText == "Unauthorized"
+      ) {
+        localStorage.removeItem("token");
+      }
       return Promise.reject(error);
     }
   );
@@ -33,77 +38,33 @@ const createAPI = () => {
   return api;
 };
 
-const api = createAPI();
+export const api = createAPI();
 
-export const doGet = async (route, headers, mockResponse, config) => {
+export const doGet = async (route, headers, config) => {
   try {
-    // defaultHeaders.Authorization = localStorage.getItem("token");
-    // return (
-    //   await axios({
-    //     method: "GET",
-    //     url: route,
-    //     headers: { ...defaultHeaders, ...headers },
-    //     ...config,
-    //   })
-    // ).data.data;
-    return api.get(route, { headers, ...config });
+    return (await api.get(route, { headers, ...config })).data;
   } catch (e) {
-    if (mockResponse) {
-      return mockResponse;
-    }
     throw e;
   }
 };
-export const doDelete = async (route, headers, mockResponse) => {
+export const doDelete = async (route, headers) => {
   try {
-    defaultHeaders.Authorization = localStorage.getItem("token");
-    return (
-      await axios({
-        method: "DELETE",
-        url: route,
-        headers: { ...defaultHeaders, ...headers },
-      })
-    ).data;
+    return await api.delete(route, { headers });
   } catch (e) {
-    if (mockResponse) {
-      return mockResponse;
-    }
     throw e;
   }
 };
-export const doPost = async (route, headers, payload, mockResponse) => {
+export const doPost = async (route, headers, payload) => {
   try {
-    defaultHeaders.Authorization = localStorage.getItem("token");
-    return (
-      await axios({
-        method: "POST",
-        url: route,
-        headers: { ...defaultHeaders, ...headers },
-        data: payload,
-      })
-    ).data;
+    return await api.post(route, payload, { headers });
   } catch (e) {
-    if (mockResponse) {
-      return mockResponse;
-    }
     throw e;
   }
 };
-export const doPut = async (route, headers, payload, mockResponse) => {
+export const doPut = async (route, headers, payload) => {
   try {
-    defaultHeaders.Authorization = localStorage.getItem("token");
-    return (
-      await axios({
-        method: "PUT",
-        url: route,
-        headers: { ...defaultHeaders, ...headers },
-        data: payload,
-      })
-    ).data;
+    return await api.put(route, payload, { headers });
   } catch (e) {
-    if (mockResponse) {
-      return mockResponse;
-    }
     throw e;
   }
 };

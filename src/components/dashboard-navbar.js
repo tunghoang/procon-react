@@ -17,6 +17,7 @@ import { UserCircle as UserCircleIcon } from "../icons/user-circle";
 import { useContext } from "react";
 import { useIntl } from "react-intl";
 import { Box } from "@mui/system";
+import { api, showMessage } from "../api/commons";
 import Context from "../context";
 import LanguageTrans from "./language-trans";
 import Logo from "./logo";
@@ -27,10 +28,17 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   boxShadow: theme.shadows[3],
 }));
 
+const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+
 export const DashboardNavbar = (props) => {
   const { onSidebarOpen, isSidebarOpen, ...other } = props;
   const { team, updateLocalStorage } = useContext(Context);
   const { formatMessage: tr } = useIntl();
+
+  const handleCheckTime = async () => {
+    const res = await api.get(`${SERVICE_API}/question/time`);
+    showMessage(`Time: ${new Date() - new Date(res.time)} ms`, "success", 2000);
+  };
 
   return (
     <>
@@ -79,7 +87,7 @@ export const DashboardNavbar = (props) => {
           </Stack>
           <Stack direction={"row"} spacing={3} alignItems="center">
             <Tooltip title="Time">
-              <IconButton sx={{ ml: 3 }}>
+              <IconButton sx={{ ml: 3 }} onClick={handleCheckTime}>
                 <AccessTimeIcon />
               </IconButton>
             </Tooltip>

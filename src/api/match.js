@@ -7,10 +7,10 @@ const MATCH_URL = SERVICE_API + "/match";
 export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
   try {
     const result = await doDelete(`${MATCH_URL}/${idMatch}/team/${idTeam}`);
-    showMessage(`Delete team from match succeeded`, "success");
+    showMessage(`Delete success`, "success");
     return result;
   } catch (e) {
-    showMessage(`Delete team from match error: ${getError(e)}`, "error");
+    showMessage(`Delete error: ${getError(e)}`, "error");
   }
   return false;
 };
@@ -28,9 +28,9 @@ export const useConfirmDeleteTeamMatch = () => {
 export const apiNewTeamMatch = async (idMatch, idTeam) => {
   try {
     const result = await doPost(`${MATCH_URL}/${idMatch}/team/${idTeam}`, null);
-    showMessage("Success add team to match", "success", 1000);
+    showMessage("Add success", "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error add team to match: ${getError(e)}`, "error");
+    showMessage(`Add error: ${getError(e)}`, "error");
   }
 };

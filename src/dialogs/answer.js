@@ -9,11 +9,12 @@ import {
   Autocomplete,
   Typography,
   Box,
+  Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useIntl } from "react-intl";
-import { doPost } from "../api/commons";
+import { api, doGet, doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
 import CodeEditor from "../components/code-editor";
 import Context from "../context";
@@ -104,63 +105,64 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const { formatMessage: tr } = useIntl();
   const [isDisabled, setIsDisabled] = useState(true);
   const answerData = instance?.answer_data || {};
-  const [segments, setSegments] = useState([]);
+  // const [segments, setSegments] = useState([]);
 
-  const formatReadingCards = () => {
-    const arr = [];
-    for (let i = 0; i < 88; i++) {
-      let card = i + 1;
-      if (card <= 44) {
-        card = "E" + (card < 10 ? `0${card}` : card);
-      } else {
-        card -= 44;
-        card = "J" + (card < 10 ? `0${card}` : card);
-      }
-      arr.push(card);
-    }
+  // const formatReadingCards = () => {
+  //   const arr = [];
+  //   for (let i = 0; i < 88; i++) {
+  //     let card = i + 1;
+  //     if (card <= 44) {
+  //       card = "E" + (card < 10 ? `0${card}` : card);
+  //     } else {
+  //       card -= 44;
+  //       card = "J" + (card < 10 ? `0${card}` : card);
+  //     }
+  //     arr.push(card);
+  //   }
 
-    return arr;
-  };
-  function getRequestedSegments() {
-    console.log(instance, open);
-    if (!open) return;
-    if (!instance?.question_id) return;
+  //   return arr;
+  // };
+  // function getRequestedSegments() {
+  //   if (!open) return;
+  //   if (!instance?.question_id) return;
 
-    doPost(
-      `${SERVICE_API}/question/${instance.question_id}/divided-data`,
-      {},
-      { new: false }
-    )
-      .then(({ data: segmentUUIDs }) => {
-        console.log(segmentUUIDs);
-        setSegments(segmentUUIDs);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  }
-  const requestNewSegment = async () => {
-    console.log(instance, open);
-    if (!open) return;
-    if (!instance?.question_id) return;
+  //   doPost(
+  //     `${SERVICE_API}/question/${instance.question_id}/divided-data`,
+  //     {},
+  //     { new: false }
+  //   )
+  //     .then(({ data: segmentUUIDs }) => {
+  //       console.log(segmentUUIDs);
+  //       setSegments(segmentUUIDs);
+  //     })
+  //     .catch((e) => {
+  //       console.error(e);
+  //     });
+  // }
+  // const requestNewSegment = async () => {
+  //   console.log(instance, open);
+  //   if (!open) return;
+  //   if (!instance?.question_id) return;
 
-    doPost(
-      `${SERVICE_API}/question/${instance.question_id}/divided-data`,
-      {},
-      { new: true }
-    )
-      .then(({ data: segmentUUIDs }) => {
-        console.log(segmentUUIDs);
-        setSegments(segmentUUIDs);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  };
-  const readingCards = useMemo(() => formatReadingCards(), []);
+  //   doPost(
+  //     `${SERVICE_API}/question/${instance.question_id}/divided-data`,
+  //     {},
+  //     { new: true }
+  //   )
+  //     .then(({ data: segmentUUIDs }) => {
+  //       console.log(segmentUUIDs);
+  //       setSegments(segmentUUIDs);
+  //     })
+  //     .catch((e) => {
+  //       console.error(e);
+  //     });
+  // };
+  // const readingCards = useMemo(() => formatReadingCards(), []);
   if (!instance) return null;
 
-  useEffect(() => getRequestedSegments(), [instance.question_id]);
+  const questionData = JSON.parse(instance.question.question_data);
+
+  // useEffect(() => getRequestedSegments(), [instance.question_id]);
 
   return (
     <Dialog
@@ -169,12 +171,44 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       onClose={close}
     >
       <DialogTitle>
-        {instance?.id ? "Edit Answer" : "Create Answer"}
+        {instance?.id ? "Edit answer" : "Create answer"}
       </DialogTitle>
       <DialogContent className={classes.root}>
         <Stack spacing={3} width={500}>
           <Stack spacing={1}>
             <Typography variant="h6">Problem Data</Typography>
+            {questionData.board.goal.map((row, ridx) => {
+              return (
+                <div key={ridx}>
+                  {row.map((item, cidx) => {
+                    if (item === 0)
+                      return (
+                        <span style={{ backgroundColor: "red" }} key={cidx}>
+                          {item}
+                        </span>
+                      );
+                    if (item === 1)
+                      return (
+                        <span style={{ backgroundColor: "green" }} key={cidx}>
+                          {item}
+                        </span>
+                      );
+                    if (item === 2)
+                      return (
+                        <span style={{ backgroundColor: "blue" }} key={cidx}>
+                          {item}
+                        </span>
+                      );
+                    else
+                      return (
+                        <span style={{ backgroundColor: "yellow" }} key={cidx}>
+                          {item}
+                        </span>
+                      );
+                  })}
+                </div>
+              );
+            })}
             {/* <AudioAuth
               src={`${SERVICE_API}/question/${instance.question_id}/audio/problem-data`}
               type="audio/wav"
