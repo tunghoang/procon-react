@@ -1,5 +1,4 @@
 import {
-  SERVICE_API,
   doGet,
   doPost,
   doPut,
@@ -9,6 +8,8 @@ import {
 } from "./commons";
 import { useConfirm } from "material-ui-confirm";
 import { useCallback } from "react";
+
+const SERVICE_API = process.env.REACT_APP_SERVICE_API;
 
 export const useApi = (pathName, apiName) => {
   const URL = SERVICE_API + pathName;

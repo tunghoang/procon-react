@@ -2,13 +2,12 @@ import { useContext, useEffect } from "react";
 import { Box, Container, Grid, Typography, Toolbar, Chip } from "@mui/material";
 import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
-import Context from "../../context";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../../api";
-import CardData from "../../components/card-data";
 import { navigate } from "hookrouter";
+import Context from "../../context";
+import CardData from "../../components/card-data";
 import LoadingPage from "../../components/loading-page";
-import { GAME_API } from "../../api/commons";
 
 const Competition = () => {
   const { updateContext } = useContext(Context);
@@ -61,11 +60,6 @@ const Competition = () => {
                         showAction={false}
                         handleSelect={() => {
                           navigate(`/competition/question`);
-                          // window.open(
-                          //   `${GAME_API}/compete?token=${localStorage.getItem(
-                          //     "token"
-                          //   )}`
-                          // );
                           updateContext({ userMatch: match });
                         }}
                       />

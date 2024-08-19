@@ -14,11 +14,9 @@ import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../../api";
 import { UserAnswerDialog, ScoreDataDialog } from "../../dialogs/answer";
-// import { SERVICE_API } from "../../api/commons";
 import { formatDateTime } from "../../utils/commons";
 import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-// import DownloadIcon from "@mui/icons-material/Download";
 import Context from "../../context";
 import LoadingPage from "../../components/loading-page";
 

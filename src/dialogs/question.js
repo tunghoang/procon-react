@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   Autocomplete,
-  Typography,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -16,8 +15,6 @@ import { useFetchData } from "../api";
 import { useContext } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
-import { SERVICE_API } from "../api/commons";
-import AudioAuth from "../components/audio-auth";
 
 const useStyles = makeStyles({
   root: {
@@ -103,15 +100,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
               //point_per_correct: instance.point_per_correct
             }}
             onValueChange={(value) => handleChange(value)}
-            //onValueChange={(value) => handleChange({ 
-              //width: value.width,
-              //height: value.height,
-              //p: 2,
-              //n_cards: value.n_cards,
-              //n_parts: value.n_parts,
-              //bonus_factor: value.bonus_factor,
-              //penalty_per_change: value.penalty_per_change,
-              //point_per_correct: value.point_per_correct
+            //onValueChange={(value) => handleChange({
+            //width: value.width,
+            //height: value.height,
+            //p: 2,
+            //n_cards: value.n_cards,
+            //n_parts: value.n_parts,
+            //bonus_factor: value.bonus_factor,
+            //penalty_per_change: value.penalty_per_change,
+            //point_per_correct: value.point_per_correct
             //})}
           />
         </Stack>
@@ -142,11 +139,7 @@ const QuestionDataDialog = ({
     >
       <DialogTitle></DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <CodeEditor
-          title={title}
-          defaultValue={instance}
-          readOnly={disabled}
-        />
+        <CodeEditor title={title} defaultValue={instance} readOnly={disabled} />
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>

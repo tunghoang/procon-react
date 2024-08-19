@@ -1,5 +1,6 @@
-import { SERVICE_API, doPost, showMessage, getError } from "./commons";
+import { doPost, showMessage, getError } from "./commons";
 
+const SERVICE_API = process.env.REACT_APP_SERVICE_API;
 const SIGNIN_URL = SERVICE_API + "/team/signin";
 const SIGNUP_URL = SERVICE_API + "/team/signup";
 

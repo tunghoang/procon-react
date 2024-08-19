@@ -9,18 +9,17 @@ import {
   Autocomplete,
   Typography,
   Box,
-  Chip,
-  Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useIntl } from "react-intl";
-import { SERVICE_API, doGet, doPost } from "../api/commons";
+import { doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
-import AudioAuth from "../components/audio-auth";
 import CodeEditor from "../components/code-editor";
 import Context from "../context";
-import AudioController from "../components/audio-controller";
+
+const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+
 const useStyles = makeStyles({
   root: {
     // overflow: "visible",
