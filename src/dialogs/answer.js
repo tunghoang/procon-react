@@ -121,12 +121,12 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <Stack spacing={1}>
+          {/* <Stack spacing={1}>
             <Typography variant="h6">Start Board</Typography>
-            <GameBoard board={questionData?.board?.goal} />
-            <Typography variant="h6">Goal Board</Typography>
             <GameBoard board={questionData?.board?.start} />
-          </Stack>
+            <Typography variant="h6">Goal Board</Typography>
+            <GameBoard board={questionData?.board?.goal} />
+          </Stack> */}
           <CodeEditor
             title="Answer Data"
             height="180px"
