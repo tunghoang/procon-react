@@ -135,6 +135,7 @@ const UserQuestion = () => {
                           setCurrentItem({
                             ...answer,
                             question_id: question.id,
+                            question,
                           });
                         }}
                         showAction={!!answer}
@@ -175,14 +176,14 @@ const UserQuestion = () => {
                     lineHeight: "300px",
                   }}
                 >
-                  No questions added yet
+                  No questions added
                 </Typography>
               )}
             </Grid>
           </Container>
         </Box>
       </DashboardLayoutRoot>
-      {dialogName === "UserAnswerDialog" ? (
+      {dialogName === "UserAnswerDialog" && (
         <UserAnswerDialog
           open={dialogName === "UserAnswerDialog"}
           instance={currentItem}
@@ -190,18 +191,14 @@ const UserQuestion = () => {
           save={saveInstance}
           handleChange={changeInstance}
         />
-      ) : (
-        ""
       )}
-      {dialogName === "ScoreDataDialog" ? (
+      {dialogName === "ScoreDataDialog" && (
         <ScoreDataDialog
           open={dialogName === "ScoreDataDialog"}
           instance={currentItem}
           close={closeDialog}
           disabled
         />
-      ) : (
-        ""
       )}
       <DashboardNavbar
         sx={{

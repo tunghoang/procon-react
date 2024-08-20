@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef } from "react";
-import Context from "../context";
+import Context from "../../context";
 
 export default function AudioAuth({
   src,
@@ -28,7 +28,13 @@ export default function AudioAuth({
   };
   return (
     <>
-      <audio style={{width: '100%'}} ref={audioRef} type={type} controls={controls} preload="none" />
+      <audio
+        style={{ width: "100%" }}
+        ref={audioRef}
+        type={type}
+        controls={controls}
+        preload="none"
+      />
     </>
   );
 }

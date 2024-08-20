@@ -4,9 +4,9 @@ import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useState, useEffect } from "react";
 import { useFetchData } from "../api";
+import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
-import { ScoreDataDialog } from "../dialogs/answer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
 
