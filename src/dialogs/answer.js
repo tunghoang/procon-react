@@ -119,8 +119,8 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       <DialogTitle>
         {instance?.id ? "Edit Answer" : "Create Answer"}
       </DialogTitle>
-      <DialogContent className={classes.root}>
-        <Stack spacing={3} width={500}>
+      <DialogContent className={classes.root} style={{ minWidth: 500 }}>
+        <Stack spacing={3}>
           <Stack spacing={1}>
             <Typography variant="h6">Start Board</Typography>
             <GameBoard board={questionData?.board?.goal} />
@@ -160,7 +160,8 @@ const ScoreDataDialog = ({
   const { formatMessage: tr } = useIntl();
   if (!instance) return null;
 
-  console.log(instance.score_data);
+  const goalBoard = JSON.parse(instance.question.question_data).board.goal;
+  const answerBoard = JSON.parse(instance.score_data).answer_board;
 
   const _getScoreData = () => {
     if (!instance.score_data) {
@@ -174,6 +175,7 @@ const ScoreDataDialog = ({
     scoreData.duration = duration;
     scoreData.start_time = startTime;
     scoreData.submit_time = submitTime;
+    delete scoreData.answer_board;
 
     return JSON.stringify(scoreData);
   };
@@ -186,11 +188,17 @@ const ScoreDataDialog = ({
     >
       <DialogTitle>{instance.team?.name}</DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <CodeEditor
-          title={title}
-          defaultValue={_getScoreData()}
-          readOnly={disabled}
-        />
+        <Stack spacing={3}>
+          <Stack spacing={1}>
+            <Typography variant="h6">Answer Board</Typography>
+            <GameBoard board={answerBoard} goal={goalBoard} type="compare" />
+          </Stack>
+          <CodeEditor
+            title={title}
+            defaultValue={_getScoreData()}
+            readOnly={disabled}
+          />
+        </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>
