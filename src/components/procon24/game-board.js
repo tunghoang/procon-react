@@ -5,16 +5,12 @@ export default function GameBoard({ board, goal, type = "default" }) {
   if (!board) return null;
   if (type == "compare") {
     if (!goal) return null;
-    let dev = 0;
     return (
       <div className="GameBoard">
         {board.map((row, ridx) => {
           return (
             <div key={ridx} style={{ display: "flex" }}>
               {row.map((col, cidx) => {
-                if (goal[ridx][cidx] === col) {
-                  console.log(dev++);
-                }
                 return (
                   <div
                     className={`cell ${
