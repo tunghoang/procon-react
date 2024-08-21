@@ -53,7 +53,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
             title="Answer Data"
             height="180px"
             defaultValue={answerData}
-            subTitle="This is an example."
+            subTitle="Write your answer here!"
             onValueChange={(value) => {
               handleChange({ answer_data: value });
               setIsDisabled(false);
