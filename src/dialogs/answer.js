@@ -152,7 +152,7 @@ const ScoreDataDialog = ({
             key={answerId}
           />
           <Stack spacing={0}>
-            <AccordionBoard title="Answer Board">
+            <AccordionBoard title="Answer Board" defaultExpanded={true}>
               <GameBoard board={answerBoard} goal={goalBoard} type="compare" />
             </AccordionBoard>
             <AccordionBoard title="Start Board" board={startBoard} />
