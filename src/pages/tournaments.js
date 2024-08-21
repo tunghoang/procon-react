@@ -34,6 +34,7 @@ const Tournaments = () => {
   } = useFetchData({
     path: "/tournament",
     name: "Tournament",
+    isFetch: false,
   });
   useEffect(() => {
     refetch();

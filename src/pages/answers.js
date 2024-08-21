@@ -142,8 +142,7 @@ const Answers = () => {
             <IconButton
               onClick={() => {
                 setAnswer({
-                  ...row,
-                  question_id: row.question_id,
+                  answers: [row],
                 });
                 setDialogName("ScoreDataDialog");
               }}

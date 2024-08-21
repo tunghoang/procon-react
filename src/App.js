@@ -108,7 +108,7 @@ export function App() {
   );
 }
 function AppInternal() {
-  const { token, locale, tournament, round, team } = useContext(Context);
+  const { token, locale, team } = useContext(Context);
   const match = useRoutes(routes);
   const getLayout = match.component.getLayout ?? ((page) => page);
   const path = usePath();

@@ -19,7 +19,8 @@ export const useApi = (pathName, apiName) => {
         const results = await doGet(URL, headers, config);
         return results;
       } catch (e) {
-        showMessage(`Get ${apiName} error: ${getError(e)}`, "error");
+        // showMessage(`Get ${apiName} Error: ${getError(e)}`, "error");
+        showMessage(`Error: ${getError(e)}`, "error");
       }
       return false;
     },
@@ -29,10 +30,10 @@ export const useApi = (pathName, apiName) => {
     async (id, headers) => {
       try {
         const results = await doDelete(`${URL}/${id}`, headers);
-        showMessage(`Delete ${apiName} succeeded`, "success", 1000);
+        showMessage(`Success Delete ${apiName}`, "success", 1000);
         return results;
       } catch (e) {
-        showMessage(`Delete ${apiName} error: ${getError(e)}`, "error");
+        showMessage(`Error Delete ${apiName}: ${getError(e)}`, "error");
       }
       return false;
     },
@@ -54,10 +55,10 @@ export const useApi = (pathName, apiName) => {
     async (payload, headers) => {
       try {
         const result = await doPost(URL, headers, payload);
-        showMessage(`Success create new ${apiName}`, "success", 1000);
+        showMessage(`Success Create new ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error creating new ${apiName}: ${getError(e)}`, "error");
+        showMessage(`Error Create new ${apiName}: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]
@@ -66,10 +67,10 @@ export const useApi = (pathName, apiName) => {
     async (id, payload, headers) => {
       try {
         const result = await doPut(`${URL}/${id}`, headers, payload);
-        showMessage(`Success edit ${apiName}`, "success", 1000);
+        showMessage(`Success Edit ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error edit ${apiName}: ${getError(e)}`, "error");
+        showMessage(`Error Edit ${apiName}: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]

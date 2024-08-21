@@ -89,10 +89,13 @@ const UserQuestion = () => {
             <Grid container spacing={3}>
               {questions.length ? (
                 questions.map((question) => {
-                  const answer = answers.find(
+                  // const answer = answers.find(
+                  //   (item) => item.question_id === question.id
+                  // );
+                  const uAnswers = answers.filter(
                     (item) => item.question_id === question.id
                   );
-                  const question_data = JSON.parse(
+                  const questionData = JSON.parse(
                     question.question_data || "{}"
                   );
                   return (
@@ -111,15 +114,14 @@ const UserQuestion = () => {
                                 <span>ID:</span> {question.id}
                               </div>
                               <div className="data-item">
-                                <span>Width:</span> {question_data.board.width}
+                                <span>Width:</span> {questionData.board.width}
                               </div>
                               <div className="data-item">
-                                <span>Height:</span>{" "}
-                                {question_data.board.height}
+                                <span>Height:</span> {questionData.board.height}
                               </div>
                               <div className="data-item">
                                 <span>General patterns:</span>{" "}
-                                {question_data.general.n}
+                                {questionData.general.n}
                               </div>
                             </div>
                             <div>
@@ -133,20 +135,19 @@ const UserQuestion = () => {
                         handleSelect={() => {
                           setDialogName("UserAnswerDialog");
                           setCurrentItem({
-                            ...answer,
+                            ...uAnswers[0],
                             question_id: question.id,
                             question,
                           });
                         }}
-                        showAction={!!answer}
+                        showAction={!!uAnswers.length}
                         action={
-                          answer && (
+                          uAnswers[0] && (
                             <Button
                               onClick={() => {
                                 setDialogName("ScoreDataDialog");
                                 setCurrentItem({
-                                  ...answer,
-                                  question_id: question.id,
+                                  answers: uAnswers,
                                 });
                               }}
                             >
