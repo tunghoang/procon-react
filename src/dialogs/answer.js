@@ -34,7 +34,11 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const answer = instance.answers[0];
 
   const questionData = JSON.parse(question?.question_data || "{}");
-  const answerData = answer?.answer_data;
+  // const answerData = answer?.answer_data;
+  const answerData = JSON.stringify({
+    n: 0,
+    ops: [],
+  });
 
   return (
     <Dialog
@@ -49,6 +53,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
             title="Answer Data"
             height="180px"
             defaultValue={answerData}
+            subTitle="This is an example."
             onValueChange={(value) => {
               handleChange({ answer_data: value });
               setIsDisabled(false);

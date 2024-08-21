@@ -117,11 +117,6 @@ function AppInternal() {
     navigate("/competition");
 
   useEffect(() => {
-    if (team?.is_admin) navigate("/");
-    else navigate("/competition");
-  }, []);
-
-  useEffect(() => {
     if (!token) navigate("/login");
   }, [token]);
 
@@ -132,10 +127,6 @@ function AppInternal() {
           <ConfirmProvider>
             <CssBaseline />
             {getLayout(React.createElement(match.component, match.props))}
-            {/* {token ? (
-            ) : (
-              <Login />
-            )} */}
           </ConfirmProvider>
         </ThemeProvider>
       </LocalizationProvider>
