@@ -9,21 +9,21 @@ import {
   Autocomplete,
   Typography,
   Box,
-  Grid,
+  AccordionDetails,
+  AccordionSummary,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
-import { api, doGet, doPost } from "../api/commons";
 import { useFetchData } from "../api/useFetchData";
 import CodeEditor from "../components/code-editor";
 import Context from "../context";
 import GameBoard from "../components/procon24/game-board";
-
-const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+import Accordion from "@mui/material/Accordion";
 
 const useStyles = makeStyles({
   root: {
+    minWidth: "800px",
     // overflow: "visible",
   },
 });
@@ -121,12 +121,6 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          {/* <Stack spacing={1}>
-            <Typography variant="h6">Start Board</Typography>
-            <GameBoard board={questionData?.board?.start} />
-            <Typography variant="h6">Goal Board</Typography>
-            <GameBoard board={questionData?.board?.goal} />
-          </Stack> */}
           <CodeEditor
             title="Answer Data"
             height="180px"
@@ -137,6 +131,24 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
             }}
             onError={() => setIsDisabled(true)}
           />
+          <Stack spacing={0}>
+            <Accordion>
+              <AccordionSummary>
+                <Typography variant="h6">Start Board</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <GameBoard board={questionData?.board?.start} />
+              </AccordionDetails>
+            </Accordion>
+            <Accordion>
+              <AccordionSummary>
+                <Typography variant="h6">Goal Board</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <GameBoard board={questionData?.board?.goal} />
+              </AccordionDetails>
+            </Accordion>
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -160,6 +172,7 @@ const ScoreDataDialog = ({
   const { formatMessage: tr } = useIntl();
   if (!instance) return null;
 
+  const startBoard = JSON.parse(instance.question.question_data).board.start;
   const goalBoard = JSON.parse(instance.question.question_data).board.goal;
   const answerBoard = JSON.parse(instance.score_data).answer_board;
 
@@ -189,15 +202,41 @@ const ScoreDataDialog = ({
       <DialogTitle>{instance.team?.name}</DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <Stack spacing={1}>
-            <Typography variant="h6">Answer Board</Typography>
-            <GameBoard board={answerBoard} goal={goalBoard} type="compare" />
-          </Stack>
           <CodeEditor
             title={title}
             defaultValue={_getScoreData()}
             readOnly={disabled}
           />
+          <Stack spacing={0}>
+            <Accordion>
+              <AccordionSummary>
+                <Typography variant="h6">Start Board</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <GameBoard board={startBoard} />
+              </AccordionDetails>
+            </Accordion>
+            <Accordion>
+              <AccordionSummary>
+                <Typography variant="h6">Goal Board</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <GameBoard board={goalBoard} />
+              </AccordionDetails>
+            </Accordion>
+            <Accordion>
+              <AccordionSummary>
+                <Typography variant="h6">Answer Board</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <GameBoard
+                  board={answerBoard}
+                  goal={goalBoard}
+                  type="compare"
+                />
+              </AccordionDetails>
+            </Accordion>
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>
