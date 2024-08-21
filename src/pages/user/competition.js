@@ -36,9 +36,6 @@ const Competition = () => {
         >
           <Container maxWidth="lg">
             <Typography variant="h5">{tr({ id: "Matches" })}</Typography>
-            <Typography variant="subtitle2">
-              token: {localStorage.getItem("token")}
-            </Typography>
             <Toolbar />
             <Grid container spacing={3}>
               {matches.length ? (
@@ -56,7 +53,7 @@ const Competition = () => {
                         }
                         disabled={!match.is_active}
                         name={match.name}
-                        description={`${match.round.tournament.name} - ${match.round.name}`}
+                        description={`${match.round.tournament.name} → ${match.round.name}`}
                         showAction={false}
                         handleSelect={() => {
                           navigate(`/competition/question`);
@@ -75,7 +72,7 @@ const Competition = () => {
                     lineHeight: "300px",
                   }}
                 >
-                  No match added yet
+                  No matches added yet
                 </Typography>
               )}
             </Grid>

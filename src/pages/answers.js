@@ -9,6 +9,7 @@ import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
+import { api } from "../api/commons";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
@@ -77,7 +78,7 @@ const Answers = () => {
     const scores = JSON.parse(answerData || "{}");
     return isNaN(scores?.final_score)
       ? Number.NEGATIVE_INFINITY
-      : scores.final_score;
+      : scores.final_escore;
   };
   const renderScores = (answerData) => {
     const scores = JSON.parse(answerData || "{}");
@@ -140,9 +141,13 @@ const Answers = () => {
         return (
           <>
             <IconButton
-              onClick={() => {
+              onClick={async () => {
+                const question = await api(
+                  `${process.env.REACT_APP_SERVICE_API}/question/${row.question_id}`
+                );
                 setAnswer({
                   answers: [row],
+                  question,
                 });
                 setDialogName("ScoreDataDialog");
               }}

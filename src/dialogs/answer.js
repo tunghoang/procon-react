@@ -6,8 +6,6 @@ import {
   Button,
   Stack,
   Typography,
-  AccordionDetails,
-  AccordionSummary,
   Select,
   MenuItem,
   FormControl,
@@ -17,7 +15,6 @@ import { useState } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon24/game-board";
-import Accordion from "@mui/material/Accordion";
 import AccordionBoard from "../components/procon24/accordion-board";
 
 const useStyles = makeStyles({
@@ -30,10 +27,14 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
   const [isDisabled, setIsDisabled] = useState(true);
-  const answerData = instance?.answer_data || {};
+
   if (!instance) return null;
 
-  const questionData = JSON.parse(instance?.question?.question_data || "{}");
+  const question = instance.question;
+  const answer = instance.answers[0];
+
+  const questionData = JSON.parse(question?.question_data || "{}");
+  const answerData = answer?.answer_data;
 
   return (
     <Dialog
@@ -41,9 +42,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
       open={open}
       onClose={close}
     >
-      <DialogTitle>
-        {instance?.id ? "Edit Answer" : "Create Answer"}
-      </DialogTitle>
+      <DialogTitle>{answer?.id ? "Edit Answer" : "Create Answer"}</DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
           <CodeEditor
@@ -59,11 +58,11 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
           <Stack spacing={0}>
             <AccordionBoard
               title="Start Board"
-              board={questionData?.board?.start}
+              board={questionData.board?.start}
             />
             <AccordionBoard
               title="Goal Board"
-              board={questionData?.board?.goal}
+              board={questionData.board?.goal}
             />
           </Stack>
         </Stack>
@@ -90,11 +89,11 @@ const ScoreDataDialog = ({
   const [answerId, setAnswerId] = useState(0);
 
   if (!instance) return null;
-  const answers = instance.answers || [];
 
-  const questionData = JSON.parse(
-    answers[answerId]?.question?.question_data || "{}"
-  );
+  const answers = instance.answers || [];
+  const question = instance.question || {};
+
+  const questionData = JSON.parse(question?.question_data || "{}");
   const startBoard = questionData.board?.start;
   const goalBoard = questionData.board?.goal;
   const answerBoard = JSON.parse(
@@ -107,13 +106,11 @@ const ScoreDataDialog = ({
       return null;
     }
     const scoreData = JSON.parse(answer.score_data);
-    const question = answer.question;
     const startTime = new Date(question.start_time);
     const submitTime = new Date(answer.updatedAt);
-    const duration = submitTime - startTime;
-    scoreData.duration = duration;
     scoreData.start_time = startTime;
     scoreData.submit_time = submitTime;
+    scoreData.duration = submitTime - startTime;
     delete scoreData.answer_board;
 
     return JSON.stringify(scoreData);

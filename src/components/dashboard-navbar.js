@@ -11,8 +11,11 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/MeetingRoom";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import SportsMmaIcon from "@mui/icons-material/SportsMma";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import TokenIcon from "@mui/icons-material/Token";
+
 import { UserCircle as UserCircleIcon } from "../icons/user-circle";
 import { useContext } from "react";
 import { useIntl } from "react-intl";
@@ -91,13 +94,33 @@ export const DashboardNavbar = (props) => {
                 <AccessTimeIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Refresh">
+            <Tooltip title="Token">
+              <IconButton
+                onClick={() => {
+                  const token = localStorage.getItem("token");
+                  navigator.clipboard.writeText(token);
+                  showMessage("Copied token to clipboard!", "success", 2000);
+                }}
+              >
+                <TokenIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Competition">
+              <IconButton
+                onClick={() => {
+                  navigate("/competition");
+                }}
+              >
+                <SportsMmaIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Admin Only">
               <IconButton
                 onClick={() => {
                   navigate("/");
                 }}
               >
-                <RefreshIcon />
+                <AdminPanelSettingsIcon />
               </IconButton>
             </Tooltip>
             <LanguageTrans />

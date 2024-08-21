@@ -24,6 +24,7 @@ const UserQuestion = () => {
   const { userMatch } = useContext(Context);
   const [dialogName, setDialogName] = useState("");
   const [currentItem, setCurrentItem] = useState(null);
+  const [payload, setPayload] = useState(null);
   const { formatMessage: tr } = useIntl();
   const { data: questions } = useFetchData({
     path: "/question",
@@ -47,24 +48,19 @@ const UserQuestion = () => {
       },
     },
   });
-  const { apiCreate, apiEdit } = useApi("/answer", "Answer");
+  const { apiCreate } = useApi("/answer", "Answer");
 
   const closeDialog = () => {
     setDialogName("");
   };
 
   const saveInstance = async () => {
-    let result;
-    if (currentItem?.id) {
-      result = await apiEdit(currentItem.id, currentItem);
-    } else {
-      result = await apiCreate(currentItem);
-    }
+    const result = await apiCreate(payload);
     if (result) refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
-    setCurrentItem({ ...currentItem, ...changes });
+    setPayload({ ...payload, ...changes });
   };
 
   if (loading) return <LoadingPage />;
@@ -89,9 +85,6 @@ const UserQuestion = () => {
             <Grid container spacing={3}>
               {questions.length ? (
                 questions.map((question) => {
-                  // const answer = answers.find(
-                  //   (item) => item.question_id === question.id
-                  // );
                   const uAnswers = answers.filter(
                     (item) => item.question_id === question.id
                   );
@@ -135,9 +128,11 @@ const UserQuestion = () => {
                         handleSelect={() => {
                           setDialogName("UserAnswerDialog");
                           setCurrentItem({
-                            ...uAnswers[0],
-                            question_id: question.id,
+                            answers: uAnswers,
                             question,
+                          });
+                          setPayload({
+                            question_id: question.id,
                           });
                         }}
                         showAction={!!uAnswers.length}
@@ -148,6 +143,7 @@ const UserQuestion = () => {
                                 setDialogName("ScoreDataDialog");
                                 setCurrentItem({
                                   answers: uAnswers,
+                                  question,
                                 });
                               }}
                             >
@@ -158,7 +154,7 @@ const UserQuestion = () => {
                                 sx={{ pl: 1 }}
                                 variant="body2"
                               >
-                                Score
+                                {tr({ id: "Score" })}
                               </Typography>
                             </Button>
                           )
@@ -177,7 +173,7 @@ const UserQuestion = () => {
                     lineHeight: "300px",
                   }}
                 >
-                  No questions added
+                  No questions added yet
                 </Typography>
               )}
             </Grid>
