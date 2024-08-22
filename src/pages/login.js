@@ -1,11 +1,10 @@
 import { useIntl } from "react-intl";
 import { useFormik } from "formik";
 import { useContext } from "react";
-import * as Yup from "yup";
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import * as Yup from "yup";
 import Context from "../context";
 import { apiSignIn } from "../api";
-import jwtDecode from "jwt-decode";
 
 const Login = () => {
   const { formatMessage } = useIntl();
