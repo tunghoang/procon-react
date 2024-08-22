@@ -6,7 +6,7 @@
 }
 
 .GameBoard .cell-wrong {
-  background-color: red;
+  background-color: rgb(204, 71, 71);
 }
 .GameBoard .cell-correct {
   background-color: rgb(106, 207, 95);
