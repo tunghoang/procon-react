@@ -5,8 +5,11 @@
   border: 1px solid #000;
 }
 
-.GameBoard .cell-hl {
+.GameBoard .cell-wrong {
   background-color: red;
+}
+.GameBoard .cell-correct {
+  background-color: rgb(106, 207, 95);
 }
 
 .GameBoard .cell-0 {

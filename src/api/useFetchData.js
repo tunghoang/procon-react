@@ -15,7 +15,7 @@ export function useFetchData({
   const { apiGetAll } = useApi(path, name);
 
   useEffect(() => {
-    isFetch && fetch();
+    if (isFetch) fetch();
     return () => {
       setData([]);
     };

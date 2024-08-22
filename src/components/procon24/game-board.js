@@ -14,7 +14,7 @@ export default function GameBoard({ board, goal, type = "default" }) {
                 return (
                   <div
                     className={`cell ${
-                      goal[ridx][cidx] !== col ? "cell-hl" : ""
+                      goal[ridx][cidx] !== col ? "cell-wrong" : "cell-correct"
                     }`}
                     key={cidx}
                   >
