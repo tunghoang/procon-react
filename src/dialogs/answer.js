@@ -101,9 +101,8 @@ const ScoreDataDialog = ({
   const questionData = JSON.parse(question?.question_data || "{}");
   const startBoard = questionData.board?.start;
   const goalBoard = questionData.board?.goal;
-  const answerBoard = JSON.parse(
-    answers[answerId]?.score_data || "{}"
-  ).answer_board;
+  const answerBoard = JSON.parse(answers[answerId]?.score_data || "{}")
+    .answer_board || [[]];
 
   const _getScoreData = () => {
     const answer = answers[answerId];

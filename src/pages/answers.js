@@ -3,19 +3,21 @@ import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useState, useEffect } from "react";
-import { useFetchData } from "../api";
+import { useApi, useFetchData } from "../api";
+import { api } from "../api/commons";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
-import { api } from "../api/commons";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
   const [selectedIds, setSelectedIds] = useState([]);
   const [answer, setAnswer] = useState({});
   const { round } = useContext(Context);
+  const { useConfirmDelete } = useApi("/answer", "Answer");
+  const apiDeleteDialog = useConfirmDelete();
   const [filterParams, setFilterParams] = useState({});
   const {
     data: answers,
@@ -74,18 +76,20 @@ const Answers = () => {
     },
   ];
 
-  const getScores = (answerData) => {
-    const scores = JSON.parse(answerData || "{}");
+  const getScores = (scoreData) => {
+    const scores = JSON.parse(scoreData || "{}");
     return isNaN(scores?.final_score)
       ? Number.NEGATIVE_INFINITY
-      : scores.final_escore;
+      : scores.final_score;
   };
-  const renderScores = (answerData) => {
-    const scores = JSON.parse(answerData || "{}");
+  const renderScores = (scoreData) => {
+    const scores = JSON.parse(scoreData || "{}");
+    const finaScore = scores?.final_score / scores?.max_score;
     return (
       <span className="scores">
         <span className="final-score">
-          {!isNaN(scores?.final_score) ? scores.final_score : "NA"}
+          {/* {!isNaN(scores?.final_score) ? scores.final_score : "NA"} */}
+          {!isNaN(finaScore) ? (finaScore * 100).toFixed(2) : "NA"}
         </span>
         <span className="raw-score">
           {!isNaN(scores?.raw_score) ? scores?.raw_score : "NA"}

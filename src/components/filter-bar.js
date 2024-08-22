@@ -72,25 +72,24 @@ const FilterBar = ({ onFilter, filterOptions }) => {
           Filter
         </Button>
         {filterData.map((filter, idx) => {
+          if (!filter.isSelected) return null;
           return (
-            <div key={idx}>
-              {filter.isSelected && (
-                <FilterItem
-                  type={filter.type}
-                  filter={filter}
-                  setFilterData={() => setFilterData([...filterData])}
-                />
-              )}
-            </div>
+            <FilterItem
+              key={idx}
+              type={filter.type}
+              filter={filter}
+              handleFilter={handleFilter}
+              setFilterData={() => setFilterData([...filterData])}
+            />
           );
         })}
         {isFilter && (
-          <Stack spacing={1} direction="row">
+          <Stack spacing={1} direction="row" justifyContent={"center"}>
             <IconButton onClick={handleFilter} size={"small"}>
-              <SearchIcon />
+              <SearchIcon fontSize="small" />
             </IconButton>
             <IconButton onClick={resetFilter} size={"small"}>
-              <ClearIcon />
+              <ClearIcon fontSize="small" />
             </IconButton>
           </Stack>
         )}
@@ -104,7 +103,11 @@ const FilterBar = ({ onFilter, filterOptions }) => {
                 checked={filter.isSelected}
                 onChange={(e) => {
                   filter.isSelected = e.target.checked;
-                  if (!filter.isSelected) filter.filterValue = "";
+                  if (!filter.isSelected) {
+                    filter.filterValue = "";
+                    handleFilter();
+                  }
+
                   setFilterData([...filterData]);
                 }}
               />
@@ -117,7 +120,7 @@ const FilterBar = ({ onFilter, filterOptions }) => {
   );
 };
 
-const FilterItem = ({ type, filter, setFilterData }) => {
+const FilterItem = ({ type, filter, setFilterData, handleFilter }) => {
   switch (type) {
     case "boolean":
       return (
@@ -148,6 +151,9 @@ const FilterItem = ({ type, filter, setFilterData }) => {
           onChange={(evt) => {
             filter.filterValue = evt.target.value;
             setFilterData();
+          }}
+          onKeyDown={(e) => {
+            if (e.key == "Enter") handleFilter();
           }}
           placeholder={`Search by ${filter.label}`}
           variant="standard"
