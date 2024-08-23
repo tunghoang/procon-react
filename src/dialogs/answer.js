@@ -150,7 +150,7 @@ const ScoreDataDialog = ({
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <ScoreData score={answers[answerId]?.score_data} />
+          <ScoreData score={answers[answerId]?.score_data} onlyFinal />
           <CodeEditor
             title={title}
             defaultValue={_getScoreData()}
