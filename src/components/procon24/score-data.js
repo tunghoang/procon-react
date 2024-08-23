@@ -7,7 +7,15 @@ const ScoreData = ({ score, onlyFinal = false }) => {
 
     if (onlyFinal)
       return (
-        <span className="scores">
+        <span
+          className="scores"
+          style={{
+            textAlign: "center",
+            fontSize: "45px",
+            width: "100%",
+            display: "inline-block",
+          }}
+        >
           <span className="final-score">
             {!isNaN(finaScore) ? (finaScore * 100).toFixed(2) : "NA"} %
           </span>
