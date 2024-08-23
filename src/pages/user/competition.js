@@ -1,5 +1,13 @@
 import { useContext, useEffect } from "react";
-import { Box, Container, Grid, Typography, Toolbar, Chip } from "@mui/material";
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  Toolbar,
+  Chip,
+  Stack,
+} from "@mui/material";
 import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
@@ -53,7 +61,20 @@ const Competition = () => {
                         }
                         disabled={!match.is_active}
                         name={match.name}
-                        description={`${match.round.tournament.name} → ${match.round.name}`}
+                        description={
+                          <Stack direction="row" spacing={1} mt={3}>
+                            <Chip
+                              label={match.round.tournament.name}
+                              color="primary"
+                              variant="outlined"
+                            />
+                            <Chip
+                              label={match.round.name}
+                              color="warning"
+                              variant="outlined"
+                            />
+                          </Stack>
+                        }
                         showAction={false}
                         handleSelect={() => {
                           navigate(`/competition/question`);
