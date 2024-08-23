@@ -17,7 +17,7 @@ const ScoreData = ({ score, onlyFinal = false }) => {
           }}
         >
           <span className="final-score">
-            {!isNaN(finaScore) ? (finaScore * 100).toFixed(2) : "NA"} %
+            {!isNaN(finaScore) ? `${(finaScore * 100).toFixed(2)}%` : "NA"}
           </span>
         </span>
       );
