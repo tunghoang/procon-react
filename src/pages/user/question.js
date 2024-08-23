@@ -137,7 +137,7 @@ const UserQuestion = () => {
                         }}
                         showAction={!!uAnswers.length}
                         action={
-                          uAnswers[0] && (
+                          uAnswers.length && (
                             <Button
                               onClick={() => {
                                 setDialogName("ScoreDataDialog");

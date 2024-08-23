@@ -1,4 +1,3 @@
-import "./answers.css";
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
@@ -10,6 +9,7 @@ import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
+import ScoreData from "../components/procon24/score-data";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
@@ -82,27 +82,7 @@ const Answers = () => {
       ? Number.NEGATIVE_INFINITY
       : scores.final_score;
   };
-  const renderScores = (scoreData) => {
-    const scores = JSON.parse(scoreData || "{}");
-    const finaScore = scores?.final_score / scores?.max_score;
-    return (
-      <span className="scores">
-        <span className="final-score">
-          {/* {!isNaN(scores?.final_score) ? scores.final_score : "NA"} */}
-          {!isNaN(finaScore) ? (finaScore * 100).toFixed(2) : "NA"}
-        </span>
-        <span className="raw-score">
-          {!isNaN(scores?.raw_score) ? scores?.raw_score : "NA"}
-        </span>
-        <span className="penalty-score">
-          {!isNaN(scores?.penalties) ? scores?.penalties : "NA"}
-        </span>
-        <span className="max-score">
-          {!isNaN(scores?.max_score) ? scores?.max_score : "NA"}
-        </span>
-      </span>
-    );
-  };
+
   const columns = [
     {
       field: "team",
@@ -158,7 +138,7 @@ const Answers = () => {
             >
               <VisibilityIcon />
             </IconButton>
-            <span>{renderScores(row.score_data)}</span>
+            <ScoreData score={row.score_data} />
           </>
         );
       },

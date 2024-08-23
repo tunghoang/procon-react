@@ -1,0 +1,18 @@
+.ScoreData .scores span {
+  font-style: italic;
+  margin-right: 10px;
+}
+
+.ScoreData .scores .final-score {
+  color: green;
+  font-weight: 600;
+}
+.ScoreData .scores .raw-score {
+  color: green;
+}
+.ScoreData .scores .penalty-score {
+  color: red;
+}
+.ScoreData .scores .max-score {
+  color: brown;
+}

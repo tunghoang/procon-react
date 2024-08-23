@@ -16,6 +16,7 @@ import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon24/game-board";
 import AccordionBoard from "../components/procon24/accordion-board";
+import ScoreData from "../components/procon24/score-data";
 
 const useStyles = makeStyles({
   root: {
@@ -149,6 +150,7 @@ const ScoreDataDialog = ({
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
+          <ScoreData score={answers[answerId]?.score_data} />
           <CodeEditor
             title={title}
             defaultValue={_getScoreData()}
