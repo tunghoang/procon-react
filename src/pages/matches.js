@@ -24,7 +24,7 @@ import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
 const Matches = () => {
   const { formatMessage: tr } = useIntl();
   const { round } = useContext(Context);
-  const [matchTeams, setMatchTeams] = useState({});
+  const [selectedMatch, setSelectedMatch] = useState({});
   const [selectedMatchIds, setSelectedMatchIds] = useState([]);
   const { useConfirmDelete, apiCreate, apiEdit } = useApi("/match", "Match");
   const apiDeleteMatch = useConfirmDelete();
@@ -120,7 +120,7 @@ const Matches = () => {
             <IconButton
               disabled={!row.teams.length}
               onClick={() => {
-                setMatchTeams({
+                setSelectedMatch({
                   id: row.id,
                   teams: row.teams,
                 });
@@ -139,7 +139,7 @@ const Matches = () => {
 
   const clickNew = () => {
     setCurrentMatch({
-      name: "",
+      name: "New Match",
       description: "",
       is_active: false,
       team_id: "",
@@ -175,13 +175,18 @@ const Matches = () => {
   };
 
   const handleAction = async (teams, action) => {
+    let apiAction;
+    let matchId;
+    if (action === "add") {
+      apiAction = apiNewTeamMatch;
+      matchId = currentMatch.id;
+    } else if (action === "delete") {
+      apiAction = apiDeleteTeamMatch;
+      matchId = selectedMatch.id;
+    } else return;
+
     const result = await Promise.all(
-      teams.map(async (team) => {
-        if (action === "add")
-          return await apiNewTeamMatch(currentMatch.id, team.id);
-        else if (action === "delete")
-          return await apiDeleteTeamMatch(matchTeams.id, team.id);
-      })
+      teams.map(async (team) => await apiAction(matchId, team.id))
     );
     if (result.length) refetch();
     setDialogName("");
@@ -192,8 +197,8 @@ const Matches = () => {
       <PageToolbar
         title={tr({ id: "Matches" })}
         showNew={true}
-        showEdit={(selectedMatchIds || []).length === 1}
-        showDelete={(selectedMatchIds || []).length}
+        showEdit={selectedMatchIds.length === 1}
+        showDelete={!!selectedMatchIds.length}
         handleNew={clickNew}
         editBtns={[
           {
@@ -242,7 +247,7 @@ const Matches = () => {
       {dialogName === "TeamMatchDialog" && (
         <TeamMatchDialog
           open={dialogName === "TeamMatchDialog"}
-          teams={matchTeams.teams}
+          teams={selectedMatch.teams}
           close={closeDialog}
           handleDelete={(teams) => handleAction(teams, "delete")}
         />

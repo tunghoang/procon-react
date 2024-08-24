@@ -139,7 +139,7 @@ const Questions = () => {
 
   const clickNew = () => {
     setCurrentItem({
-      name: "",
+      name: "New Question",
       match_id: "",
       start_time: null,
       end_time: null,
@@ -151,7 +151,6 @@ const Questions = () => {
   };
   const openDialog = (name) => {
     const selected = questions.find((c) => c.id === selectedIds[0]);
-    console.log(selected);
     const question_data = JSON.parse(selected.question_data || "{}");
     setCurrentItem({
       ...selected,
