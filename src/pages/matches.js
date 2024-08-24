@@ -174,14 +174,16 @@ const Matches = () => {
     setCurrentMatch({ ...currentMatch, ...changes });
   };
 
-  const handleTeam = async (teamId, action) => {
-    let result;
-    if (action === "delete") {
-      result = await apiDeleteTeamMatch(matchTeams.id, teamId);
-    } else if (action === "add") {
-      result = await apiNewTeamMatch(currentMatch.id, teamId);
-    }
-    if (result) refetch();
+  const handleAction = async (teams, action) => {
+    const result = await Promise.all(
+      teams.map(async (team) => {
+        if (action === "add")
+          return await apiNewTeamMatch(currentMatch.id, team.id);
+        else if (action === "delete")
+          return await apiDeleteTeamMatch(matchTeams.id, team.id);
+      })
+    );
+    if (result.length) refetch();
     setDialogName("");
   };
 
@@ -220,24 +222,31 @@ const Matches = () => {
           loading={loading}
         />
       </Paper>
-      <MatchDialog
-        open={dialogName === "MatchDialog"}
-        instance={currentMatch}
-        close={closeDialog}
-        save={saveInstance}
-        handleChange={changeInstance}
-      />
-      <AddTeamMatchDialog
-        open={dialogName === "AddTeamMatchDialog"}
-        close={closeDialog}
-        handleAdd={(teamId) => handleTeam(teamId, "add")}
-      />
-      <TeamMatchDialog
-        open={dialogName === "TeamMatchDialog"}
-        teams={matchTeams.teams}
-        close={closeDialog}
-        handleDelete={(teamId) => handleTeam(teamId, "delete")}
-      />
+      {dialogName === "MatchDialog" && (
+        <MatchDialog
+          open={dialogName === "MatchDialog"}
+          instance={currentMatch}
+          close={closeDialog}
+          save={saveInstance}
+          handleChange={changeInstance}
+        />
+      )}
+      {dialogName === "AddTeamMatchDialog" && (
+        <AddTeamMatchDialog
+          open={dialogName === "AddTeamMatchDialog"}
+          close={closeDialog}
+          teams={currentMatch.teams}
+          handleAdd={(teams) => handleAction(teams, "add")}
+        />
+      )}
+      {dialogName === "TeamMatchDialog" && (
+        <TeamMatchDialog
+          open={dialogName === "TeamMatchDialog"}
+          teams={matchTeams.teams}
+          close={closeDialog}
+          handleDelete={(teams) => handleAction(teams, "delete")}
+        />
+      )}
     </>
   );
 };

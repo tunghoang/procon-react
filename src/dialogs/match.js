@@ -8,9 +8,9 @@ import {
   Stack,
   Switch,
   FormControlLabel,
-  Typography,
-  IconButton,
   Autocomplete,
+  Checkbox,
+  Box,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -32,12 +32,10 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
       open={open}
       onClose={close}
     >
-      <DialogTitle>
-        {(instance || {}).id ? "Edit Match" : "Create Match"}
-      </DialogTitle>
+      <DialogTitle>{instance?.id ? "Edit Match" : "Create Match"}</DialogTitle>
       <form>
-        <DialogContent className={classes.root}>
-          <Stack spacing={3} width={500}>
+        <DialogContent className={classes.root} sx={{ width: 500 }}>
+          <Stack spacing={3}>
             <TextField
               margin="dense"
               label="Name"
@@ -45,7 +43,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
               fullWidth
               variant="standard"
               name="name"
-              value={(instance || {}).name}
+              value={instance?.name}
               onChange={(evt) => {
                 handleChange({ name: evt.target.value });
               }}
@@ -57,7 +55,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
               fullWidth
               variant="standard"
               name="account"
-              value={(instance || {}).description}
+              value={instance?.description}
               onChange={(evt) => {
                 handleChange({ description: evt.target.value });
               }}
@@ -89,6 +87,16 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 const TeamMatchDialog = ({ open, teams, close, handleDelete }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+  const [selectedTeams, setSelectedTeams] = useState([]);
+
+  const handleSelect = (e, team) => {
+    if (e.target.checked) setSelectedTeams([...selectedTeams, team]);
+    else {
+      const rmIdx = selectedTeams.findIndex((item) => item.id === team.id);
+      selectedTeams.splice(rmIdx, 1);
+      setSelectedTeams([...selectedTeams]);
+    }
+  };
 
   return (
     <Dialog
@@ -98,31 +106,31 @@ const TeamMatchDialog = ({ open, teams, close, handleDelete }) => {
     >
       <DialogTitle>{tr({ id: "Teams" })}</DialogTitle>
       <form>
-        <DialogContent className={classes.root}>
-          <Stack spacing={1} width={300}>
-            {teams?.map((item, idx) => {
+        <DialogContent className={classes.root} sx={{ width: 500 }}>
+          <Stack spacing={1}>
+            {teams?.map((item) => {
               return (
-                <Stack
-                  key={item.id}
-                  direction={"row"}
-                  alignItems="center"
-                  justifyContent={"space-between"}
-                >
-                  <Typography>
-                    {idx + 1}. {item.name}
-                  </Typography>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Stack>
+                <div key={item.id}>
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    onChange={(e) => handleSelect(e, item)}
+                    label={item.name}
+                  />
+                </div>
               );
             })}
           </Stack>
         </DialogContent>
         <DialogActions>
+          {!!selectedTeams.length && (
+            <Button
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => handleDelete(selectedTeams)}
+            >
+              {tr({ id: "Remove" })}
+            </Button>
+          )}
           <Button onClick={close}>{tr({ id: "Close" })}</Button>
         </DialogActions>
       </form>
@@ -130,11 +138,16 @@ const TeamMatchDialog = ({ open, teams, close, handleDelete }) => {
   );
 };
 
-const AddTeamMatchDialog = ({ open, close, handleAdd }) => {
+const AddTeamMatchDialog = ({ open, close, teams, handleAdd }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
-  const { data: teams } = useFetchData({ path: "/team", name: "Team" });
-  const [teamId, setTeamId] = useState(null);
+  const { data: allTeams } = useFetchData({ path: "/team", name: "Team" });
+  const [selectedTeams, setSelectedTeams] = useState([]);
+
+  const filterTeams = allTeams.filter(
+    (item) => !teams.find((team) => team.id === item.id)
+  );
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -143,27 +156,36 @@ const AddTeamMatchDialog = ({ open, close, handleAdd }) => {
     >
       <DialogTitle>{tr({ id: "Add Team" })}</DialogTitle>
       <form>
-        <DialogContent className={classes.root} sx={{ width: 300 }}>
+        <DialogContent className={classes.root} sx={{ width: 500 }}>
           <Autocomplete
-            options={teams}
+            multiple
+            options={filterTeams}
             getOptionLabel={(option) => option.name}
             isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderInput={(params) => (
-              <TextField {...params} label={"Team"} variant="standard" />
-            )}
-            onChange={(evt, v) => {
-              console.log(evt, v);
-              setTeamId(v?.id);
+            renderOption={(props, option) => {
+              const { key, ...optionProps } = props;
+              return (
+                <Box key={key} {...optionProps}>
+                  {option.name} {option.added}
+                </Box>
+              );
             }}
+            renderInput={(params) => (
+              <TextField {...params} label="Team" variant="standard" />
+            )}
+            onChange={(_, values) => setSelectedTeams(values)}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-          <Button disabled={!teamId} onClick={() => handleAdd(teamId)}>
-            {tr({ id: "Save" })}
-          </Button>
-        </DialogActions>
       </form>
+      <DialogActions>
+        <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
+        <Button
+          disabled={!selectedTeams.length}
+          onClick={() => handleAdd(selectedTeams)}
+        >
+          {tr({ id: "Save" })}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };
