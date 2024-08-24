@@ -163,8 +163,8 @@ const Questions = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
-    const result = await apiDeleteDialog(selectedIds[0]);
-    if (result) refetch();
+    const result = await apiDeleteDialog(selectedIds);
+    if (result.length) refetch();
   };
   const saveInstance = async () => {
     let result;

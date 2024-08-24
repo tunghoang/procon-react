@@ -155,9 +155,10 @@ const Matches = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
-    const result = await apiDeleteMatch(selectedMatchIds[0]);
-    if (result) refetch();
+    const result = await apiDeleteMatch(selectedMatchIds);
+    if (result.length) refetch();
   };
+
   const saveInstance = async () => {
     let result;
     if (currentMatch.id) {

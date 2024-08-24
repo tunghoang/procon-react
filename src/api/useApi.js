@@ -19,7 +19,6 @@ export const useApi = (pathName, apiName) => {
         const results = await doGet(URL, headers, config);
         return results;
       } catch (e) {
-        // showMessage(`Get ${apiName} Error: ${getError(e)}`, "error");
         showMessage(`Error: ${getError(e)}`, "error");
       }
       return false;
@@ -30,10 +29,10 @@ export const useApi = (pathName, apiName) => {
     async (id, headers) => {
       try {
         const results = await doDelete(`${URL}/${id}`, headers);
-        showMessage(`Success Delete ${apiName}`, "success", 1000);
+        showMessage(`${apiName} was successfully deleted.`, "success", 1000);
         return results;
       } catch (e) {
-        showMessage(`Error Delete ${apiName}: ${getError(e)}`, "error");
+        showMessage(`Error: ${getError(e)}`, "error");
       }
       return false;
     },
@@ -42,10 +41,10 @@ export const useApi = (pathName, apiName) => {
 
   const useConfirmDelete = (headers) => {
     const confirm = useConfirm();
-    return async (id) => {
+    return async (ids) => {
       try {
-        await confirm({ description: "Are you sure?" });
-        return apiDelete(id, headers);
+        await confirm({ title: "Are you sure want to delete?" });
+        return Promise.all(ids.map(async (id) => await apiDelete(id, headers)));
       } catch (e) {
         return false;
       }
@@ -55,10 +54,10 @@ export const useApi = (pathName, apiName) => {
     async (payload, headers) => {
       try {
         const result = await doPost(URL, headers, payload);
-        showMessage(`Success Create new ${apiName}`, "success", 1000);
+        showMessage(`${apiName} was sucessfully created.`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error Create new ${apiName}: ${getError(e)}`, "error");
+        showMessage(`Error: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]

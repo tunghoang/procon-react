@@ -43,8 +43,8 @@ const Rounds = () => {
   }, []);
   const apiDeleteDialog = useConfirmDelete();
   const handleDelete = async (item) => {
-    const res = await apiDeleteDialog(item.id);
-    if (res) refetch();
+    const res = await apiDeleteDialog([item.id]);
+    if (res.length) refetch();
   };
 
   if (loading) return <LoadingPage />;

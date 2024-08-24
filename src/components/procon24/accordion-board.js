@@ -3,7 +3,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   IconButton,
-  Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -34,7 +33,7 @@ const AccordionBoard = ({
               onClick={(e) => {
                 e.stopPropagation();
                 navigator.clipboard.writeText(JSON.stringify(board));
-                showMessage("Copied to clipboard!", "success", 2000);
+                showMessage("Copied board to clipboard!", "success", 2000);
               }}
             >
               <ContentCopyIcon fontSize="small" />

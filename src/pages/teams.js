@@ -100,8 +100,8 @@ const Teams = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
-    const result = await apiDeleteTeam(selectedTeamIds[0]);
-    if (result) refetch();
+    const result = await apiDeleteTeam(selectedTeamIds);
+    if (result.length) refetch();
   };
   const saveInstance = async () => {
     let result;

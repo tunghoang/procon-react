@@ -151,8 +151,8 @@ const Answers = () => {
     setDialogName("");
   };
   const clickDelete = async () => {
-    const result = await apiDeleteDialog(selectedIds[0]);
-    if (result) refetch();
+    const result = await apiDeleteDialog(selectedIds);
+    if (result.length) refetch();
   };
 
   return (

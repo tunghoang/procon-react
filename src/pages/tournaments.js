@@ -34,16 +34,14 @@ const Tournaments = () => {
   } = useFetchData({
     path: "/tournament",
     name: "Tournament",
-    isFetch: false,
   });
   useEffect(() => {
-    refetch();
     updateContext({ tournament: null, round: null });
   }, []);
   const apiDeleteTournament = useConfirmDelete();
   const handleDelete = async (tournament) => {
-    const res = await apiDeleteTournament(tournament.id);
-    if (res) refetch();
+    const res = await apiDeleteTournament([tournament.id]);
+    if (res.length) refetch();
   };
 
   if (loading) return <LoadingPage />;
@@ -122,8 +120,7 @@ const Tournaments = () => {
           refetch();
         }}
         handleChange={(change) => {
-          let s = { ...currentTournament, ...change };
-          setCurrentTournament(s);
+          setCurrentTournament({ ...currentTournament, ...change });
         }}
       />
       <DashboardNavbar

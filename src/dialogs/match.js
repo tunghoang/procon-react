@@ -152,13 +152,14 @@ const AddTeamMatchDialog = ({ open, close, handleAdd }) => {
               <TextField {...params} label={"Team"} variant="standard" />
             )}
             onChange={(evt, v) => {
-              setTeamId(v.id);
+              console.log(evt, v);
+              setTeamId(v?.id);
             }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-          <Button onClick={() => handleAdd(teamId)}>
+          <Button disabled={!teamId} onClick={() => handleAdd(teamId)}>
             {tr({ id: "Save" })}
           </Button>
         </DialogActions>
