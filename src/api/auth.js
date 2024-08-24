@@ -10,7 +10,6 @@ export const apiSignIn = async (payload, headers) => {
     showMessage("Login Success", "success", 1000);
     return result;
   } catch (e) {
-    console.log(e);
     showMessage(`Login Error: ${getError(e)}`, "error");
   }
   return false;

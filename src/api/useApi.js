@@ -19,7 +19,7 @@ export const useApi = (pathName, apiName) => {
         const results = await doGet(URL, headers, config);
         return results;
       } catch (e) {
-        showMessage(`Error: ${getError(e)}`, "error");
+        showMessage(getError(e), "error");
       }
       return false;
     },
@@ -32,7 +32,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`${apiName} was successfully deleted.`, "success", 1000);
         return results;
       } catch (e) {
-        showMessage(`Error: ${getError(e)}`, "error");
+        showMessage(getError(e), "error");
       }
       return false;
     },
@@ -57,7 +57,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`${apiName} was sucessfully created.`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error: ${getError(e)}`, "error");
+        showMessage(getError(e), "error");
       }
     },
     [URL, apiName]

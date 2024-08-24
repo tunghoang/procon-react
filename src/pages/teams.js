@@ -92,7 +92,9 @@ const Teams = () => {
     setDialogName("TeamDialog");
   };
   const openDialog = (name) => {
-    let selectedTeam = teams.find((c) => c.id === selectedTeamIds[0]);
+    const selectedTeam = teams.find((c) => c.id === selectedTeamIds[0]);
+    if (name === "TeamPasswordDialog") selectedTeam.password = "";
+    else delete selectedTeam.password;
     setCurrentTeam(selectedTeam);
     setDialogName(name);
   };
@@ -107,17 +109,14 @@ const Teams = () => {
     let result;
     if (currentTeam.id) {
       result = await apiEdit(currentTeam.id, currentTeam);
-      console.log(result);
     } else {
       result = await apiCreate(currentTeam);
-      console.log(result);
     }
     if (result) refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
-    let newInst = { ...currentTeam, ...changes };
-    setCurrentTeam(newInst);
+    setCurrentTeam({ ...currentTeam, ...changes });
   };
 
   return (

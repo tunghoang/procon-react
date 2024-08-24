@@ -10,7 +10,7 @@ export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
     showMessage(`Team was sucessfully removed from match.`, "success");
     return result;
   } catch (e) {
-    showMessage(`Error: ${getError(e)}`, "error");
+    showMessage(getError(e), "error");
   }
   return false;
 };
@@ -31,6 +31,6 @@ export const apiNewTeamMatch = async (idMatch, idTeam) => {
     showMessage("Team was successfully added.", "success", 1000);
     return result;
   } catch (e) {
-    showMessage(`Error: ${getError(e)}`, "error");
+    showMessage(getError(e), "error");
   }
 };

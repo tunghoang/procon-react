@@ -14,17 +14,19 @@ import LogoutIcon from "@mui/icons-material/MeetingRoom";
 import SportsMmaIcon from "@mui/icons-material/SportsMma";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import TokenIcon from "@mui/icons-material/Token";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import HttpsIcon from "@mui/icons-material/Https";
 
 import { UserCircle as UserCircleIcon } from "../icons/user-circle";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
 import { Box } from "@mui/system";
-import { api, showMessage } from "../api/commons";
+import { api, getError, showMessage } from "../api/commons";
 import Context from "../context";
 import LanguageTrans from "./language-trans";
 import Logo from "./logo";
 import Breadcrumb from "./breadcrumb";
+import TeamPasswordDialog from "../dialogs/password";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -37,10 +39,40 @@ export const DashboardNavbar = (props) => {
   const { onSidebarOpen, isSidebarOpen, ...other } = props;
   const { team, updateLocalStorage } = useContext(Context);
   const { formatMessage: tr } = useIntl();
+  const [dialogName, setDialogName] = useState("");
+  const [password, setPassword] = useState({ password: "" });
 
   const handleCheckTime = async () => {
-    const res = await api.get(`${SERVICE_API}/question/time`);
-    showMessage(`Time: ${new Date() - new Date(res.time)} ms`, "success", 2000);
+    try {
+      const res = await api.get(`${SERVICE_API}/question/time`);
+      showMessage(
+        `Time: ${new Date() - new Date(res.time)} ms`,
+        "success",
+        2000
+      );
+    } catch (e) {
+      showMessage(getError(e), "error");
+    }
+  };
+
+  const closeDialog = () => {
+    setPassword({ password: "" });
+    setDialogName("");
+  };
+
+  const savePassword = async () => {
+    try {
+      await api.put(`${SERVICE_API}/team/password`, password);
+      showMessage("Changed password successfully", "success", 2000);
+    } catch (e) {
+      showMessage(getError(e), "error");
+    } finally {
+      setDialogName("");
+    }
+  };
+
+  const changePassword = (password) => {
+    setPassword(password);
   };
 
   return (
@@ -102,25 +134,22 @@ export const DashboardNavbar = (props) => {
                   showMessage("Copied token to clipboard!", "success", 2000);
                 }}
               >
-                <TokenIcon />
+                <VpnKeyIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="Competition">
-              <IconButton
-                onClick={() => {
-                  navigate("/competition");
-                }}
-              >
+              <IconButton onClick={() => navigate("/competition")}>
                 <SportsMmaIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="Admin Only">
-              <IconButton
-                onClick={() => {
-                  navigate("/");
-                }}
-              >
+              <IconButton onClick={() => navigate("/")}>
                 <AdminPanelSettingsIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Password">
+              <IconButton onClick={() => setDialogName("TeamPasswordDialog")}>
+                <HttpsIcon />
               </IconButton>
             </Tooltip>
             <LanguageTrans />
@@ -147,6 +176,13 @@ export const DashboardNavbar = (props) => {
           </Stack>
         </Toolbar>
       </DashboardNavbarRoot>
+      <TeamPasswordDialog
+        open={dialogName === "TeamPasswordDialog"}
+        instance={password}
+        close={closeDialog}
+        save={savePassword}
+        handleChange={changePassword}
+      />
     </>
   );
 };
