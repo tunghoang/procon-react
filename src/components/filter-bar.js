@@ -153,7 +153,7 @@ const FilterItem = ({ type, filter, setFilterData, handleFilter }) => {
             setFilterData();
           }}
           onKeyDown={(e) => {
-            if (e.key == "Enter") handleFilter();
+            if (e.key === "Enter") handleFilter();
           }}
           placeholder={`Search by ${filter.label}`}
           variant="standard"

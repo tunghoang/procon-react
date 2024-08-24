@@ -67,6 +67,7 @@ export const DashboardNavbar = (props) => {
     } catch (e) {
       showMessage(getError(e), "error");
     } finally {
+      setPassword({ password: "" });
       setDialogName("");
     }
   };
