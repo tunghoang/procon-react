@@ -69,6 +69,7 @@ const Login = () => {
             type="password"
             value={formik.values.password}
             variant="outlined"
+            autoComplete="on"
           />
           <Box sx={{ py: 2 }}>
             <Button

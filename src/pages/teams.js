@@ -88,7 +88,7 @@ const Teams = () => {
   const [currentTeam, setCurrentTeam] = useState({});
 
   const clickNew = () => {
-    setCurrentTeam({ name: "", account: "", is_admin: false });
+    setCurrentTeam({ name: "", account: "", is_admin: false, password: "" });
     setDialogName("TeamDialog");
   };
   const openDialog = (name) => {

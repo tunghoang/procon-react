@@ -51,7 +51,7 @@ const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
             type="text"
             fullWidth
             variant="standard"
-            // disabled={!!(instance || {}).id}
+            disabled={!!(instance || {}).id}
             name="account"
             value={(instance || {}).account}
             onChange={(evt) => {
@@ -98,7 +98,8 @@ const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
               fullWidth
               variant="standard"
               name="Password"
-              value={(instance || {}).password}
+              autoComplete="on"
+              value={instance.password}
               onChange={(evt) => {
                 handleChange({ password: evt.target.value });
               }}
