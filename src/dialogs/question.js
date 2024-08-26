@@ -87,16 +87,18 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
             )}
             onChange={(evt, v) => handleChange({ match_id: v?.id })}
           />
-          {/* <CodeEditor
-            title="Question Data"
-            readOnly={!!instance?.id}
-            defaultValue={{
-              width: 32,
-              height: 32,
-              p: 2,
-            }}
-            onValueChange={(value) => handleChange(value)}
-          /> */}
+          {!instance?.id && (
+            <CodeEditor
+              title="Question Data"
+              readOnly={!!instance?.id}
+              defaultValue={{
+                width: 32,
+                height: 32,
+                p: 2,
+              }}
+              onValueChange={(value) => handleChange(value)}
+            />
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
