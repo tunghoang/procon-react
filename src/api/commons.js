@@ -5,7 +5,7 @@ const defaultHeaders = {
 };
 
 export const getError = (e) => {
-  return e.response.data?.message || e.message;
+  return e.response?.data?.message || e.message;
 };
 
 const createAPI = () => {

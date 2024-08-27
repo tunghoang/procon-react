@@ -9,18 +9,16 @@ import {
   Select,
   MenuItem,
   FormControl,
-  Tooltip,
-  IconButton,
+  Slider,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon24/game-board";
 import AccordionBoard from "../components/procon24/accordion-board";
 import ScoreData from "../components/procon24/score-data";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { showMessage } from "../api/commons";
+import AnswerBoard from "../components/procon24/answer-board";
 
 const useStyles = makeStyles({
   root: {
@@ -94,6 +92,12 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   );
 };
 
+const useScoreStyle = makeStyles({
+  root: {
+    minWidth: "90%",
+  },
+});
+
 const ScoreDataDialog = ({
   open,
   instance,
@@ -101,23 +105,24 @@ const ScoreDataDialog = ({
   title = "Score Data",
   disabled = false,
 }) => {
-  const classes = useStyles();
+  const classes = useScoreStyle();
   const { formatMessage: tr } = useIntl();
-  const [answerId, setAnswerId] = useState(0);
 
   if (!instance) return null;
 
   const answers = instance.answers || [];
+  const [answer, setAnswer] = useState(answers[0]);
+
   const question = instance.question || {};
 
   const questionData = JSON.parse(question?.question_data || "{}");
   const startBoard = questionData.board?.start;
   const goalBoard = questionData.board?.goal;
-  const answerBoard = JSON.parse(answers[answerId]?.score_data || "{}")
-    .answer_board || [[]];
+  // const answerBoard = JSON.parse(answer?.score_data || "{}").answer_board || [
+  //   [],
+  // ];
 
   const _getScoreData = () => {
-    const answer = answers[answerId];
     if (!answer?.score_data) {
       return null;
     }
@@ -141,17 +146,17 @@ const ScoreDataDialog = ({
       <DialogTitle>
         <Stack direction={"row"} spacing={2} justifyContent={"space-between"}>
           <Typography variant="h5" color={"blue"} fontSize={"22px"}>
-            {answers[answerId]?.team?.name}
+            {answer?.team?.name}
           </Typography>
           <FormControl variant="standard" sx={{ m: 1, width: 120 }}>
             <Select
               defaultValue={0}
-              onChange={(e) => setAnswerId(e.target.value)}
+              onChange={(e) => setAnswer(answers[e.target.value])}
             >
-              {answers.map((as, idx) => {
+              {answers.map((asw, idx) => {
                 return (
                   <MenuItem key={idx} value={idx}>
-                    {as.team?.name}
+                    {asw.team?.name}
                   </MenuItem>
                 );
               })}
@@ -161,21 +166,26 @@ const ScoreDataDialog = ({
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <ScoreData score={answers[answerId]?.score_data} onlyFinal />
+          <ScoreData score={answer?.score_data} onlyFinal />
           <CodeEditor
             title={title}
             defaultValue={_getScoreData()}
             readOnly={disabled}
-            key={answerId}
+            key={answer?.id}
           />
           <Stack spacing={0}>
             <AccordionBoard
               title="Answer Board"
-              defaultExpanded={
-                answerBoard.length * answerBoard[0].length <= 10000
-              }
+              // defaultExpanded={
+              //   answerBoard.length * answerBoard[0].length <= 10000
+              // }
             >
-              <GameBoard board={answerBoard} goal={goalBoard} type="compare" />
+              <AnswerBoard
+                answerId={answer?.id}
+                startBoard={startBoard}
+                goalBoard={goalBoard}
+              />
+              {/* <GameBoard board={answerBoard} goal={goalBoard} type="compare" /> */}
             </AccordionBoard>
             <AccordionBoard title="Start Board" board={startBoard} />
             <AccordionBoard title="Goal Board" board={goalBoard} />
