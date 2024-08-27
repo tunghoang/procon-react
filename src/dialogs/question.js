@@ -90,11 +90,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
           {!instance?.id && (
             <CodeEditor
               title="Question Data"
+              subTitle={"mode= 0: random; 1: special"}
               readOnly={!!instance?.id}
               defaultValue={{
                 width: 32,
                 height: 32,
                 p: 2,
+                mode: 0,
+                ndie: 1,
+                niter: 2,
               }}
               onValueChange={(value) => handleChange(value)}
             />

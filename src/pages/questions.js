@@ -146,6 +146,9 @@ const Questions = () => {
       width: 32,
       height: 32,
       p: 2,
+      mode: 0,
+      ndie: 1,
+      niter: 5,
     });
     setDialogName("QuestionDialog");
   };
