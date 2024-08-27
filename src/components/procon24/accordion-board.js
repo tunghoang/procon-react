@@ -15,6 +15,8 @@ const AccordionBoard = ({
   title,
   board,
   children,
+  copyContent,
+  showCopy = false,
   defaultExpanded = false,
 }) => {
   return (
@@ -24,15 +26,17 @@ const AccordionBoard = ({
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6" mr={1}>
-          {title}{" "}
+          {title}
         </Typography>
-        {!children && (
+        {(!children || showCopy) && (
           <Tooltip title="Copy">
             <IconButton
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                navigator.clipboard.writeText(JSON.stringify(board));
+                navigator.clipboard.writeText(
+                  JSON.stringify(copyContent || board)
+                );
                 showMessage("Copied board to clipboard!", "success", 2000);
               }}
             >

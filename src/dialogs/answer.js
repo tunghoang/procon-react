@@ -9,6 +9,8 @@ import {
   Select,
   MenuItem,
   FormControl,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useState } from "react";
@@ -17,6 +19,8 @@ import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon24/game-board";
 import AccordionBoard from "../components/procon24/accordion-board";
 import ScoreData from "../components/procon24/score-data";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { showMessage } from "../api/commons";
 
 const useStyles = makeStyles({
   root: {
@@ -70,6 +74,13 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
               title="Goal Board"
               board={questionData.board?.goal}
             />
+            <AccordionBoard
+              title="General Patterns"
+              copyContent={questionData.general}
+              showCopy
+            >
+              <CodeEditor readOnly defaultValue={questionData.general} />
+            </AccordionBoard>
           </Stack>
         </Stack>
       </DialogContent>
