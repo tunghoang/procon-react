@@ -62,18 +62,21 @@ const Competition = () => {
                         disabled={!match.is_active}
                         name={match.name}
                         description={
-                          <Stack direction="row" spacing={1} mt={3}>
-                            <Chip
-                              label={match.round.tournament.name}
-                              color="primary"
-                              variant="outlined"
-                            />
-                            <Chip
-                              label={match.round.name}
-                              color="warning"
-                              variant="outlined"
-                            />
-                          </Stack>
+                          <>
+                            {match.description}
+                            <Stack direction="row" spacing={1} mt={3}>
+                              <Chip
+                                label={match.round.tournament.name}
+                                color="primary"
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={match.round.name}
+                                color="warning"
+                                variant="outlined"
+                              />
+                            </Stack>
+                          </>
                         }
                         showAction={false}
                         handleSelect={() => {
