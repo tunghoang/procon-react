@@ -6,8 +6,9 @@ import { api, getError, showMessage } from "../../api/commons";
 const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
   const [answerData, setAnswerData] = useState({});
   const [answerBoard, setAnswerBoard] = useState(startBoard);
+  const [currentStep, setCurrentStep] = useState({});
 
-  const dieCutting = (coord, dir, die, board) => {
+  const _dieCutting = (coord, dir, die, board) => {
     let height = board.length;
     let width = board[0].length;
     let dh = die.length;
@@ -80,7 +81,7 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
     const dSize = dieSizes[Math.floor((dIdx + 2) / 3)];
     const dType = (dIdx + 2) % 3;
 
-    const die = [];
+    const die = [[]];
     for (let i = 0; i < dSize; i++) {
       die[i] = [];
       for (let j = 0; j < dSize; j++) {
@@ -104,18 +105,19 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
     }
   };
 
-  const getAnswerBoard = (move) => {
+  const _getAnswerBoard = (stepIdx, steps) => {
     let tmpBoard = JSON.parse(JSON.stringify(startBoard));
-    const ops = answerData.ops || [];
-    for (let i = 0; i < move; i++) {
-      let { x, y, s, p } = ops[i];
-      dieCutting([x, y], s, _getDieFromIdx(p), tmpBoard);
+    for (let i = 0; i < stepIdx; i++) {
+      let { x, y, s, p } = steps[i];
+      _dieCutting([x, y], s, _getDieFromIdx(p), tmpBoard);
     }
     return tmpBoard;
   };
 
   const handleChange = (_, val) => {
-    setAnswerBoard(getAnswerBoard(val));
+    const ops = answerData.ops || [];
+    setAnswerBoard(_getAnswerBoard(val, ops));
+    setCurrentStep(ops[val] || {});
   };
 
   useEffect(() => {
@@ -124,7 +126,7 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
 
   useEffect(() => {
     if (!answerData) return;
-    setAnswerBoard(getAnswerBoard(answerData.n));
+    setAnswerBoard(_getAnswerBoard(answerData.n, answerData.ops));
   }, [answerData]);
 
   return (
@@ -139,7 +141,12 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
           valueLabelDisplay="auto"
         />
       )}
-      <GameBoard board={answerBoard} goal={goalBoard} type="compare" />
+      <GameBoard
+        board={answerBoard}
+        goal={goalBoard}
+        step={currentStep}
+        type="compare"
+      />
     </>
   );
 };
