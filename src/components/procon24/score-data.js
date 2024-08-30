@@ -3,7 +3,7 @@ import "./score.css";
 const ScoreData = ({ score, onlyFinal = false }) => {
   const renderScores = (scoreData) => {
     const scores = JSON.parse(scoreData || "{}");
-    const percentage = scores?.raw_score / scores?.max_score;
+    const percentage = scores?.match_count / scores?.max_match_count;
 
     if (onlyFinal)
       return (
@@ -31,13 +31,15 @@ const ScoreData = ({ score, onlyFinal = false }) => {
           {!isNaN(percentage) ? `${(percentage * 100).toFixed(0)}%` : "NA"}
         </span>
         <span className="penalty-score">
-          {!isNaN(scores?.penalties) ? scores?.penalties : "NA"}
+          {!isNaN(scores?.step_penalty) ? scores?.step_penalty : "NA"}
         </span>
         <span className="penalty-score">
-          {!isNaN(scores?.num_steps) ? scores?.num_steps : "NA"}
+          {!isNaN(scores?.resubmission_penalty)
+            ? scores?.resubmission_penalty
+            : "NA"}
         </span>
         <span className="max-score">
-          {!isNaN(scores?.max_score) ? scores?.max_score : "NA"}
+          {!isNaN(scores?.max_match_count) ? scores?.max_match_count : "NA"}
         </span>
       </span>
     );
