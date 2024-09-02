@@ -1,7 +1,12 @@
 import React from "react";
 import "./board.css";
 
-export default function GameBoard({ board, goal, step, type = "default" }) {
+export default function GameBoard({
+  board,
+  goal,
+  step = {},
+  type = "default",
+}) {
   if (!board) return null;
   if (type == "compare") {
     if (!goal) return null;

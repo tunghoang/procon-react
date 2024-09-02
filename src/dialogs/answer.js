@@ -17,6 +17,7 @@ import CodeEditor from "../components/code-editor";
 import AccordionBoard from "../components/procon24/accordion-board";
 import ScoreData from "../components/procon24/score-data";
 import AnswerBoard from "../components/procon24/answer-board";
+import GameBoard from "../components/procon24/game-board";
 
 const useStyles = makeStyles({
   root: {
@@ -35,6 +36,8 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const answer = instance.answers[0];
 
   const questionData = JSON.parse(question?.question_data || "{}");
+  const startBoard = questionData.board?.start;
+  const goalBoard = questionData.board?.goal;
   const answerData = JSON.stringify({
     n: 0,
     ops: [],
@@ -63,12 +66,14 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
           <Stack spacing={0}>
             <AccordionBoard
               title="Start Board"
-              board={questionData.board?.start}
-            />
-            <AccordionBoard
-              title="Goal Board"
-              board={questionData.board?.goal}
-            />
+              copyContent={startBoard}
+              showCopy
+            >
+              <GameBoard board={startBoard} goal={goalBoard} type="compare" />
+            </AccordionBoard>
+            <AccordionBoard title="Goal Board" copyContent={goalBoard} showCopy>
+              <GameBoard board={goalBoard} goal={goalBoard} type="compare" />
+            </AccordionBoard>
             <AccordionBoard
               title="General Patterns"
               copyContent={questionData.general}
@@ -160,8 +165,12 @@ const ScoreDataDialog = ({
                 onChange={(score) => setScoreData(score)}
               />
             </AccordionBoard>
-            <AccordionBoard title="Start Board" board={startBoard} />
-            <AccordionBoard title="Goal Board" board={goalBoard} />
+            <AccordionBoard title="Start Board">
+              <GameBoard board={startBoard} goal={goalBoard} type="compare" />
+            </AccordionBoard>
+            <AccordionBoard title="Goal Board">
+              <GameBoard board={goalBoard} goal={goalBoard} type="compare" />
+            </AccordionBoard>
           </Stack>
         </Stack>
       </DialogContent>
