@@ -28,7 +28,7 @@ const AccordionBoard = ({
         <Typography variant="h6" mr={1}>
           {title}
         </Typography>
-        {(!children || showCopy) && (
+        {showCopy && (
           <Tooltip title="Copy">
             <IconButton
               size="small"
@@ -45,9 +45,7 @@ const AccordionBoard = ({
           </Tooltip>
         )}
       </AccordionSummary>
-      <AccordionDetails>
-        {children ? children : <GameBoard board={board} />}
-      </AccordionDetails>
+      <AccordionDetails>{children}</AccordionDetails>
     </Accordion>
   );
 };

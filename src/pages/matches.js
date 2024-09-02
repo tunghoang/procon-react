@@ -156,7 +156,7 @@ const Matches = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteMatch(selectedMatchIds);
-    if (result.length) refetch();
+    if (result.length) await refetch();
   };
 
   const saveInstance = async () => {
@@ -167,7 +167,7 @@ const Matches = () => {
       currentMatch.round_id = round.id;
       result = await apiCreate(currentMatch);
     }
-    if (result) refetch();
+    if (result) await refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
@@ -188,7 +188,7 @@ const Matches = () => {
     const result = await Promise.all(
       teams.map(async (team) => await apiAction(matchId, team.id))
     );
-    if (result.length) refetch();
+    if (result.length) await refetch();
     setDialogName("");
   };
 
@@ -218,7 +218,7 @@ const Matches = () => {
       >
         <DataTable
           filterOptions={filterOptions}
-          onFilter={(params) => refetch(params)}
+          onFilter={async (params) => await refetch(params)}
           rows={matches}
           columns={columns}
           onSelectionModelChange={(ids) => {

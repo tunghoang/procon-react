@@ -152,7 +152,7 @@ const Answers = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteDialog(selectedIds);
-    if (result.length) refetch();
+    if (result.length) await refetch();
   };
 
   return (

@@ -38,13 +38,15 @@ const Rounds = () => {
       },
     },
   });
+
   useEffect(() => {
     updateContext({ round: null });
   }, []);
+
   const apiDeleteDialog = useConfirmDelete();
   const handleDelete = async (item) => {
     const res = await apiDeleteDialog([item.id]);
-    if (res.length) refetch();
+    if (res.length) await refetch();
   };
 
   if (loading) return <LoadingPage />;
@@ -120,7 +122,7 @@ const Rounds = () => {
             await apiCreate(currentItem);
           }
           setShowDialog(false);
-          refetch();
+          await refetch();
         }}
         handleChange={(change) => {
           setCurrentItem({ ...currentItem, ...change });

@@ -1,5 +1,5 @@
 const formatDateTime = (datetime) => {
-  return new Date(datetime).toLocaleString("en");
+  return new Date(datetime).toLocaleString();
 };
 
 const setLocalStorage = (item, name) => {

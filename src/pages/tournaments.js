@@ -41,7 +41,7 @@ const Tournaments = () => {
   const apiDeleteTournament = useConfirmDelete();
   const handleDelete = async (tournament) => {
     const res = await apiDeleteTournament([tournament.id]);
-    if (res.length) refetch();
+    if (res.length) await refetch();
   };
 
   if (loading) return <LoadingPage />;
@@ -117,7 +117,7 @@ const Tournaments = () => {
             await apiEdit(currentTournament.id, currentTournament);
           else await apiCreate(currentTournament);
           setShowDialog(false);
-          refetch();
+          await refetch();
         }}
         handleChange={(change) => {
           setCurrentTournament({ ...currentTournament, ...change });

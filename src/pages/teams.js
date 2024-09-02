@@ -103,7 +103,7 @@ const Teams = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteTeam(selectedTeamIds);
-    if (result.length) refetch();
+    if (result.length) await refetch();
   };
   const saveInstance = async () => {
     let result;
@@ -112,7 +112,7 @@ const Teams = () => {
     } else {
       result = await apiCreate(currentTeam);
     }
-    if (result) refetch();
+    if (result) await refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
@@ -146,7 +146,7 @@ const Teams = () => {
         <DataTable
           rows={teams}
           filterOptions={filterOptions}
-          onFilter={(params) => refetch(params)}
+          onFilter={async (params) => await refetch(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedTeamIds(ids);

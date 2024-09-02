@@ -56,7 +56,7 @@ const UserQuestion = () => {
 
   const saveInstance = async () => {
     const result = await apiCreate(payload);
-    if (result) refetch();
+    if (result) await refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
@@ -107,14 +107,15 @@ const UserQuestion = () => {
                                 <span>ID:</span> {question.id}
                               </div>
                               <div className="data-item">
-                                <span>Width:</span> {questionData.board.width}
+                                <span>Width:</span> {questionData.board?.width}
                               </div>
                               <div className="data-item">
-                                <span>Height:</span> {questionData.board.height}
+                                <span>Height:</span>{" "}
+                                {questionData.board?.height}
                               </div>
                               <div className="data-item">
                                 <span>General patterns:</span>{" "}
-                                {questionData.general.n}
+                                {questionData.general?.n}
                               </div>
                             </div>
                             <div>

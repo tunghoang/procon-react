@@ -15,6 +15,8 @@ import { useFetchData } from "../api";
 import { useContext } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
+import GameBoard from "../components/procon24/game-board";
+import AccordionBoard from "../components/procon24/accordion-board";
 
 const useStyles = makeStyles({
   root: {
@@ -122,6 +124,11 @@ const QuestionDataDialog = ({
 }) => {
   const classes = useStyles();
   const { formatMessage: tr } = useIntl();
+
+  const questionData = JSON.parse(instance || "{}");
+  const startBoard = questionData.board?.start;
+  const goalBoard = questionData.board?.goal;
+
   return (
     <Dialog
       classes={{ paperScrollPaper: classes.root }}
@@ -130,7 +137,27 @@ const QuestionDataDialog = ({
     >
       <DialogTitle></DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
-        <CodeEditor title={title} defaultValue={instance} readOnly={disabled} />
+        <Stack spacing={3}>
+          <CodeEditor
+            title={title}
+            defaultValue={{
+              board: {
+                width: questionData.board?.width,
+                height: questionData.board?.height,
+              },
+              general: questionData.general,
+            }}
+            readOnly={disabled}
+          />
+          <Stack spacing={0}>
+            <AccordionBoard title="Start Board">
+              <GameBoard board={startBoard} goal={goalBoard} />
+            </AccordionBoard>
+            <AccordionBoard title="Goal Board">
+              <GameBoard board={goalBoard} goal={goalBoard} />
+            </AccordionBoard>
+          </Stack>
+        </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>{tr({ id: "Close" })}</Button>

@@ -13,7 +13,9 @@ import Context from "../context";
 const Questions = () => {
   const { formatMessage: tr } = useIntl();
   const [selectedIds, setSelectedIds] = useState([]);
-  const [questionData, setQuestionData] = useState({});
+  const [question, setQuestion] = useState({});
+  const [dialogName, setDialogName] = useState("");
+  const [currentItem, setCurrentItem] = useState({});
   const { round } = useContext(Context);
   const { useConfirmDelete, apiCreate, apiEdit } = useApi(
     "/question",
@@ -121,7 +123,7 @@ const Questions = () => {
         return (
           <IconButton
             onClick={() => {
-              setQuestionData({
+              setQuestion({
                 questionId: row.id,
                 questionData: row.question_data,
               });
@@ -134,8 +136,6 @@ const Questions = () => {
       },
     },
   ];
-  const [dialogName, setDialogName] = useState("");
-  const [currentItem, setCurrentItem] = useState({});
 
   const clickNew = () => {
     setCurrentItem({
@@ -166,7 +166,7 @@ const Questions = () => {
   };
   const clickDelete = async () => {
     const result = await apiDeleteDialog(selectedIds);
-    if (result.length) refetch();
+    if (result.length) await refetch();
   };
   const saveInstance = async () => {
     let result;
@@ -175,12 +175,11 @@ const Questions = () => {
     } else {
       result = await apiCreate(currentItem);
     }
-    if (result) refetch();
+    if (result) await refetch();
     setDialogName("");
   };
   const changeInstance = (changes) => {
-    let newInst = { ...currentItem, ...changes };
-    setCurrentItem(newInst);
+    setCurrentItem({ ...currentItem, ...changes });
   };
 
   return (
@@ -206,7 +205,7 @@ const Questions = () => {
         <DataTable
           rows={questions}
           filterOptions={filterOptions}
-          onFilter={(params) => refetch(params)}
+          onFilter={async (params) => await refetch(params)}
           columns={columns}
           onSelectionModelChange={(ids) => {
             setSelectedIds(ids);
@@ -223,7 +222,7 @@ const Questions = () => {
       />
       <QuestionDataDialog
         open={dialogName === "QuestionDataDialog"}
-        instance={questionData.questionData}
+        instance={question.questionData}
         close={closeDialog}
         disabled
       />
