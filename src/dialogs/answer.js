@@ -9,13 +9,11 @@ import {
   Select,
   MenuItem,
   FormControl,
-  Slider,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
-import GameBoard from "../components/procon24/game-board";
 import AccordionBoard from "../components/procon24/accordion-board";
 import ScoreData from "../components/procon24/score-data";
 import AnswerBoard from "../components/procon24/answer-board";
@@ -37,7 +35,6 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const answer = instance.answers[0];
 
   const questionData = JSON.parse(question?.question_data || "{}");
-  // const answerData = answer?.answer_data;
   const answerData = JSON.stringify({
     n: 0,
     ops: [],
@@ -112,30 +109,12 @@ const ScoreDataDialog = ({
 
   const answers = instance.answers || [];
   const [answer, setAnswer] = useState(answers[0]);
+  const [scoreData, setScoreData] = useState({});
 
   const question = instance.question || {};
-
   const questionData = JSON.parse(question?.question_data || "{}");
   const startBoard = questionData.board?.start;
   const goalBoard = questionData.board?.goal;
-  // const answerBoard = JSON.parse(answer?.score_data || "{}").answer_board || [
-  //   [],
-  // ];
-
-  const _getScoreData = () => {
-    if (!answer?.score_data) {
-      return null;
-    }
-    const scoreData = JSON.parse(answer.score_data);
-    const startTime = new Date(question.start_time);
-    const submitTime = new Date(answer.updatedAt);
-    scoreData.start_time = startTime;
-    scoreData.submit_time = submitTime;
-    scoreData.duration = submitTime - startTime;
-    delete scoreData.answer_board;
-
-    return JSON.stringify(scoreData);
-  };
 
   return (
     <Dialog
@@ -166,19 +145,19 @@ const ScoreDataDialog = ({
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <ScoreData score={answer?.score_data} onlyFinal />
+          <ScoreData scores={scoreData} />
           <CodeEditor
             title={title}
-            defaultValue={_getScoreData()}
+            defaultValue={scoreData}
             readOnly={disabled}
-            key={answer?.id}
           />
           <Stack spacing={0}>
-            <AccordionBoard title="Answer Board">
+            <AccordionBoard title="Answer Board" defaultExpanded>
               <AnswerBoard
                 answerId={answer?.id}
                 startBoard={startBoard}
                 goalBoard={goalBoard}
+                onChange={(score) => setScoreData(score)}
               />
             </AccordionBoard>
             <AccordionBoard title="Start Board" board={startBoard} />

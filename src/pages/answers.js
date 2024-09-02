@@ -14,7 +14,8 @@ import ScoreData from "../components/procon24/score-data";
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
   const [selectedIds, setSelectedIds] = useState([]);
-  const [answer, setAnswer] = useState({});
+  const [dialogInstance, setDialogInstance] = useState({});
+  const [dialogName, setDialogName] = useState("");
   const { round } = useContext(Context);
   const { useConfirmDelete } = useApi("/answer", "Answer");
   const apiDeleteDialog = useConfirmDelete();
@@ -129,7 +130,7 @@ const Answers = () => {
                 const question = await api(
                   `${process.env.REACT_APP_SERVICE_API}/question/${row.question_id}`
                 );
-                setAnswer({
+                setDialogInstance({
                   answers: [row],
                   question,
                 });
@@ -138,14 +139,13 @@ const Answers = () => {
             >
               <VisibilityIcon />
             </IconButton>
-            <ScoreData score={row.score_data} />
+            <ScoreData scores={JSON.parse(row.score_data || "{}")} />
           </>
         );
       },
       valueGetter: ({ row }) => getScores(row.score_data),
     },
   ];
-  const [dialogName, setDialogName] = useState("");
 
   const closeDialog = () => {
     setDialogName("");
@@ -184,12 +184,14 @@ const Answers = () => {
           }}
         />
       </Paper>
-      <ScoreDataDialog
-        open={dialogName === "ScoreDataDialog"}
-        instance={answer}
-        close={closeDialog}
-        disabled
-      />
+      {dialogName === "ScoreDataDialog" && (
+        <ScoreDataDialog
+          open={dialogName === "ScoreDataDialog"}
+          instance={dialogInstance}
+          close={closeDialog}
+          disabled
+        />
+      )}
     </>
   );
 };

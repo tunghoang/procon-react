@@ -15,8 +15,7 @@ export default function CodeEditor({
   const [code, setCode] = useState("");
   const [validate, setValidate] = useState("");
 
-  useEffect(() => {
-    if (!defaultValue) return;
+  const _changeDefaultValue = () => {
     let value = "";
     switch (typeof defaultValue) {
       case "string":
@@ -27,9 +26,18 @@ export default function CodeEditor({
         value = JSON.stringify(defaultValue, null, 2);
         break;
     }
-
     setCode(value);
+  };
+
+  useEffect(() => {
+    if (!defaultValue) return;
+    _changeDefaultValue();
   }, []);
+
+  useEffect(() => {
+    if (!readOnly) return;
+    _changeDefaultValue();
+  }, [defaultValue]);
 
   const onChange = (code) => {
     try {

@@ -1,10 +1,11 @@
-import { Box, Slider } from "@mui/material";
+import { Slider } from "@mui/material";
 import GameBoard from "./game-board";
 import { useEffect, useState } from "react";
 import { api, getError, showMessage } from "../../api/commons";
 
-const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
-  const [answerData, setAnswerData] = useState({});
+const AnswerBoard = ({ answerId, startBoard, goalBoard, onChange }) => {
+  const [answer, setAnswer] = useState({});
+  const [maxStep, setMaxStep] = useState(0);
   const [answerBoard, setAnswerBoard] = useState(startBoard);
   const [currentStep, setCurrentStep] = useState({});
 
@@ -94,17 +95,6 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
     return die;
   };
 
-  const getAnswer = async () => {
-    try {
-      const res = await api.get(
-        `${process.env.REACT_APP_SERVICE_API}/answer/${answerId}`
-      );
-      setAnswerData(JSON.parse(res.answer_data || "{}"));
-    } catch (e) {
-      showMessage(getError(e), "error");
-    }
-  };
-
   const _getAnswerBoard = (stepIdx, steps) => {
     let tmpBoard = JSON.parse(JSON.stringify(startBoard));
     for (let i = 0; i < stepIdx; i++) {
@@ -114,9 +104,45 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
     return tmpBoard;
   };
 
-  const handleChange = (_, val) => {
-    const ops = answerData.ops || [];
-    setAnswerBoard(_getAnswerBoard(val, ops));
+  const _getCorrectCount = (curBoard, goal) => {
+    let corr = 0;
+    curBoard.forEach((row, ridx) => {
+      row.forEach((item, cidx) => {
+        if (item === goal[ridx][cidx]) corr += 1;
+      });
+    });
+
+    return corr;
+  };
+
+  const getAnswer = async () => {
+    try {
+      const result = await api.get(
+        `${process.env.REACT_APP_SERVICE_API}/answer/${answerId}`
+      );
+      const ansData = JSON.parse(result.answer_data || "{}");
+      setMaxStep(ansData.n);
+      setAnswer(result);
+    } catch (e) {
+      showMessage(getError(e), "error");
+    }
+  };
+
+  const handleBoardChange = (val) => {
+    const ops = JSON.parse(answer.answer_data || "{}").ops || [];
+    const score = JSON.parse(answer.score_data || "{}");
+
+    const curBoard = _getAnswerBoard(val, ops);
+    const matchCnt = _getCorrectCount(curBoard, goalBoard);
+
+    score.match_count = matchCnt;
+    score.match_score = matchCnt * score.match_factor;
+    score.final_score =
+      score.match_score + score.step_penalty + score.resubmission_penalty;
+    score.submit_time = new Date(answer.updatedAt).toLocaleString();
+
+    onChange(score);
+    setAnswerBoard(curBoard);
     setCurrentStep(ops[val] || {});
   };
 
@@ -125,19 +151,18 @@ const AnswerBoard = ({ answerId, startBoard, goalBoard }) => {
   }, [answerId]);
 
   useEffect(() => {
-    if (!answerData) return;
-    setAnswerBoard(_getAnswerBoard(answerData.n, answerData.ops));
-  }, [answerData]);
+    handleBoardChange(maxStep);
+  }, [answer]);
 
   return (
     <>
-      {!!answerData.n && (
+      {!!maxStep && (
         <Slider
-          onChange={handleChange}
-          defaultValue={answerData.n}
+          onChange={(_, val) => handleBoardChange(val)}
+          defaultValue={maxStep}
           step={1}
           min={0}
-          max={answerData.n}
+          max={maxStep}
           valueLabelDisplay="auto"
         />
       )}
