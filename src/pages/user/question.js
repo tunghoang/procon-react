@@ -118,12 +118,12 @@ const UserQuestion = () => {
                                 {questionData.general?.n}
                               </div>
                             </div>
-                            <div>
+                            {/* <div>
                               Start Time: {formatDateTime(question.start_time)}
                             </div>
                             <div>
                               End Time: {formatDateTime(question.end_time)}
-                            </div>
+                            </div> */}
                           </Stack>
                         }
                         handleSelect={() => {

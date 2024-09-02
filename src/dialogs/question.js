@@ -59,7 +59,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
               handleChange({ name: evt.target.value });
             }}
           />
-          <DateTimePicker
+          {/* <DateTimePicker
             label="Start time"
             value={instance?.start_time || null}
             onChange={(newValue) => {
@@ -76,7 +76,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
             renderInput={(props) => (
               <TextField variant="standard" error={false} {...props} />
             )}
-          />
+          /> */}
           <Autocomplete
             options={matches}
             value={

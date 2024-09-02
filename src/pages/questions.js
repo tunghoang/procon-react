@@ -82,24 +82,24 @@ const Questions = () => {
       flex: 1,
       headerClassName: "tableHeader",
     },
-    {
-      field: "start_time",
-      headerName: "Start Time",
-      flex: 1,
-      headerClassName: "tableHeader",
-      valueGetter: (params) => {
-        return formatDateTime(params.row.start_time);
-      },
-    },
-    {
-      field: "end_time",
-      headerName: "End Time",
-      flex: 1,
-      headerClassName: "tableHeader",
-      valueGetter: (params) => {
-        return formatDateTime(params.row.end_time);
-      },
-    },
+    // {
+    //   field: "start_time",
+    //   headerName: "Start Time",
+    //   flex: 1,
+    //   headerClassName: "tableHeader",
+    //   valueGetter: (params) => {
+    //     return formatDateTime(params.row.start_time);
+    //   },
+    // },
+    // {
+    //   field: "end_time",
+    //   headerName: "End Time",
+    //   flex: 1,
+    //   headerClassName: "tableHeader",
+    //   valueGetter: (params) => {
+    //     return formatDateTime(params.row.end_time);
+    //   },
+    // },
     {
       field: "match",
       headerName: "Match",

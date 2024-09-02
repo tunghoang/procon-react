@@ -17,6 +17,7 @@ import { useIntl } from "react-intl";
 import { useFetchData } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
+import { DateTimePicker } from "@mui/x-date-pickers";
 const useStyles = makeStyles({
   root: {
     // overflow: "visible",
@@ -59,6 +60,26 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
               onChange={(evt) => {
                 handleChange({ description: evt.target.value });
               }}
+            />
+            <DateTimePicker
+              label="Start time"
+              value={instance?.start_time || null}
+              onChange={(newValue) => {
+                handleChange({ start_time: newValue });
+              }}
+              renderInput={(props) => (
+                <TextField variant="standard" {...props} />
+              )}
+            />
+            <DateTimePicker
+              label="End time"
+              value={instance?.end_time || null}
+              onChange={(newValue) => {
+                handleChange({ end_time: newValue });
+              }}
+              renderInput={(props) => (
+                <TextField variant="standard" error={false} {...props} />
+              )}
             />
             <FormControlLabel
               sx={{ flexDirection: "row" }}

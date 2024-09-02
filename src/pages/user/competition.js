@@ -16,6 +16,7 @@ import { navigate } from "hookrouter";
 import Context from "../../context";
 import CardData from "../../components/card-data";
 import LoadingPage from "../../components/loading-page";
+import { formatDateTime } from "../../utils/commons";
 
 const Competition = () => {
   const { updateContext } = useContext(Context);
@@ -28,6 +29,66 @@ const Competition = () => {
   useEffect(() => {
     updateContext({ userMatch: null });
   }, []);
+
+  const renderMatches = () => {
+    const activeMatches = matches.filter((m) => m.is_active);
+    if (!activeMatches.length)
+      return (
+        <Typography
+          variant="h4"
+          m="auto"
+          sx={{
+            opacity: 0.3,
+            verticalAlign: "middle",
+            lineHeight: "300px",
+          }}
+        >
+          No matches added yet
+        </Typography>
+      );
+
+    return activeMatches.map((match) => (
+      <Grid item key={match.id} lg={4} md={6} xs={12}>
+        <CardData
+          header={
+            match.is_active ? (
+              <Chip label="Active" color="success" />
+            ) : (
+              <Chip label="Inactive" />
+            )
+          }
+          disabled={!match.is_active}
+          name={match.name}
+          description={
+            <>
+              <Stack>
+                <div>{match.description}</div>
+                <div>Start Time: {formatDateTime(match.start_time)}</div>
+                <div>End Time: {formatDateTime(match.end_time)}</div>
+              </Stack>
+              <Stack direction="row" spacing={1} mt={3}>
+                <Chip
+                  label={match.round.tournament.name}
+                  color="primary"
+                  variant="outlined"
+                />
+                <Chip
+                  label={match.round.name}
+                  color="warning"
+                  variant="outlined"
+                />
+              </Stack>
+            </>
+          }
+          showAction={false}
+          handleSelect={() => {
+            navigate(`/competition/question`);
+            updateContext({ userMatch: match });
+          }}
+        />
+      </Grid>
+    ));
+  };
 
   if (loading) return <LoadingPage />;
 
@@ -46,59 +107,7 @@ const Competition = () => {
             <Typography variant="h5">{tr({ id: "Matches" })}</Typography>
             <Toolbar />
             <Grid container spacing={3}>
-              {matches.length ? (
-                matches
-                  .filter((e) => e.is_active)
-                  .map((match) => (
-                    <Grid item key={match.id} lg={4} md={6} xs={12}>
-                      <CardData
-                        header={
-                          match.is_active ? (
-                            <Chip label="Active" color="success" />
-                          ) : (
-                            <Chip label="Inactive" />
-                          )
-                        }
-                        disabled={!match.is_active}
-                        name={match.name}
-                        description={
-                          <>
-                            {match.description}
-                            <Stack direction="row" spacing={1} mt={3}>
-                              <Chip
-                                label={match.round.tournament.name}
-                                color="primary"
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={match.round.name}
-                                color="warning"
-                                variant="outlined"
-                              />
-                            </Stack>
-                          </>
-                        }
-                        showAction={false}
-                        handleSelect={() => {
-                          navigate(`/competition/question`);
-                          updateContext({ userMatch: match });
-                        }}
-                      />
-                    </Grid>
-                  ))
-              ) : (
-                <Typography
-                  variant="h4"
-                  m="auto"
-                  sx={{
-                    opacity: 0.3,
-                    verticalAlign: "middle",
-                    lineHeight: "300px",
-                  }}
-                >
-                  No matches added yet
-                </Typography>
-              )}
+              {renderMatches()}
             </Grid>
           </Container>
         </Box>

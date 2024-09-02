@@ -169,7 +169,7 @@ const Answers = () => {
       >
         <DataTable
           rows={answers}
-          onRefresh={() => refetch(filterParams)}
+          onRefresh={async () => await refetch(filterParams)}
           filterOptions={filterOptions}
           onFilter={(params) => setFilterParams(params)}
           columns={columns}
