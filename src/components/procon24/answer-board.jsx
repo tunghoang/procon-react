@@ -59,8 +59,9 @@ const AnswerBoard = ({
 
     score.match_count = matchCnt;
     score.match_score = matchCnt * score.match_factor;
-    score.final_score =
+    const finalScore =
       score.match_score + score.step_penalty + score.resubmission_penalty;
+    score.final_score = Math.round(finalScore * 100) / 100;
     score.submit_time = formatDateTime(answer.updatedAt);
 
     onChange(score);

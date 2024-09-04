@@ -26,8 +26,8 @@ const createAPI = () => {
     },
     (error) => {
       if (
-        error.response.status == 401 &&
-        error.response.statusText == "Unauthorized"
+        error.response?.status === 401 &&
+        error.response?.statusText === "Unauthorized"
       ) {
         localStorage.removeItem("token");
       }
