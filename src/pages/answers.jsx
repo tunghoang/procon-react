@@ -128,7 +128,7 @@ const Answers = () => {
             <IconButton
               onClick={async () => {
                 const question = await api(
-                  `${process.env.REACT_APP_SERVICE_API}/question/${row.question_id}`
+                  `${import.meta.env.VITE_SERVICE_API}/question/${row.question_id}`
                 );
                 setDialogInstance({
                   answers: [row],

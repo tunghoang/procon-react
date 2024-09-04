@@ -33,7 +33,7 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   boxShadow: theme.shadows[3],
 }));
 
-const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 
 export const DashboardNavbar = (props) => {
   const { onSidebarOpen, isSidebarOpen, ...other } = props;

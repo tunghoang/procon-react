@@ -40,7 +40,7 @@ const AnswerBoard = ({
   const getAnswer = async () => {
     try {
       const result = await api.get(
-        `${process.env.REACT_APP_SERVICE_API}/answer/${answerId}`
+        `${import.meta.env.VITE_SERVICE_API}/answer/${answerId}`
       );
       const ansData = JSON.parse(result.answer_data || "{}");
       setMaxStep(ansData.n);

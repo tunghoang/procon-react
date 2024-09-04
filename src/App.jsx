@@ -2,13 +2,13 @@ import "./App.css";
 import { useRoutes, usePath } from "hookrouter";
 import React from "react";
 import { useEffect, useState, useContext } from "react";
-import Tournaments from "./pages/tournaments.js";
+import Tournaments from "./pages/tournaments";
 import Matches from "./pages/matches";
-import Teams from "./pages/teams.js";
+import Teams from "./pages/teams";
 import Rounds from "./pages/rounds";
 import Questions from "./pages/questions";
 import Answers from "./pages/answers";
-import Login from "./pages/login.js";
+import Login from "./pages/login";
 
 import Context from "./context";
 

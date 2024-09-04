@@ -9,7 +9,7 @@ import {
 import { useConfirm } from "material-ui-confirm";
 import { useCallback } from "react";
 
-const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 
 export const useApi = (pathName, apiName) => {
   const URL = SERVICE_API + pathName;

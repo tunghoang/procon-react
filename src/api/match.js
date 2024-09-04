@@ -1,7 +1,7 @@
 import { doPost, doDelete, showMessage, getError } from "./commons";
 import { useConfirm } from "material-ui-confirm";
 
-const SERVICE_API = process.env.REACT_APP_SERVICE_API;
+const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 const MATCH_URL = SERVICE_API + "/match";
 
 export const apiDeleteTeamMatch = async (idMatch, idTeam) => {
