@@ -31,8 +31,8 @@ export default function GameBoard({ board, goal, general, step = {} }) {
                 if (die[ridx - step.y][cidx - step.x] === 1) {
                   if (step.s === 0) className += " cell-up";
                   if (step.s === 1) className += " cell-bottom";
-                  if (step.s === 2) className += " cell-right";
-                  if (step.s === 3) className += " cell-left";
+                  if (step.s === 2) className += " cell-left";
+                  if (step.s === 3) className += " cell-right";
                 }
               }
 
