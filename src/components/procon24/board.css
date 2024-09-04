@@ -12,7 +12,7 @@
 }
 
 @keyframes right {
-  to {transform: translateY(5px);}
+  to {transform: translateX(5px);}
 }
 
 .GameBoard .cell {
