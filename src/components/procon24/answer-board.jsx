@@ -63,6 +63,7 @@ const AnswerBoard = ({
       score.match_score + score.step_penalty + score.resubmission_penalty;
     score.final_score = Math.round(finalScore * 100) / 100;
     score.submit_time = formatDateTime(answer.submit_time || answer.updatedAt);
+    score.updated_time = formatDateTime(answer.updatedAt);
 
     onChange(score);
     setAnswerBoard(curBoard);
