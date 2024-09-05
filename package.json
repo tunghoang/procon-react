@@ -6,10 +6,8 @@
     "@codemirror/lang-json": "^6.0.0",
     "@emotion/cache": "^11.5.0",
     "@emotion/react": "^11.5.0",
-    "@emotion/server": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.0.5",
-    "@mui/lab": "^5.0.0-alpha.53",
     "@mui/material": "^5.0.6",
     "@mui/styles": "^5.0.2",
     "@mui/x-data-grid": "^5.13.0",
@@ -25,6 +23,7 @@
     "react-dom": "^17.0.2",
     "react-intl": "^6.0.5",
     "toastify-js": "^1.11.2",
+    "url": "^0.11.4",
     "yup": "^0.32.9"
   },
   "scripts": {
@@ -45,7 +44,7 @@
     ]
   },
   "devDependencies": {
-    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.3"
   }
 }
