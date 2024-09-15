@@ -63,7 +63,7 @@ const UserQuestion = () => {
     setPayload({ ...payload, ...changes });
   };
 
-  if (qloading && aloading) return <LoadingPage />;
+  if (qloading || aloading) return <LoadingPage />;
 
   if (!questions.length) return (
     <Typography
