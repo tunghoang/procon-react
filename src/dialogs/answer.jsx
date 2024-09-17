@@ -11,13 +11,14 @@ import {
   FormControl,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import AccordionBoard from "../components/procon24/accordion-board";
 import ScoreData from "../components/procon24/score-data";
 import AnswerBoard from "../components/procon24/answer-board";
 import GameBoard from "../components/procon24/game-board";
+import Context from "../context";
 
 const useStyles = makeStyles({
   root: {
@@ -117,6 +118,7 @@ const ScoreDataDialog = ({
   const answers = instance.answers || [];
   const [answer, setAnswer] = useState(answers[0]);
   const [scoreData, setScoreData] = useState({});
+  const { team } = useContext(Context);
 
   const question = instance.question || {};
   const questionData = JSON.parse(question?.question_data || "{}");
@@ -136,18 +138,20 @@ const ScoreDataDialog = ({
             {answer?.team?.name}
           </Typography>
           <FormControl variant="standard" sx={{ m: 1, width: 120 }}>
-            <Select
-              defaultValue={0}
-              onChange={(e) => setAnswer(answers[e.target.value])}
-            >
-              {answers.map((asw, idx) => {
-                return (
-                  <MenuItem key={idx} value={idx}>
-                    {asw.team?.name}
-                  </MenuItem>
-                );
-              })}
-            </Select>
+            {team.is_admin && (
+              <Select
+                defaultValue={0}
+                onChange={(e) => setAnswer(answers[e.target.value])}
+              >
+                {answers.map((asw, idx) => {
+                  return (
+                    <MenuItem key={idx} value={idx}>
+                      {asw.team?.name}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            )}
           </FormControl>
         </Stack>
       </DialogTitle>

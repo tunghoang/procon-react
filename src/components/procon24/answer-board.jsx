@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, getError, showMessage } from "../../api/commons";
 import { formatDateTime } from "../../utils/commons";
 import { dieCutting, getDieFromIdx } from "./game-handler";
+import { debounce } from "lodash";
 
 const AnswerBoard = ({
   answerId,
@@ -62,13 +63,19 @@ const AnswerBoard = ({
     const finalScore =
       score.match_score + score.step_penalty + score.resubmission_penalty;
     score.final_score = Math.round(finalScore * 100) / 100;
-    score.submitted_time = formatDateTime(answer.submitted_time || answer.updatedAt);
+    score.submitted_time = formatDateTime(
+      answer.submitted_time || answer.updatedAt
+    );
     score.updated_time = formatDateTime(answer.updatedAt);
 
     onChange(score);
     setAnswerBoard(curBoard);
     setCurrentStep(ops[val] || {});
   };
+
+  const handleBoardChangedb = debounce((val) => {
+    handleBoardChange(val);
+  }, 500);
 
   useEffect(() => {
     getAnswer();
@@ -82,12 +89,13 @@ const AnswerBoard = ({
     <>
       {!!maxStep && (
         <Slider
-          onChange={(_, val) => handleBoardChange(val)}
+          onChange={(_, val) => handleBoardChangedb(val)}
           defaultValue={maxStep}
           step={1}
           min={0}
           max={maxStep}
           valueLabelDisplay="auto"
+          key={maxStep}
         />
       )}
       <GameBoard
