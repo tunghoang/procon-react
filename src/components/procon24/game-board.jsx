@@ -13,7 +13,7 @@ const GameBoard = ({ board, goal, general, step = {}, defaultMode = 0 }) => {
   if (!board) return null;
   if (!goal) return null;
 
-  const boardId = new Date();
+  const boardId = Date.now();
   const [mode, setMode] = useState(defaultMode);
 
   const die = getDieFromIdx(step.p, general);
