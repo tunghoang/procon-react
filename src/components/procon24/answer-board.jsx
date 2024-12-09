@@ -75,7 +75,7 @@ const AnswerBoard = ({
 
   const handleBoardChangedb = debounce((val) => {
     handleBoardChange(val);
-  }, 500);
+  }, 300);
 
   useEffect(() => {
     getAnswer();
