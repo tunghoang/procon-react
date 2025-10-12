@@ -136,7 +136,7 @@ export const DashboardNavbar = (props) => {
                   if (isCopied) {
                     showMessage("Copied token to clipboard!", "success", 2000);
                   } else {
-                    showMessage("Copy is unavailable", "warning", 2000);
+                    showMessage("Copy unavailable — open DevTools to view the result.", "warning", 2000);
                   }
                 }}
               >

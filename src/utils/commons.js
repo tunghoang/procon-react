@@ -12,6 +12,7 @@ const copyText = async (text) => {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (err) {
+    console.log(text);
     return false;
   }
 };
