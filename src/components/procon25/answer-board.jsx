@@ -77,7 +77,7 @@ const AnswerBoard = ({ answerId, startBoard, onChange }) => {
 
   const handleBoardChangedb = debounce((val) => {
     handleBoardChange(val);
-  }, 300);
+  }, 100);
 
   useEffect(() => {
     getAnswer();

@@ -9,7 +9,7 @@ import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
-import ScoreData from "../components/procon24/score-data";
+import ScoreData from "../components/procon25/score-data";
 
 const Answers = () => {
   const { formatMessage: tr } = useIntl();
