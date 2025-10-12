@@ -27,6 +27,7 @@ import LanguageTrans from "./language-trans";
 import Logo from "./logo";
 import Breadcrumb from "./breadcrumb";
 import TeamPasswordDialog from "../dialogs/password";
+import { copyText } from "../utils/commons";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -129,10 +130,14 @@ export const DashboardNavbar = (props) => {
             </Tooltip>
             <Tooltip title="Token">
               <IconButton
-                onClick={() => {
+                onClick={async () => {
                   const token = localStorage.getItem("token");
-                  navigator.clipboard.writeText(token);
-                  showMessage("Copied token to clipboard!", "success", 2000);
+                  const isCopied = await copyText(token)
+                  if (isCopied) {
+                    showMessage("Copied token to clipboard!", "success", 2000);
+                  } else {
+                    showMessage("Copy is unavailable", "warning", 2000);
+                  }
                 }}
               >
                 <VpnKeyIcon />
