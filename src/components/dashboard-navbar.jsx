@@ -46,7 +46,7 @@ export const DashboardNavbar = (props) => {
     try {
       const res = await api.get(`${SERVICE_API}/question/time`);
       showMessage(
-        `Time: ${new Date() - new Date(res.time)} ms`,
+        `Ping: ${Math.abs(Date.now() - new Date(res.time))} ms`,
         "success",
         2000
       );
@@ -122,7 +122,7 @@ export const DashboardNavbar = (props) => {
             <Breadcrumb />
           </Stack>
           <Stack direction={"row"} spacing={3} alignItems="center">
-            <Tooltip title="Time">
+            <Tooltip title="Ping">
               <IconButton sx={{ ml: 3 }} onClick={handleCheckTime}>
                 <AccessTimeIcon />
               </IconButton>

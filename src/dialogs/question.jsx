@@ -15,12 +15,13 @@ import { useFetchData } from "../api";
 import { useContext } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
-import GameBoard from "../components/procon24/game-board";
-import AccordionBoard from "../components/procon24/accordion-board";
+import GameBoard from "../components/procon25/game-board";
+import AccordionBoard from "../components/procon25/accordion-board";
 
 const useStyles = makeStyles({
   root: {
     // overflow: "visible",
+    minWidth: "600px"
   },
 });
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
@@ -91,16 +92,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
           />
           {!instance?.id && (
             <CodeEditor
-              title="Question Data"
-              subTitle={"mode= 0: random; 1: special"}
+              title="Parameters"
+              subTitle={"mode= 0: random; 1: optimal solution"}
               readOnly={!!instance?.id}
               defaultValue={{
-                width: 32,
-                height: 32,
-                p: 2,
+                size: 12,
                 mode: 0,
-                ndie: 1,
-                niter: 2,
+                max_ops: 2,
+                rotations: 3
               }}
               onValueChange={(value) => handleChange(value)}
             />
@@ -126,8 +125,9 @@ const QuestionDataDialog = ({
   const { formatMessage: tr } = useIntl();
 
   const questionData = JSON.parse(instance || "{}");
-  const startBoard = questionData.board?.start;
-  const goalBoard = questionData.board?.goal;
+  const entities = questionData.field?.entities;
+  // const startBoard = questionData.board?.start;
+  // const goalBoard = questionData.board?.goal;
 
   return (
     <Dialog
@@ -141,21 +141,24 @@ const QuestionDataDialog = ({
           <CodeEditor
             title={title}
             defaultValue={{
-              board: {
-                width: questionData.board?.width,
-                height: questionData.board?.height,
+              parameters: questionData.parameters,
+              field: {
+                size: questionData.field?.size,
+                entities: questionData.field?.entities,
               },
-              general: questionData.general,
             }}
             readOnly={disabled}
           />
           <Stack spacing={0}>
-            <AccordionBoard title="Start Board">
+            <AccordionBoard title="Board">
+              <GameBoard board={entities} />
+            </AccordionBoard>
+            {/* <AccordionBoard title="Start Board">
               <GameBoard board={startBoard} goal={goalBoard} />
             </AccordionBoard>
             <AccordionBoard title="Goal Board">
               <GameBoard board={goalBoard} goal={goalBoard} />
-            </AccordionBoard>
+            </AccordionBoard> */}
           </Stack>
         </Stack>
       </DialogContent>

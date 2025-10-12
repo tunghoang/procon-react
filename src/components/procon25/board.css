@@ -1,0 +1,44 @@
+.GameBoard {
+  display: inline-block;
+  border-collapse: collapse;
+  max-width: 90vw; /* prevent overflow on small screens */
+}
+
+.GameBoard .cell {
+  aspect-ratio: 1 / 1; /* keep square shape */
+  width: clamp(12px, 2vw, 24px); /* responsive scaling */
+  font-size: clamp(8px, 1vw, 12px);
+  text-align: center;
+  border: 1px solid #333;
+  transition: background-color 0.25s ease, transform 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.GameBoard .cell-border {
+  border: 1px solid #ffd54f; /* soft yellow */
+  box-shadow: 0 0 3px #ffeb3b inset;
+}
+
+.GameBoard .cell-wrong {
+  background-color: #e57373; /* soft red */
+}
+
+.GameBoard .cell-correct {
+  background-color: #81c784; /* soft green */
+}
+
+.GameBoard .cell.rotating {
+  animation: rotateAnim 0.6s ease-in-out;
+  transform-origin: center center;
+}
+
+@keyframes rotateAnim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}

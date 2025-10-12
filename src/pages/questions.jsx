@@ -143,12 +143,8 @@ const Questions = () => {
       match_id: "",
       start_time: null,
       end_time: null,
-      width: 32,
-      height: 32,
-      p: 2,
+      size: 12,
       mode: 0,
-      ndie: 1,
-      niter: 5,
     });
     setDialogName("QuestionDialog");
   };

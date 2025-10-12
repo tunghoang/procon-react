@@ -43,7 +43,7 @@ const Competition = () => {
             lineHeight: "300px",
           }}
         >
-          No matches added yet
+          No matches available
         </Typography>
       );
 

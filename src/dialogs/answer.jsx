@@ -14,15 +14,16 @@ import makeStyles from "@mui/styles/makeStyles";
 import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
-import AccordionBoard from "../components/procon24/accordion-board";
-import ScoreData from "../components/procon24/score-data";
-import AnswerBoard from "../components/procon24/answer-board";
-import GameBoard from "../components/procon24/game-board";
+import AccordionBoard from "../components/procon25/accordion-board";
+import ScoreData from "../components/procon25/score-data";
+import AnswerBoard from "../components/procon25/answer-board";
+import GameBoard from "../components/procon25/game-board";
 import Context from "../context";
 
 const useStyles = makeStyles({
   root: {
-    minWidth: "800px",
+    // minWidth: "800px",
+    minWidth: "60%",
   },
 });
 
@@ -37,12 +38,13 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
   const answer = instance.answers[0];
 
   const questionData = JSON.parse(question?.question_data || "{}");
-  const startBoard = questionData.board?.start;
-  const goalBoard = questionData.board?.goal;
-  const general = questionData.general;
+  const entities = questionData.field?.entities;
+  // const startBoard = questionData.board?.start;
+  // const goalBoard = questionData.board?.goal;
+  // const general = questionData.general;
 
   const answerData = JSON.stringify({
-    n: 0,
+    // n: 0,
     ops: [],
   });
 
@@ -68,22 +70,31 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
           />
           <Stack spacing={0}>
             <AccordionBoard
+              title="Board"
+              copyContent={entities}
+              showCopy
+              defaultExpanded
+            >
+              <GameBoard board={entities} />
+            </AccordionBoard>
+            {/* </AccordionBoard>
+             <AccordionBoard
               title="Start Board"
               copyContent={startBoard}
               showCopy
             >
               <GameBoard board={startBoard} goal={goalBoard} />
-            </AccordionBoard>
-            <AccordionBoard title="Goal Board" copyContent={goalBoard} showCopy>
+            </AccordionBoard> */}
+            {/* <AccordionBoard title="Goal Board" copyContent={goalBoard} showCopy>
               <GameBoard board={goalBoard} goal={goalBoard} />
-            </AccordionBoard>
-            <AccordionBoard
+            </AccordionBoard> */}
+            {/* <AccordionBoard
               title="General Patterns"
               copyContent={general}
               showCopy
             >
               <CodeEditor defaultValue={general} readOnly />
-            </AccordionBoard>
+            </AccordionBoard> */}
           </Stack>
         </Stack>
       </DialogContent>
@@ -99,7 +110,7 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 
 const useScoreStyle = makeStyles({
   root: {
-    minWidth: "90%",
+    minWidth: "60%",
   },
 });
 
@@ -122,9 +133,10 @@ const ScoreDataDialog = ({
 
   const question = instance.question || {};
   const questionData = JSON.parse(question?.question_data || "{}");
-  const startBoard = questionData.board?.start;
-  const goalBoard = questionData.board?.goal;
-  const general = questionData.general;
+  const startBoard = questionData.field?.entities;
+  // const startBoard = questionData.board?.start;
+  // const goalBoard = questionData.board?.goal;
+  // const general = questionData.general;
 
   return (
     <Dialog
@@ -164,7 +176,14 @@ const ScoreDataDialog = ({
             readOnly={disabled}
           />
           <Stack spacing={0}>
-            <AccordionBoard title="Answer Board" defaultExpanded>
+              <AccordionBoard title="Answer Board" defaultExpanded>
+              <AnswerBoard
+                answerId={answer?.id}
+                startBoard={startBoard}
+                onChange={(score) => setScoreData(score)}
+              />
+            </AccordionBoard>
+            {/* <AccordionBoard title="Answer Board" defaultExpanded>
               <AnswerBoard
                 answerId={answer?.id}
                 startBoard={startBoard}
@@ -178,7 +197,7 @@ const ScoreDataDialog = ({
             </AccordionBoard>
             <AccordionBoard title="Goal Board">
               <GameBoard board={goalBoard} goal={goalBoard} />
-            </AccordionBoard>
+            </AccordionBoard> */}
           </Stack>
         </Stack>
       </DialogContent>

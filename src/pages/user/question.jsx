@@ -14,7 +14,6 @@ import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../../api";
 import { UserAnswerDialog, ScoreDataDialog } from "../../dialogs/answer";
-import { formatDateTime } from "../../utils/commons";
 import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import Context from "../../context";
@@ -77,7 +76,7 @@ const UserQuestion = () => {
           lineHeight: "300px",
         }}
       >
-        No questions added yet
+        No questions available
       </Typography>
     )
 
@@ -104,6 +103,9 @@ const UserQuestion = () => {
                     <span>ID:</span> {question.id}
                   </div>
                   <div className="data-item">
+                    <span>Size:</span> {questionData.field?.size}
+                  </div>
+                  {/* <div className="data-item">
                     <span>Width:</span> {questionData.board?.width}
                   </div>
                   <div className="data-item">
@@ -113,7 +115,7 @@ const UserQuestion = () => {
                   <div className="data-item">
                     <span>General patterns:</span>{" "}
                     {questionData.general?.n}
-                  </div>
+                  </div> */}
                 </div>
                 {/* <div>
                     Start Time: {formatDateTime(question.start_time)}
