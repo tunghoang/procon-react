@@ -47,7 +47,7 @@ const GameBoard = ({ board, step = {} }) => {
           out.push(
             <div
               className="subboard-wrapper rotating" /* add/remove rotating class as needed */
-              key={`subboard-${r}-${c}`}
+              key={`subboard-${r}-${c}-${Date.now()}`}
               style={{
                 gridRow: `${r + 1} / span ${n}`,
                 gridColumn: `${c + 1} / span ${n}`,
