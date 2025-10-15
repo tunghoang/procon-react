@@ -86,11 +86,21 @@ const GameBoard = ({ board, step = {} }) => {
     return out;
   };
 
+  const getScreenSize = (size) => {
+    if (size <= 14) return "60vmin";
+    if (size <= 18) return "80vmin";
+    return "100vh"
+  }
+
   return (
     <Stack spacing={2} alignItems={"center"}>
       <div
         className="GameBoard"
-        style={{gridTemplateColumns: `repeat(${rows}, 1fr)`}}
+        style={{
+            gridTemplateColumns: `repeat(${rows}, 1fr)`,
+            width: getScreenSize(rows),
+            height: getScreenSize(rows),
+        }}
       >
         {renderGrid()}
       </div>

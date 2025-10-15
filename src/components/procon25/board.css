@@ -5,8 +5,6 @@
 /* base cell */
 .GameBoard {
   display: grid;
-  width: 60vmin; /* keep square board that fits screen */
-  height: 60vmin;
   aspect-ratio: 1 / 1;
 }
 
