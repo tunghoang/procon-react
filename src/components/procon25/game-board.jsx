@@ -87,10 +87,10 @@ const GameBoard = ({ board, step = {} }) => {
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} alignItems={"center"}>
       <div
         className="GameBoard"
-        style={{gridTemplateColumns: `repeat(${board.length}, 1fr)`}}
+        style={{gridTemplateColumns: `repeat(${rows}, 1fr)`}}
       >
         {renderGrid()}
       </div>
