@@ -62,6 +62,8 @@ const AnswerBoard = ({ answerId, startBoard, onChange }) => {
 
     score.match_count = matchCnt;
     score.match_score = matchCnt * score.match_factor;
+    score.step_penalty = Number((val * score.step_factor).toFixed(2));
+
     const finalScore =
       score.match_score + score.step_penalty + score.resubmission_penalty;
     score.final_score = Math.round(finalScore * 100) / 100;

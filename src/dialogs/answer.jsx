@@ -146,9 +146,12 @@ const ScoreDataDialog = ({
     >
       <DialogTitle>
         <Stack direction={"row"} spacing={2} justifyContent={"space-between"}>
-          <Typography variant="h5" color={"blue"} fontSize={"22px"}>
-            {answer?.team?.name}
-          </Typography>
+          <Stack direction={"row"} gap={3} alignItems={"center"}>
+            <Typography variant="h5" color={"blue"} fontSize={"22px"}>
+              {answer?.team?.name}
+            </Typography>
+            <ScoreData scores={scoreData} />
+          </Stack>
           <FormControl variant="standard" sx={{ m: 1, width: 120 }}>
             {team.is_admin && (
               <Select
@@ -169,7 +172,6 @@ const ScoreDataDialog = ({
       </DialogTitle>
       <DialogContent className={classes.root} style={{ minWidth: 500 }}>
         <Stack spacing={3}>
-          <ScoreData scores={scoreData} />
           <CodeEditor
             title={title}
             defaultValue={scoreData}
