@@ -61,10 +61,18 @@ const Competition = () => {
           name={match.name}
           description={
             <>
-              <Stack>
-                <div>{match.description}</div>
-                <div>Start Time: {formatDateTime(match.start_time)}</div>
-                <div>End Time: {formatDateTime(match.end_time)}</div>
+              <Stack spacing={0.5}>
+                <Typography variant="body1" color="text.primary">
+                  {match.description}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Start:</strong> {formatDateTime(match.start_time)}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  <strong>End:</strong> {formatDateTime(match.end_time)}
+                </Typography>
               </Stack>
               <Stack direction="row" spacing={1} mt={3}>
                 <Chip

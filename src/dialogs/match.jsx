@@ -62,7 +62,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
               }}
             />
             <DateTimePicker
-              label="Start time"
+              label="Start Time"
               value={instance?.start_time || null}
               onChange={(newValue) => {
                 handleChange({ start_time: newValue });
@@ -72,7 +72,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
               )}
             />
             <DateTimePicker
-              label="End time"
+              label="End Time"
               value={instance?.end_time || null}
               onChange={(newValue) => {
                 handleChange({ end_time: newValue });

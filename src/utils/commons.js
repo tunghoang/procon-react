@@ -1,5 +1,15 @@
-const formatDateTime = (datetime) => {
-  return new Date(datetime).toLocaleString();
+const formatDateTime = (dateString) => {
+  const date = new Date(dateString);
+  return date
+    .toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short", // e.g., "Dec"
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+    .replace(",", "");
 };
 
 const setLocalStorage = (item, name) => {
