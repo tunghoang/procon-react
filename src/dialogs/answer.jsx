@@ -110,7 +110,9 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 
 const useScoreStyle = makeStyles({
   root: {
-    minWidth: "60%",
+    // minWidth: "60%",
+    minWidth: "100%",
+    minHeight: "100%",
   },
 });
 

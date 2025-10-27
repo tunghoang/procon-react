@@ -141,7 +141,7 @@ const QuestionDataDialog = ({
           <CodeEditor
             title={title}
             defaultValue={{
-              parameters: questionData.parameters,
+              // parameters: questionData.parameters,
               field: {
                 size: questionData.field?.size,
                 entities: questionData.field?.entities,

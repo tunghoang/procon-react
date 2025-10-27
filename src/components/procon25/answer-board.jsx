@@ -2,7 +2,7 @@ import { Slider } from "@mui/material";
 import GameBoard from "./game-board";
 import { useEffect, useState } from "react";
 import { api, getError, showMessage } from "../../api/commons";
-import { formatDateTime } from "../../utils/commons";
+import { formatDateTime, roundNumber } from "../../utils/commons";
 import { debounce } from "lodash";
 import { rotateSubBoard } from "./game-handler";
 
@@ -62,11 +62,11 @@ const AnswerBoard = ({ answerId, startBoard, onChange }) => {
 
     score.match_count = matchCnt;
     score.match_score = matchCnt * score.match_factor;
-    score.step_penalty = Number((val * score.step_factor).toFixed(2));
+    score.step_penalty = roundNumber(val * score.step_factor);
 
     const finalScore =
       score.match_score + score.step_penalty + score.resubmission_penalty;
-    score.final_score = Math.round(finalScore * 100) / 100;
+    score.final_score = roundNumber(finalScore);
     score.submitted_time = formatDateTime(
       answer.submitted_time || answer.updatedAt
     );

@@ -1,3 +1,4 @@
+import { roundNumber } from "../../utils/commons";
 import "./score.css";
 
 const ScoreData = ({ scores, onlyFinal = false }) => {
@@ -23,13 +24,13 @@ const ScoreData = ({ scores, onlyFinal = false }) => {
   return (
     <span className="ScoreData">
       <span className="final-score">
-        {!isNaN(scores?.final_score) ? scores.final_score : "NA"}
+        {roundNumber(scores?.final_score)}
       </span>
       <span className="raw-score">
         {!isNaN(percentage) ? `${(percentage * 100).toFixed(0)}%` : "NA"}
       </span>
       <span className="penalty-score">
-        {!isNaN(scores?.step_penalty) ? scores?.step_penalty : "NA"}
+         {roundNumber(scores?.step_penalty)}
       </span>
       <span className="penalty-score">
         {!isNaN(scores?.resubmission_penalty)

@@ -27,4 +27,9 @@ const copyText = async (text) => {
   }
 };
 
-export { formatDateTime, setLocalStorage, copyText };
+const roundNumber = (number) => {
+  if (isNaN(number)) return "NA";
+  return Math.round(number * 100) / 100;
+};
+
+export { formatDateTime, setLocalStorage, copyText, roundNumber };
