@@ -123,10 +123,7 @@ const Questions = () => {
 				return (
 					<IconButton
 						onClick={() => {
-							setQuestion({
-								questionId: row.id,
-								questionData: row.question_data,
-							});
+							setQuestion(row);
 							setDialogName("QuestionDataDialog");
 						}}>
 						<VisibilityIcon />
@@ -148,6 +145,9 @@ const Questions = () => {
 			mode: 0,
 			type: "parameters",
 			raw_questions: [],
+			match_factor: 1.0,
+			step_factor: -0.05,
+			resub_factor: -10.0,
 		});
 		setDialogName("QuestionDialog");
 	};
@@ -168,6 +168,7 @@ const Questions = () => {
 		if (result.length) await refetch();
 	};
 	const saveInstance = async () => {
+		console.log("Saving question with data:", currentItem);
 		let result;
 		if (currentItem.id) {
 			result = await apiEdit(currentItem.id, currentItem);
@@ -221,7 +222,7 @@ const Questions = () => {
 			/>
 			<QuestionDataDialog
 				open={dialogName === "QuestionDataDialog"}
-				instance={question.questionData}
+				instance={question}
 				close={closeDialog}
 				disabled
 			/>

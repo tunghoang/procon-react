@@ -11,6 +11,7 @@ import {
 	Tabs,
 	Tab,
 	Box,
+	Grid,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -24,7 +25,7 @@ import AccordionBoard from "../components/procon25/accordion-board";
 const useStyles = makeStyles({
 	root: {
 		// overflow: "visible",
-		minWidth: "600px",
+		minWidth: "900px",
 	},
 });
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
@@ -55,49 +56,90 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				{instance?.id ? "Edit Question" : "Create Question"}
 			</DialogTitle>
 			<DialogContent className={classes.root}>
-				<Stack spacing={3} width={500}>
-					<TextField
-						margin="dense"
-						label="Name"
-						type="text"
-						fullWidth
-						variant="standard"
-						name="name"
-						value={instance?.name}
-						onChange={(evt) => {
-							handleChange({ name: evt.target.value });
-						}}
-					/>
-					{/* <DateTimePicker
-            label="Start time"
-            value={instance?.start_time || null}
-            onChange={(newValue) => {
-              handleChange({ start_time: newValue });
-            }}
-            renderInput={(props) => <TextField variant="standard" {...props} />}
-          />
-          <DateTimePicker
-            label="End time"
-            value={instance?.end_time || null}
-            onChange={(newValue) => {
-              handleChange({ end_time: newValue });
-            }}
-            renderInput={(props) => (
-              <TextField variant="standard" error={false} {...props} />
-            )}
-          /> */}
-					<Autocomplete
-						options={matches}
-						value={
-							matches.find((item) => item.id === instance.match_id) || null
-						}
-						getOptionLabel={(option) => option.name}
-						isOptionEqualToValue={(option, value) => option.id === value.id}
-						renderInput={(params) => (
-							<TextField {...params} label={"Match"} variant="standard" />
-						)}
-						onChange={(evt, v) => handleChange({ match_id: v?.id })}
-					/>
+				<Stack spacing={3}>
+					<Grid container spacing={2}>
+						<Grid item xs={6}>
+							<TextField
+								margin="dense"
+								label="Name"
+								type="text"
+								fullWidth
+								variant="standard"
+								name="name"
+								value={instance?.name}
+								onChange={(evt) => {
+									handleChange({ name: evt.target.value });
+								}}
+							/>
+						</Grid>
+						<Grid item xs={6}>
+							<Autocomplete
+								options={matches}
+								value={
+									matches.find((item) => item.id === instance.match_id) || null
+								}
+								getOptionLabel={(option) => option.name}
+								isOptionEqualToValue={(option, value) => option.id === value.id}
+								renderInput={(params) => (
+									<TextField {...params} label={"Match"} variant="standard" />
+								)}
+								onChange={(evt, v) => handleChange({ match_id: v?.id })}
+							/>
+						</Grid>
+					</Grid>
+					<Grid container spacing={2}>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Match Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								name="match_factor"
+								value={instance?.match_factor ?? 1.0}
+								onChange={(evt) => {
+									handleChange({
+										match_factor: parseFloat(evt.target.value) || 1.0,
+									});
+								}}
+								helperText="Multiplier for matching pairs (default: 1.0)"
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Step Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								name="step_factor"
+								value={instance?.step_factor ?? -0.05}
+								onChange={(evt) => {
+									handleChange({
+										step_factor: parseFloat(evt.target.value) || -0.05,
+									});
+								}}
+								helperText="Penalty per step (default: -0.05)"
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Resubmission Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								name="resub_factor"
+								value={instance?.resub_factor ?? -10.0}
+								onChange={(evt) => {
+									handleChange({
+										resub_factor: parseFloat(evt.target.value) || -10.0,
+									});
+								}}
+								helperText="Penalty for resubmission (default: -10.0)"
+							/>
+						</Grid>
+					</Grid>
 					{!instance?.id && (
 						<Box>
 							<Tabs value={tabValue} onChange={handleTabChange}>
@@ -174,7 +216,7 @@ const QuestionDataDialog = ({
 	const classes = useStyles();
 	const { formatMessage: tr } = useIntl();
 
-	const questionData = JSON.parse(instance || "{}");
+	const questionData = JSON.parse(instance?.question_data || "{}");
 	const entities = questionData.field?.entities;
 	// const startBoard = questionData.board?.start;
 	// const goalBoard = questionData.board?.goal;
@@ -187,6 +229,47 @@ const QuestionDataDialog = ({
 			<DialogTitle></DialogTitle>
 			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
 				<Stack spacing={3}>
+					<Grid container spacing={2}>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Match Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								value={instance?.match_factor ?? 1.0}
+								InputProps={{
+									readOnly: true,
+								}}
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Step Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								value={instance?.step_factor ?? -0.05}
+								InputProps={{
+									readOnly: true,
+								}}
+							/>
+						</Grid>
+						<Grid item xs={4}>
+							<TextField
+								margin="dense"
+								label="Resubmission Factor"
+								type="number"
+								fullWidth
+								variant="standard"
+								value={instance?.resub_factor ?? -10.0}
+								InputProps={{
+									readOnly: true,
+								}}
+							/>
+						</Grid>
+					</Grid>
 					<CodeEditor
 						title={title}
 						defaultValue={{
