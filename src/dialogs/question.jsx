@@ -56,90 +56,115 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				{instance?.id ? "Edit Question" : "Create Question"}
 			</DialogTitle>
 			<DialogContent className={classes.root}>
-				<Stack spacing={3}>
-					<Grid container spacing={2}>
-						<Grid item xs={6}>
-							<TextField
-								margin="dense"
-								label="Name"
-								type="text"
-								fullWidth
-								variant="standard"
-								name="name"
-								value={instance?.name}
-								onChange={(evt) => {
-									handleChange({ name: evt.target.value });
-								}}
-							/>
+				<Stack spacing={1}>
+					<Box sx={{ mx: -1 }}>
+						<Grid container spacing={2}>
+							<Grid item xs={6}>
+								<TextField
+									margin="dense"
+									label="Name"
+									type="text"
+									fullWidth
+									variant="standard"
+									name="name"
+									value={instance?.name}
+									onChange={(evt) => {
+										handleChange({ name: evt.target.value });
+									}}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<Autocomplete
+									options={matches}
+									value={
+										matches.find((item) => item.id === instance.match_id) ||
+										null
+									}
+									getOptionLabel={(option) => option.name}
+									isOptionEqualToValue={(option, value) =>
+										option.id === value.id
+									}
+									renderInput={(params) => (
+										<TextField {...params} label={"Match"} variant="standard" />
+									)}
+									onChange={(evt, v) => handleChange({ match_id: v?.id })}
+								/>
+							</Grid>
 						</Grid>
-						<Grid item xs={6}>
-							<Autocomplete
-								options={matches}
-								value={
-									matches.find((item) => item.id === instance.match_id) || null
-								}
-								getOptionLabel={(option) => option.name}
-								isOptionEqualToValue={(option, value) => option.id === value.id}
-								renderInput={(params) => (
-									<TextField {...params} label={"Match"} variant="standard" />
-								)}
-								onChange={(evt, v) => handleChange({ match_id: v?.id })}
-							/>
+					</Box>
+					<Box sx={{ mx: -1 }}>
+						<Grid container spacing={2}>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Match Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									name="match_factor"
+									value={instance?.match_factor ?? 1.0}
+									onChange={(evt) => {
+										handleChange({
+											match_factor: parseFloat(evt.target.value) || 1.0,
+										});
+									}}
+									helperText="Multiplier for matching pairs (default: 1.0)"
+								/>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Step Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									name="step_factor"
+									value={instance?.step_factor ?? -0.05}
+									onChange={(evt) => {
+										handleChange({
+											step_factor: parseFloat(evt.target.value) || -0.05,
+										});
+									}}
+									helperText="Penalty per step (default: -0.05)"
+								/>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Resubmission Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									name="resub_factor"
+									value={instance?.resub_factor ?? -10.0}
+									onChange={(evt) => {
+										handleChange({
+											resub_factor: parseFloat(evt.target.value) || -10.0,
+										});
+									}}
+									helperText="Penalty for resubmission (default: -10.0)"
+								/>
+							</Grid>
 						</Grid>
-					</Grid>
-					<Grid container spacing={2}>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Match Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								name="match_factor"
-								value={instance?.match_factor ?? 1.0}
-								onChange={(evt) => {
-									handleChange({
-										match_factor: parseFloat(evt.target.value) || 1.0,
-									});
-								}}
-								helperText="Multiplier for matching pairs (default: 1.0)"
-							/>
+					</Box>
+					<Box sx={{ mx: -1 }}>
+						<Grid container spacing={2}>
+							<Grid item xs={12}>
+								<TextField
+									margin="dense"
+									label="Description"
+									type="text"
+									fullWidth
+									variant="standard"
+									name="description"
+									value={instance?.description || ""}
+									onChange={(evt) => {
+										handleChange({ description: evt.target.value });
+									}}
+								/>
+							</Grid>
 						</Grid>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Step Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								name="step_factor"
-								value={instance?.step_factor ?? -0.05}
-								onChange={(evt) => {
-									handleChange({
-										step_factor: parseFloat(evt.target.value) || -0.05,
-									});
-								}}
-								helperText="Penalty per step (default: -0.05)"
-							/>
-						</Grid>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Resubmission Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								name="resub_factor"
-								value={instance?.resub_factor ?? -10.0}
-								onChange={(evt) => {
-									handleChange({
-										resub_factor: parseFloat(evt.target.value) || -10.0,
-									});
-								}}
-								helperText="Penalty for resubmission (default: -10.0)"
-							/>
-						</Grid>
-					</Grid>
+					</Box>
 					{!instance?.id && (
 						<Box>
 							<Tabs value={tabValue} onChange={handleTabChange}>
@@ -228,48 +253,67 @@ const QuestionDataDialog = ({
 			onClose={close}>
 			<DialogTitle></DialogTitle>
 			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
-				<Stack spacing={3}>
-					<Grid container spacing={2}>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Match Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								value={instance?.match_factor ?? 1.0}
-								InputProps={{
-									readOnly: true,
-								}}
-							/>
+				<Stack spacing={1}>
+					<Box sx={{ mx: -1 }}>
+						<Grid container spacing={2}>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Match Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									value={instance?.match_factor ?? 1.0}
+									InputProps={{
+										readOnly: true,
+									}}
+								/>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Step Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									value={instance?.step_factor ?? -0.05}
+									InputProps={{
+										readOnly: true,
+									}}
+								/>
+							</Grid>
+							<Grid item xs={4}>
+								<TextField
+									margin="dense"
+									label="Resubmission Factor"
+									type="number"
+									fullWidth
+									variant="standard"
+									value={instance?.resub_factor ?? -10.0}
+									InputProps={{
+										readOnly: true,
+									}}
+								/>
+							</Grid>
 						</Grid>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Step Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								value={instance?.step_factor ?? -0.05}
-								InputProps={{
-									readOnly: true,
-								}}
-							/>
+					</Box>
+					<Box sx={{ mx: -1 }}>
+						<Grid container spacing={2}>
+							<Grid item xs={12}>
+								<TextField
+									margin="dense"
+									label="Description"
+									type="text"
+									fullWidth
+									variant="standard"
+									value={instance?.description || ""}
+									InputProps={{
+										readOnly: true,
+									}}
+								/>
+							</Grid>
 						</Grid>
-						<Grid item xs={4}>
-							<TextField
-								margin="dense"
-								label="Resubmission Factor"
-								type="number"
-								fullWidth
-								variant="standard"
-								value={instance?.resub_factor ?? -10.0}
-								InputProps={{
-									readOnly: true,
-								}}
-							/>
-						</Grid>
-					</Grid>
+					</Box>
 					<CodeEditor
 						title={title}
 						defaultValue={{
