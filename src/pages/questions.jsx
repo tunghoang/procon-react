@@ -71,39 +71,21 @@ const Questions = () => {
 
 	const columns = [
 		{
-			field: "id",
-			headerName: "ID",
-			width: 100,
+			field: "name",
+			headerName: "Name",
+			width: 120,
 			headerClassName: "tableHeader",
 		},
 		{
-			field: "name",
-			headerName: "Name",
-			flex: 1,
+			field: "description",
+			headerName: "Description",
+			width: 200,
 			headerClassName: "tableHeader",
 		},
-		// {
-		//   field: "start_time",
-		//   headerName: "Start Time",
-		//   flex: 1,
-		//   headerClassName: "tableHeader",
-		//   valueGetter: (params) => {
-		//     return formatDateTime(params.row.start_time);
-		//   },
-		// },
-		// {
-		//   field: "end_time",
-		//   headerName: "End Time",
-		//   flex: 1,
-		//   headerClassName: "tableHeader",
-		//   valueGetter: (params) => {
-		//     return formatDateTime(params.row.end_time);
-		//   },
-		// },
 		{
 			field: "match",
 			headerName: "Match",
-			flex: 1,
+			width: 150,
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
@@ -115,9 +97,46 @@ const Questions = () => {
 			},
 		},
 		{
+			field: "size",
+			headerName: "Size",
+			width: 80,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => {
+				const data = JSON.parse(params.row.question_data || "{}");
+				return data.field?.size || data.parameters?.size || "-";
+			},
+		},
+		{
+			field: "match_factor",
+			headerName: "Match Factor",
+			width: 120,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => {
+				return params.row.match_factor ?? 1.0;
+			},
+		},
+		{
+			field: "step_factor",
+			headerName: "Step Factor",
+			width: 110,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => {
+				return params.row.step_factor ?? -0.05;
+			},
+		},
+		{
+			field: "resub_factor",
+			headerName: "Resub Factor",
+			width: 120,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => {
+				return params.row.resub_factor ?? -10.0;
+			},
+		},
+		{
 			field: "question_data",
 			headerName: "Question Data",
-			flex: 1,
+			width: 120,
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
