@@ -30,108 +30,203 @@ import NotFound from "./pages/not-found";
 import Competition from "./pages/user/competition";
 import UserQuestion from "./pages/user/question";
 import jwtDecode from "jwt-decode";
+import { debugLog } from "./utils/debug";
+import LoadingPage from "./components/loading-page";
 
 const routes = {
-  "/": () => ({ component: Tournaments, props: {} }),
-  "/login": () => ({ component: Login, props: {} }),
-  "/teams": () => ({ component: Teams, props: {} }),
-  "/matches": () => ({ component: Matches, props: {} }),
-  "/rounds": () => ({ component: Rounds, props: {} }),
-  "/questions": () => ({ component: Questions, props: {} }),
-  "/answers": () => ({ component: Answers, props: {} }),
-  "/competition": () => ({ component: Competition, props: {} }),
-  "/competition/question": () => ({
-    component: UserQuestion,
-    props: {},
-  }),
-  "/*": () => ({ component: NotFound, props: {} }),
+	"/login": () => ({ component: Login, props: {} }),
+	"/tournament": () => ({ component: Tournaments, props: {} }),
+	"/tournament/:tournamentId": (tournamentId) => ({
+		component: Tournaments,
+		props: { tournamentId },
+	}),
+	"/tournament/:tournamentId/rounds": (tournamentId) => ({
+		component: Rounds,
+		props: { tournamentId },
+	}),
+	"/tournament/:tournamentId/round/:roundId": (tournamentId, roundId) => ({
+		component: Rounds,
+		props: { tournamentId, roundId },
+	}),
+	"/tournament/:tournamentId/round/:roundId/matches": (
+		tournamentId,
+		roundId
+	) => ({
+		component: Matches,
+		props: { tournamentId, roundId },
+	}),
+	"/tournament/:tournamentId/round/:roundId/match/:matchId": (
+		tournamentId,
+		roundId,
+		matchId
+	) => ({
+		component: Matches,
+		props: { tournamentId, roundId, matchId },
+	}),
+	"/tournament/:tournamentId/round/:roundId/match/:matchId/questions": (
+		tournamentId,
+		roundId,
+		matchId
+	) => ({
+		component: Questions,
+		props: { tournamentId, roundId, matchId },
+	}),
+	"/tournament/:tournamentId/round/:roundId/match/:matchId/answers": (
+		tournamentId,
+		roundId,
+		matchId
+	) => ({
+		component: Answers,
+		props: { tournamentId, roundId, matchId },
+	}),
+	"/teams": () => ({ component: Teams, props: {} }),
+	"/matches": () => ({ component: Matches, props: {} }),
+	"/rounds": () => ({ component: Rounds, props: {} }),
+	"/answers": () => ({ component: Answers, props: {} }),
+	"/competition": () => ({ component: Competition, props: {} }),
+	"/competition/tournament/:tournamentId/round/:roundId": (
+		tournamentId,
+		roundId
+	) => ({
+		component: Competition,
+		props: { tournamentId, roundId },
+	}),
+	"/competition/tournament/:tournamentId/round/:roundId/match/:matchId/questions":
+		() => ({ component: UserQuestion, props: {} }),
+	"/question": () => ({
+		component: UserQuestion,
+		props: {},
+	}),
+	"/*": () => ({ component: NotFound, props: {} }),
 };
 
 function loadMessages(locale) {
-  switch (locale) {
-    case "vi-VN":
-      return viVN;
-    case "en-US":
-      return enUS;
-    default:
-      return enUS;
-  }
+	switch (locale) {
+		case "vi-VN":
+			return viVN;
+		case "en-US":
+			return enUS;
+		default:
+			return enUS;
+	}
 }
 
 export function App() {
-  const [token, setToken] = useState(null);
-  const [team, setTeam] = useState(null);
-  const [locale, setLocale] = useState(
-    localStorage.getItem("locale") || "vi-VN"
-  );
-  const [tournament, setTournament] = useState(null);
-  const [round, setRound] = useState(null);
-  const [userMatch, setUserMatch] = useState(null);
-  useEffect(() => {
-    if (!token) {
-      setToken(localStorage.getItem("token"));
-    } else {
-      setTeam(jwtDecode(token));
-    }
-  }, [token]);
+	const [token, setToken] = useState(localStorage.getItem("token"));
+	const [team, setTeam] = useState(null);
+	const [locale, setLocale] = useState(
+		localStorage.getItem("locale") || "vi-VN"
+	);
+	const [tournament, setTournament] = useState(null);
+	const [round, setRound] = useState(null);
+	const [userMatch, setUserMatch] = useState(null);
 
-  return (
-    <Context.Provider
-      value={{
-        token,
-        locale,
-        team,
-        tournament,
-        round,
-        userMatch,
-        updateContext: ({ tournament, round, team, userMatch }) => {
-          if (tournament !== undefined) setTournament(tournament);
-          if (round !== undefined) setRound(round);
-          if (team !== undefined) setTeam(team);
-          if (userMatch !== undefined) setUserMatch(userMatch);
-        },
-        updateLocalStorage: ({ token, locale }) => {
-          if (token !== undefined) {
-            setLocalStorage(token, "token");
-            setToken(token);
-          }
+	useEffect(() => {
+		if (token) {
+			try {
+				setTeam(jwtDecode(token));
+			} catch (error) {
+				console.error("Invalid token", error);
+				setToken(null);
+				localStorage.removeItem("token");
+			}
+		}
+	}, [token]);
 
-          if (locale !== undefined) {
-            setLocalStorage(locale, "locale");
-            setLocale(locale);
-          }
-        },
-      }}
-    >
-      <AppInternal />
-    </Context.Provider>
-  );
+	return (
+		<Context.Provider
+			value={{
+				token,
+				locale,
+				team,
+				tournament,
+				round,
+				userMatch,
+				updateContext: ({ tournament, round, team, userMatch }) => {
+					if (tournament !== undefined) setTournament(tournament);
+					if (round !== undefined) setRound(round);
+					if (team !== undefined) setTeam(team);
+					if (userMatch !== undefined) setUserMatch(userMatch);
+				},
+				updateLocalStorage: ({ token, locale }) => {
+					if (token !== undefined) {
+						setLocalStorage(token, "token");
+						setToken(token);
+					}
+
+					if (locale !== undefined) {
+						setLocalStorage(locale, "locale");
+						setLocale(locale);
+					}
+				},
+			}}>
+			<AppInternal />
+		</Context.Provider>
+	);
 }
 function AppInternal() {
-  const { token, locale, team } = useContext(Context);
-  const match = useRoutes(routes);
-  const getLayout = match.component.getLayout ?? ((page) => page);
-  const path = usePath();
+	const { token, locale, team } = useContext(Context);
+	const path = usePath();
+	const match = useRoutes(routes);
+	const getLayout = match.component.getLayout ?? ((page) => page);
 
-  if (token && !team?.is_admin && !path.includes("/competition"))
-    navigate("/competition");
+	// Debug logging
+	debugLog("[AppInternal] Render:", {
+		path,
+		hasToken: !!token,
+		hasTeam: !!team,
+		isAdmin: team?.is_admin,
+		timestamp: new Date().toISOString(),
+	});
 
-  useEffect(() => {
-    if (!token) navigate("/login");
-  }, [token]);
+	useEffect(() => {
+		debugLog("[AppInternal] useEffect triggered:", {
+			path,
+			hasToken: !!token,
+			hasTeam: !!team,
+			isAdmin: team?.is_admin,
+		});
 
-  return (
-    <IntlProvider locale={locale} messages={loadMessages(locale)}>
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <ThemeProvider theme={themeFn(locale)}>
-          <ConfirmProvider>
-            <CssBaseline />
-            {getLayout(React.createElement(match.component, match.props))}
-          </ConfirmProvider>
-        </ThemeProvider>
-      </LocalizationProvider>
-    </IntlProvider>
-  );
+		// Only redirect when we have finished checking token and team
+		if (!token && path !== "/login") {
+			debugLog("[AppInternal] Redirecting to /login - no token");
+			navigate("/login");
+		} else if (token && team && path === "/") {
+			// Redirect based on user role from root
+			if (team.is_admin) {
+				debugLog("[AppInternal] Redirecting to /tournament - admin user");
+				navigate("/tournament");
+			} else {
+				debugLog("[AppInternal] Redirecting to /competition - non-admin user");
+				navigate("/competition");
+			}
+		}
+	}, [token, team, path]);
+
+	// Show loading when:
+	// 1. Token exists but team not loaded yet
+	// 2. At root path "/" and needs redirect
+	// 3. No token and not at login page (will redirect to login)
+	if (
+		(token && !team) ||
+		(path === "/" && token) ||
+		(!token && path !== "/login")
+	) {
+		return <LoadingPage />;
+	}
+
+	return (
+		<IntlProvider locale={locale} messages={loadMessages(locale)}>
+			<LocalizationProvider dateAdapter={AdapterDateFns}>
+				<ThemeProvider theme={themeFn(locale)}>
+					<ConfirmProvider>
+						<CssBaseline />
+						{getLayout(React.createElement(match.component, match.props))}
+					</ConfirmProvider>
+				</ThemeProvider>
+			</LocalizationProvider>
+		</IntlProvider>
+	);
 }
 
 export default App;

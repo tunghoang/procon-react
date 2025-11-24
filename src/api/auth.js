@@ -1,4 +1,4 @@
-import { doPost, showMessage, getError } from "./commons";
+import { doPost, getError, showMessage } from "./commons";
 
 const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 const SIGNIN_URL = SERVICE_API + "/team/signin";
@@ -11,8 +11,8 @@ export const apiSignIn = async (payload, headers) => {
     return result;
   } catch (e) {
     showMessage(`Login Error: ${getError(e)}`, "error");
+    return e;
   }
-  return false;
 };
 export const apiSignUp = async (payload, headers) => {
   try {
