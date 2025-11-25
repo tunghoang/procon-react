@@ -24,6 +24,12 @@ export function useFetchData({
   const fetch = async (params) => {
     try {
       load();
+      console.log({
+        params: {
+          ...config?.params,
+          ...params,
+        },
+      })
       const result = await apiGetAll(
         {
           ...config,

@@ -31,7 +31,7 @@ const Competition = ({ tournamentId, roundId }) => {
 			tournamentId || roundId
 				? {
 						params: {
-							...(tournamentId && { eq_round_tournament_id: tournamentId }),
+							...(tournamentId && { eq_tournament_id: tournamentId }),
 							...(roundId && { eq_round_id: roundId }),
 						},
 				  }

@@ -18,10 +18,10 @@ import AddIcon from "@mui/icons-material/Add";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
 
-const Rounds = () => {
+const Rounds = ({ tournamentId }) => {
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentItem, setCurrentItem] = useState(null);
-	const { updateContext, tournament, team } = useContext(Context);
+	const { updateContext, team } = useContext(Context);
 	const isReadOnly = !team || !team.is_admin;
 	const { apiCreate, useConfirmDelete, apiEdit } = useApi("/round", "Round");
 
@@ -35,11 +35,10 @@ const Rounds = () => {
 		name: "Round",
 		config: {
 			params: {
-				eq_tournament_id: tournament?.id,
+				eq_tournament_id: tournamentId,
 			},
 		},
 	});
-	console.log(tournament);
 
 	useEffect(() => {
 		updateContext({ round: null });
@@ -82,7 +81,7 @@ const Rounds = () => {
 						<Grid container spacing={3}>
 							{rounds.length ? (
 								rounds.map((round) => (
-									<Grid item key={round.id} lg={4} md={6} xs={12}>
+									<Grid item key={round.id} lg={6} md={6} xs={12}>
 										<CardData
 											name={round.name}
 											description={round.description}
@@ -99,15 +98,15 @@ const Rounds = () => {
 											}
 											handleSelect={() => {
 												updateContext({ round });
-												if (isReadOnly) {
-													navigate(
-														`/competition/tournament/${tournament?.id}/round/${round.id}`
-													);
-												} else {
-													navigate(
-														`/tournament/${tournament?.id}/round/${round.id}/matches`
-													);
-												}
+												navigate(
+													`/competition/tournament/${tournamentId}/round/${round.id}`
+												);
+											}}
+											handleEditDetail={() => {
+												updateContext({ round });
+												navigate(
+													`/tournament/${tournamentId}/round/${round.id}/matches`
+												);
 											}}
 										/>
 									</Grid>
@@ -135,7 +134,7 @@ const Rounds = () => {
 				save={async () => {
 					if (currentItem.id) await apiEdit(currentItem.id, currentItem);
 					else {
-						currentItem.tournament_id = tournament.id;
+						currentItem.tournament_id = tournamentId;
 						await apiCreate(currentItem);
 					}
 					setShowDialog(false);

@@ -36,46 +36,46 @@ import LoadingPage from "./components/loading-page";
 const routes = {
 	"/login": () => ({ component: Login, props: {} }),
 	"/tournament": () => ({ component: Tournaments, props: {} }),
-	"/tournament/:tournamentId": (tournamentId) => ({
+	"/tournament/:tournamentId": ({ tournamentId }) => ({
 		component: Tournaments,
 		props: { tournamentId },
 	}),
-	"/tournament/:tournamentId/rounds": (tournamentId) => ({
+	"/tournament/:tournamentId/rounds": ({ tournamentId }) => ({
 		component: Rounds,
 		props: { tournamentId },
 	}),
-	"/tournament/:tournamentId/round/:roundId": (tournamentId, roundId) => ({
+	"/tournament/:tournamentId/round/:roundId": ({ tournamentId, roundId }) => ({
 		component: Rounds,
 		props: { tournamentId, roundId },
 	}),
-	"/tournament/:tournamentId/round/:roundId/matches": (
+	"/tournament/:tournamentId/round/:roundId/matches": ({
 		tournamentId,
-		roundId
-	) => ({
+		roundId,
+	}) => ({
 		component: Matches,
 		props: { tournamentId, roundId },
 	}),
-	"/tournament/:tournamentId/round/:roundId/match/:matchId": (
+	"/tournament/:tournamentId/round/:roundId/match/:matchId": ({
 		tournamentId,
 		roundId,
-		matchId
-	) => ({
+		matchId,
+	}) => ({
 		component: Matches,
 		props: { tournamentId, roundId, matchId },
 	}),
-	"/tournament/:tournamentId/round/:roundId/match/:matchId/questions": (
+	"/tournament/:tournamentId/round/:roundId/match/:matchId/questions": ({
 		tournamentId,
 		roundId,
-		matchId
-	) => ({
+		matchId,
+	}) => ({
 		component: Questions,
 		props: { tournamentId, roundId, matchId },
 	}),
-	"/tournament/:tournamentId/round/:roundId/match/:matchId/answers": (
+	"/tournament/:tournamentId/round/:roundId/match/:matchId/answers": ({
 		tournamentId,
 		roundId,
-		matchId
-	) => ({
+		matchId,
+	}) => ({
 		component: Answers,
 		props: { tournamentId, roundId, matchId },
 	}),
@@ -84,10 +84,10 @@ const routes = {
 	"/rounds": () => ({ component: Rounds, props: {} }),
 	"/answers": () => ({ component: Answers, props: {} }),
 	"/competition": () => ({ component: Competition, props: {} }),
-	"/competition/tournament/:tournamentId/round/:roundId": (
+	"/competition/tournament/:tournamentId/round/:roundId": ({
 		tournamentId,
-		roundId
-	) => ({
+		roundId,
+	}) => ({
 		component: Competition,
 		props: { tournamentId, roundId },
 	}),
