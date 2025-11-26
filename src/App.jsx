@@ -83,6 +83,7 @@ const routes = {
 	"/matches": () => ({ component: Matches, props: {} }),
 	"/rounds": () => ({ component: Rounds, props: {} }),
 	"/answers": () => ({ component: Answers, props: {} }),
+	"/questions": () => ({ component: Questions, props: {} }),
 	"/competition": () => ({ component: Competition, props: {} }),
 	"/competition/tournament/:tournamentId/round/:roundId": ({
 		tournamentId,
