@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import styled from "@emotion/styled";
-import { navigate } from "hookrouter";
 import {
 	AppBar,
 	Avatar,
@@ -20,6 +19,7 @@ import HttpsIcon from "@mui/icons-material/Https";
 import { UserCircle as UserCircleIcon } from "../icons/user-circle";
 import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
+import { useNavigate } from "@tanstack/react-router";
 import { Box } from "@mui/system";
 import { api, getError, showMessage } from "../api/commons";
 import Context from "../context";
@@ -40,6 +40,7 @@ export const DashboardNavbar = (props) => {
 	const { onSidebarOpen, isSidebarOpen, ...other } = props;
 	const { team, updateLocalStorage } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
+	const navigate = useNavigate();
 	const [dialogName, setDialogName] = useState("");
 	const [password, setPassword] = useState({ password: "" });
 
@@ -143,13 +144,13 @@ export const DashboardNavbar = (props) => {
 							</IconButton>
 						</Tooltip>
 						<Tooltip title="Competition">
-							<IconButton onClick={() => navigate("/competition")}>
+							<IconButton onClick={() => navigate({ to: "/competition" })}>
 								<SportsMmaIcon />
 							</IconButton>
 						</Tooltip>
 						{team?.is_admin && (
 							<Tooltip title="Admin Only">
-								<IconButton onClick={() => navigate("/")}>
+								<IconButton onClick={() => navigate({ to: "/tournament" })}>
 									<AdminPanelSettingsIcon />
 								</IconButton>
 							</Tooltip>
@@ -174,7 +175,10 @@ export const DashboardNavbar = (props) => {
 						<Tooltip title={tr({ id: "Sign Out" })}>
 							<IconButton
 								sx={{ ml: 1 }}
-								onClick={() => updateLocalStorage({ token: null })}>
+								onClick={() => {
+									updateLocalStorage({ token: null });
+									navigate({ to: "/login" });
+								}}>
 								<LogoutIcon fontSize="small" />
 							</IconButton>
 						</Tooltip>

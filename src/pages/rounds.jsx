@@ -11,17 +11,19 @@ import { DashboardLayoutRoot } from "../components/dashboard-layout";
 import { DashboardNavbar } from "../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
-import { navigate } from "hookrouter";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import Context from "../context";
 import RoundDialog from "../dialogs/round";
 import AddIcon from "@mui/icons-material/Add";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
 
-const Rounds = ({ tournamentId }) => {
+const Rounds = () => {
+	const { tournamentId } = useParams({ strict: false });
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentItem, setCurrentItem] = useState(null);
 	const { updateContext, team } = useContext(Context);
+	const navigate = useNavigate();
 	const isReadOnly = !team || !team.is_admin;
 	const { apiCreate, useConfirmDelete, apiEdit } = useApi("/round", "Round");
 
@@ -81,7 +83,7 @@ const Rounds = ({ tournamentId }) => {
 						<Grid container spacing={3}>
 							{rounds.length ? (
 								rounds.map((round) => (
-									<Grid item key={round.id} lg={6} md={6} xs={12}>
+									<Grid key={round.id} size={{ lg: 6, md: 6, xs: 12 }}>
 										<CardData
 											name={round.name}
 											description={round.description}
@@ -98,15 +100,20 @@ const Rounds = ({ tournamentId }) => {
 											}
 											handleSelect={() => {
 												updateContext({ round });
-												navigate(
-													`/competition/tournament/${tournamentId}/round/${round.id}`
-												);
+												navigate({
+													to: `/competition/tournament/$tournamentId/round/$roundId`,
+													params: { tournamentId, roundId: round.id },
+												});
 											}}
 											handleEditDetail={() => {
 												updateContext({ round });
-												navigate(
-													`/tournament/${tournamentId}/round/${round.id}/matches`
-												);
+												navigate({
+													to: `/admin/matches`,
+													search: {
+														tournament_id: parseInt(tournamentId),
+														round_id: round.id,
+													},
+												});
 											}}
 										/>
 									</Grid>

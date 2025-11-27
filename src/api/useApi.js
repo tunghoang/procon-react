@@ -1,13 +1,13 @@
+import { useConfirm } from "material-ui-confirm";
+import { useCallback } from "react";
 import {
+  doDelete,
   doGet,
   doPost,
   doPut,
-  doDelete,
-  showMessage,
   getError,
+  showMessage,
 } from "./commons";
-import { useConfirm } from "material-ui-confirm";
-import { useCallback } from "react";
 
 const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 
@@ -19,7 +19,7 @@ export const useApi = (pathName, apiName) => {
         const results = await doGet(URL, headers, config);
         return results;
       } catch (e) {
-        showMessage(getError(e), "error");
+        if (!e.handled) showMessage(getError(e), "error");
       }
       return false;
     },
@@ -32,7 +32,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`${apiName} was successfully deleted.`, "success", 1000);
         return results;
       } catch (e) {
-        showMessage(getError(e), "error");
+        if (!e.handled) showMessage(getError(e), "error");
       }
       return false;
     },
@@ -57,7 +57,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`${apiName} was sucessfully created.`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(getError(e), "error");
+        if (!e.handled) showMessage(getError(e), "error");
       }
     },
     [URL, apiName]
@@ -69,7 +69,7 @@ export const useApi = (pathName, apiName) => {
         showMessage(`Success Edit ${apiName}`, "success", 1000);
         return result;
       } catch (e) {
-        showMessage(`Error Edit ${apiName}: ${getError(e)}`, "error");
+        if (!e.handled) showMessage(`Error Edit ${apiName}: ${getError(e)}`, "error");
       }
     },
     [URL, apiName]

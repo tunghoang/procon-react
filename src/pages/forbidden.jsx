@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import BlockIcon from "@mui/icons-material/Block";
 import { useNavigate } from "@tanstack/react-router";
 
-export default function NotFound() {
+export default function Forbidden() {
 	const navigate = useNavigate();
 	return (
 		<Box
@@ -23,7 +23,7 @@ export default function NotFound() {
 						flexDirection: "column",
 						textAlign: "center",
 					}}>
-					<ErrorOutlineIcon
+					<BlockIcon
 						sx={{
 							fontSize: 120,
 							color: "error.main",
@@ -35,22 +35,22 @@ export default function NotFound() {
 						color="textPrimary"
 						variant="h1"
 						sx={{ mb: 2 }}>
-						404
+						403
 					</Typography>
 					<Typography
 						align="center"
 						color="textPrimary"
 						variant="h4"
 						sx={{ mb: 3 }}>
-						Page Not Found
+						Access Forbidden
 					</Typography>
 					<Typography
 						align="center"
 						color="textSecondary"
 						variant="subtitle1"
 						sx={{ mb: 4 }}>
-						The page you are looking for might have been removed, had its name
-						changed, or is temporarily unavailable.
+						You don't have permission to access this page. This page is
+						restricted to administrators only.
 					</Typography>
 					<Button
 						onClick={() => navigate({ to: "/" })}

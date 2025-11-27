@@ -16,7 +16,7 @@ import {
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../api";
-import { useContext, useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon25/game-board";
@@ -59,7 +59,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				<Stack spacing={1}>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Name"
@@ -73,7 +73,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 									}}
 								/>
 							</Grid>
-							<Grid item xs={2}>
+							<Grid size={{ xs: 2 }}>
 								<TextField
 									margin="dense"
 									label="Order"
@@ -88,7 +88,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 									helperText="Sort order"
 								/>
 							</Grid>
-							<Grid item xs={6}>
+							<Grid size={{ xs: 6 }}>
 								<Autocomplete
 									options={matches}
 									value={
@@ -109,7 +109,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 					</Box>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Match Factor"
@@ -126,7 +126,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 									helperText="Multiplier for matching pairs (default: 1.0)"
 								/>
 							</Grid>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Step Factor"
@@ -143,7 +143,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 									helperText="Penalty per step (default: -0.05)"
 								/>
 							</Grid>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Resubmission Factor"
@@ -164,7 +164,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 					</Box>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid item xs={12}>
+							<Grid size={{ xs: 12 }}>
 								<TextField
 									margin="dense"
 									label="Description"
@@ -256,7 +256,11 @@ const QuestionDataDialog = ({
 	const classes = useStyles();
 	const { formatMessage: tr } = useIntl();
 
-	const questionData = JSON.parse(instance?.question_data || "{}");
+	// Memoize questionData parsing to avoid re-parsing on every render
+	const questionData = useMemo(() => {
+		return JSON.parse(instance?.question_data || "{}");
+	}, [instance?.question_data]);
+
 	const entities = questionData.field?.entities;
 	// const startBoard = questionData.board?.start;
 	// const goalBoard = questionData.board?.goal;
@@ -265,13 +269,15 @@ const QuestionDataDialog = ({
 		<Dialog
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
-			onClose={close}>
+			onClose={close}
+			slotProps={{ transition: { timeout: 0 } }}
+			disableScrollLock>
 			<DialogTitle></DialogTitle>
 			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
 				<Stack spacing={1}>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Match Factor"
@@ -279,12 +285,14 @@ const QuestionDataDialog = ({
 									fullWidth
 									variant="standard"
 									value={instance?.match_factor ?? 1.0}
-									InputProps={{
-										readOnly: true,
+									slotProps={{
+										input: {
+											readOnly: true,
+										},
 									}}
 								/>
 							</Grid>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Step Factor"
@@ -292,12 +300,14 @@ const QuestionDataDialog = ({
 									fullWidth
 									variant="standard"
 									value={instance?.step_factor ?? -0.05}
-									InputProps={{
-										readOnly: true,
+									slotProps={{
+										input: {
+											readOnly: true,
+										},
 									}}
 								/>
 							</Grid>
-							<Grid item xs={4}>
+							<Grid size={{ xs: 4 }}>
 								<TextField
 									margin="dense"
 									label="Resubmission Factor"
@@ -314,7 +324,7 @@ const QuestionDataDialog = ({
 					</Box>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid item xs={12}>
+							<Grid size={{ xs: 12 }}>
 								<TextField
 									margin="dense"
 									label="Description"
@@ -341,7 +351,7 @@ const QuestionDataDialog = ({
 						readOnly={disabled}
 					/>
 					<Stack spacing={0}>
-						<AccordionBoard title="Board">
+						<AccordionBoard title="Board" defaultExpanded={true}>
 							<GameBoard board={entities} />
 						</AccordionBoard>
 						{/* <AccordionBoard title="Start Board">

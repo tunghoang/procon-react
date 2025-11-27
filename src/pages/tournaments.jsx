@@ -14,7 +14,7 @@ import TournamentDialog from "../dialogs/tournament";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
 import AddIcon from "@mui/icons-material/Add";
-import { navigate } from "hookrouter";
+import { useNavigate } from "@tanstack/react-router";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
 
@@ -23,6 +23,7 @@ const Tournaments = () => {
 	const [currentTournament, setCurrentTournament] = useState(null);
 	const { updateContext, team } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
+	const navigate = useNavigate();
 	const isReadOnly = !team || !team.is_admin;
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/tournament",
@@ -46,8 +47,6 @@ const Tournaments = () => {
 	};
 
 	if (loading) return <LoadingPage />;
-
-	console.log(tournaments);
 
 	return (
 		<>
@@ -78,7 +77,7 @@ const Tournaments = () => {
 						<Grid container spacing={3}>
 							{tournaments.length ? (
 								tournaments.map((tournament) => (
-									<Grid item key={tournament.id} lg={4} md={6} xs={12}>
+									<Grid key={tournament.id} size={{ lg: 4, md: 6, xs: 12 }}>
 										<CardData
 											name={tournament.name}
 											description={tournament.description}
@@ -97,7 +96,7 @@ const Tournaments = () => {
 												updateContext({
 													tournament,
 												});
-												navigate(`/tournament/${tournament.id}/rounds`);
+												navigate({ to: `/tournament/${tournament.id}/rounds` });
 											}}
 										/>
 									</Grid>

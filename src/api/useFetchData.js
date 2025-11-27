@@ -19,17 +19,11 @@ export function useFetchData({
     return () => {
       setData([]);
     };
-  }, []);
+  }, [isFetch, JSON.stringify(config?.params)]);
 
   const fetch = async (params) => {
     try {
       load();
-      console.log({
-        params: {
-          ...config?.params,
-          ...params,
-        },
-      })
       const result = await apiGetAll(
         {
           ...config,

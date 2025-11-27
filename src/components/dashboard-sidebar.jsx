@@ -10,9 +10,6 @@ import {
 import Logo from "./logo";
 import { NavItem } from "./nav-item";
 
-import { A } from "hookrouter";
-import { Child as ChildIcon } from "../icons/child";
-import { Education as EducationIcon } from "../icons/education";
 import { Blackboard as BlackboardIcon } from "../icons/blackboard";
 import QuizIcon from "@mui/icons-material/Quiz";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
@@ -20,22 +17,22 @@ import PeopleIcon from "@mui/icons-material/People";
 
 const items = [
 	{
-		href: "/teams",
+		href: "/admin/teams",
 		icon: <PeopleIcon fontSize="small" />,
 		title: "Teams",
 	},
 	{
-		href: "/matches",
+		href: "/admin/matches",
 		icon: <BlackboardIcon fontSize="small" />,
 		title: "Matches",
 	},
 	{
-		href: "/questions",
+		href: "/admin/questions",
 		icon: <QuizIcon fontSize="small" />,
 		title: "Questions",
 	},
 	{
-		href: "/answers",
+		href: "/admin/answers",
 		icon: <QuestionAnswerIcon fontSize="small" />,
 		title: "Answers",
 	},
@@ -102,7 +99,9 @@ export const DashboardSidebar = (props) => {
 				},
 			}}
 			sx={{ zIndex: (theme) => theme.zIndex.appBar + 100 }}
-			variant="temporary">
+			variant="temporary"
+			disableEnforceFocus
+			disableRestoreFocus>
 			{content}
 		</Drawer>
 	);

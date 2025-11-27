@@ -1,22 +1,24 @@
 import { Chip, IconButton, Paper } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useApi, useFetchData } from "../api";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
-import { formatDateTime } from "../utils/commons";
 import PageToolbar from "../components/page-toolbar";
-import DataTable from "../components/data-table";
+import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import Context from "../context";
+import { useParams, useSearch } from "@tanstack/react-router";
 
 const Questions = () => {
+	const routeParams = useParams({ strict: false });
+	const searchParams = useSearch({ strict: false });
+	const roundId =
+		routeParams.roundId || searchParams.roundId || searchParams.round_id;
 	const { formatMessage: tr } = useIntl();
 	const [selectedIds, setSelectedIds] = useState([]);
 	const [question, setQuestion] = useState({});
 	const [dialogName, setDialogName] = useState("");
 	const [currentItem, setCurrentItem] = useState({});
-	const { round } = useContext(Context);
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/question",
 		"Question"
@@ -31,7 +33,7 @@ const Questions = () => {
 		name: "Question",
 		config: {
 			params: {
-				"match[eq_round_id]": round?.id,
+				"match[eq_round_id]": roundId,
 			},
 		},
 	});
@@ -230,6 +232,7 @@ const Questions = () => {
 						setSelectedIds(ids);
 					}}
 					loading={loading}
+					onRefresh={refetch}
 				/>
 			</Paper>
 			<QuestionDialog

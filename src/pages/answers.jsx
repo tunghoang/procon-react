@@ -6,10 +6,11 @@ import { useApi, useFetchData } from "../api";
 import { api } from "../api/commons";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
-import DataTable from "../components/data-table";
+import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Context from "../context";
 import ScoreData from "../components/procon25/score-data";
+import { useParams, useSearch } from "@tanstack/react-router";
 
 const Answers = () => {
 	const { formatMessage: tr } = useIntl();
@@ -17,6 +18,13 @@ const Answers = () => {
 	const [dialogInstance, setDialogInstance] = useState({});
 	const [dialogName, setDialogName] = useState("");
 	const { round } = useContext(Context);
+	const routeParams = useParams({ strict: false });
+	const searchParams = useSearch({ strict: false });
+	const roundId =
+		routeParams.roundId ||
+		searchParams.roundId ||
+		searchParams.round_id ||
+		round?.id;
 	const { useConfirmDelete } = useApi("/answer", "Answer");
 	const apiDeleteDialog = useConfirmDelete();
 	const {
@@ -28,17 +36,10 @@ const Answers = () => {
 		name: "Answer",
 		config: {
 			params: {
-				"match[eq_round_id]": round?.id,
+				"match[eq_round_id]": roundId,
 			},
 		},
-		isFetch: false,
 	});
-
-	useEffect(() => {
-		if (round?.id) {
-			refetch();
-		}
-	}, [round?.id]);
 
 	const getScores = (scoreData) => {
 		const scores = JSON.parse(scoreData || "{}");

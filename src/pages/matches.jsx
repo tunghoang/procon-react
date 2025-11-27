@@ -5,6 +5,9 @@ import {
 	Paper,
 	Stack,
 	Typography,
+	Box,
+	TextField,
+	Button,
 } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
@@ -12,7 +15,7 @@ import { useContext, useState } from "react";
 import { useApi, useFetchData } from "../api";
 import Context from "../context";
 import PageToolbar from "../components/page-toolbar";
-import DataTable from "../components/data-table";
+import DataTable from "../components/DataTable/data-table";
 import {
 	AddTeamMatchDialog,
 	MatchDialog,
@@ -21,15 +24,38 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
 import { formatDateTime } from "../utils/commons";
+import { useSearch, useParams } from "@tanstack/react-router";
 
 const Matches = () => {
+	const routeParams = useParams({ strict: false });
+	const searchParams = useSearch({ strict: false });
+	const roundId =
+		routeParams.roundId || searchParams.roundId || searchParams.round_id;
 	const { formatMessage: tr } = useIntl();
-	const { round, team } = useContext(Context);
+	const { team } = useContext(Context);
 	const isReadOnly = !team || !team.is_admin;
 	const [selectedMatch, setSelectedMatch] = useState({});
 	const [selectedMatchIds, setSelectedMatchIds] = useState([]);
+	const [showTimeFilter, setShowTimeFilter] = useState(false);
+	const [timeFrom, setTimeFrom] = useState("");
+	const [timeTo, setTimeTo] = useState("");
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi("/match", "Match");
 	const apiDeleteMatch = useConfirmDelete();
+	const buildParams = () => {
+		const params = {
+			eq_round_id: roundId,
+		};
+		if (timeFrom) {
+			params["gte_start_time"] = timeFrom;
+			params["gte_end_time"] = timeFrom;
+		}
+		if (timeTo) {
+			params["lte_start_time"] = timeTo;
+			params["lte_end_time"] = timeTo;
+		}
+		return params;
+	};
+
 	const {
 		data: matches,
 		refetch,
@@ -38,9 +64,7 @@ const Matches = () => {
 		path: "/match",
 		name: "Match",
 		config: {
-			params: {
-				eq_round_id: round?.id,
-			},
+			params: buildParams(),
 		},
 	});
 
@@ -77,43 +101,40 @@ const Matches = () => {
 			field: "id",
 			headerName: "ID",
 			width: 100,
-			headerClassName: "tableHeader",
 		},
 		{
 			field: "name",
 			headerName: "Name",
-			flex: 1,
-			headerClassName: "tableHeader",
+			flex: 2,
 		},
 		{
 			field: "description",
 			headerName: "Description",
-			flex: 1,
-			headerClassName: "tableHeader",
+			flex: 2,
 		},
 		{
 			field: "start_time",
 			headerName: "Start Time",
-			flex: 1,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return formatDateTime(params.row.start_time);
+			filterable: false,
+			flex: 1.5,
+			valueGetter: ({ value }) => {
+				return formatDateTime(value);
 			},
 		},
 		{
 			field: "end_time",
 			headerName: "End Time",
-			flex: 1,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return formatDateTime(params.row.end_time);
+			filterable: false,
+			flex: 1.5,
+			valueGetter: ({ value }) => {
+				return formatDateTime(value);
 			},
 		},
 		{
 			field: "is_active",
 			headerName: "Active",
+			filterable: false,
 			flex: 1,
-			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
 					<>
@@ -129,8 +150,8 @@ const Matches = () => {
 		{
 			field: "teams",
 			headerName: "Teams",
-			flex: 1,
-			headerClassName: "tableHeader",
+			filterable: false,
+			flex: 1.5,
 			renderCell: ({ row }) => {
 				return (
 					<Stack direction={"row"} spacing={2} alignItems="center">
@@ -183,7 +204,7 @@ const Matches = () => {
 		if (currentMatch.id) {
 			result = await apiEdit(currentMatch.id, currentMatch);
 		} else {
-			currentMatch.round_id = round.id;
+			currentMatch.round_id = roundId;
 			result = await apiCreate(currentMatch);
 		}
 		if (result) await refetch();
@@ -239,6 +260,17 @@ const Matches = () => {
 				component="main"
 				sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}>
 				<DataTable
+					showTimeFilter={showTimeFilter}
+					onToggleTimeFilter={() => setShowTimeFilter(!showTimeFilter)}
+					timeFrom={timeFrom}
+					timeTo={timeTo}
+					onTimeFromChange={setTimeFrom}
+					onTimeToChange={setTimeTo}
+					onTimeFilterSearch={refetch}
+					onTimeFilterClear={() => {
+						setTimeFrom("");
+						setTimeTo("");
+					}}
 					filterOptions={filterOptions}
 					onFilter={async (params) => await refetch(params)}
 					rows={matches}
@@ -247,6 +279,7 @@ const Matches = () => {
 						setSelectedMatchIds(ids);
 					}}
 					loading={loading}
+					onRefresh={refetch}
 				/>
 			</Paper>
 			{dialogName === "MatchDialog" && (

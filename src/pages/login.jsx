@@ -3,13 +3,16 @@ import { useFormik } from "formik";
 import { useContext } from "react";
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
 import * as Yup from "yup";
-import { navigate } from "hookrouter";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import Context from "../context";
 import { apiSignIn } from "../api";
 
 const Login = () => {
 	const { formatMessage } = useIntl();
 	const { updateLocalStorage } = useContext(Context);
+	const navigate = useNavigate();
+	const search = useSearch({ from: "/login" });
+
 	const formik = useFormik({
 		initialValues: {
 			account: "",
@@ -28,10 +31,15 @@ const Login = () => {
 				token: result.token,
 				locale: "vi-VN",
 			});
-			if (result.team && result.team.is_admin) {
-				navigate("/tournament");
+
+			// Check if there's a redirect URL
+			if (search?.redirect) {
+				const redirectPath = decodeURIComponent(search.redirect);
+				navigate({ to: redirectPath });
+			} else if (result.team && result.team.is_admin) {
+				navigate({ to: "/tournament" });
 			} else {
-				navigate("/competition");
+				navigate({ to: "/competition" });
 			}
 		},
 	});

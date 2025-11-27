@@ -13,16 +13,18 @@ import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../../api";
-import { navigate } from "hookrouter";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import Context from "../../context";
 import CardData from "../../components/card-data";
 import LoadingPage from "../../components/loading-page";
 import { formatDateTime } from "../../utils/commons";
 import TournamentIcon from "@mui/icons-material/EmojiEvents";
 
-const Competition = ({ tournamentId, roundId }) => {
+const Competition = () => {
+	const { tournamentId, roundId } = useParams({ strict: false });
 	const { updateContext } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
+	const navigate = useNavigate();
 
 	const { data: matches, loading } = useFetchData({
 		path: "/match",
@@ -96,7 +98,7 @@ const Competition = ({ tournamentId, roundId }) => {
 				</Typography>
 				<Grid container spacing={3}>
 					{group.matches.map((match) => (
-						<Grid item key={match.id} lg={4} md={6} xs={12}>
+						<Grid key={match.id} size={{ lg: 4, md: 6, xs: 12 }}>
 							<CardData
 								style={{ border: "1px solid", borderColor: "#b6bdc5ff" }}
 								header={
@@ -128,11 +130,16 @@ const Competition = ({ tournamentId, roundId }) => {
 								}
 								showAction={false}
 								handleSelect={() => {
-									const tournamentId = match.round.tournament.id;
-									const roundId = match.round.id;
-									navigate(
-										`/competition/tournament/${tournamentId}/round/${roundId}/match/${match.id}/questions`
-									);
+									const matchTournamentId = match.round.tournament.id;
+									const matchRoundId = match.round.id;
+									navigate({
+										to: `/tournament/$tournamentId/round/$roundId/match/$matchId/questions`,
+										params: {
+											tournamentId: matchTournamentId,
+											roundId: matchRoundId,
+											matchId: match.id,
+										},
+									});
 									updateContext({ userMatch: match });
 								}}
 							/>
@@ -163,7 +170,7 @@ const Competition = ({ tournamentId, roundId }) => {
 							<Button
 								variant="outlined"
 								startIcon={<TournamentIcon />}
-								onClick={() => navigate("/tournament")}>
+								onClick={() => navigate({ to: "/tournament" })}>
 								{tr({ id: "Tournaments" })}
 							</Button>
 						</Toolbar>

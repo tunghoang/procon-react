@@ -79,7 +79,7 @@ const CardData = ({
 									container
 									spacing={2}
 									sx={{ justifyContent: "space-between" }}>
-									<Grid item sx={{ alignItems: "center", display: "flex" }}>
+									<Grid sx={{ alignItems: "center", display: "flex" }}>
 										{handleEdit && (
 											<Button onClick={handleEdit}>
 												<EditIcon color="action" />
@@ -93,7 +93,7 @@ const CardData = ({
 											</Button>
 										)}
 									</Grid>
-									<Grid item sx={{ alignItems: "center", display: "flex" }}>
+									<Grid sx={{ alignItems: "center", display: "flex" }}>
 										{handleEditDetail && (
 											<Button onClick={handleEditDetail}>
 												<SettingsIcon color="action" />
@@ -107,10 +107,10 @@ const CardData = ({
 											</Button>
 										)}
 									</Grid>
-									<Grid item sx={{ alignItems: "center", display: "flex" }}>
+									<Grid sx={{ alignItems: "center", display: "flex" }}>
 										{handleDelete && (
 											<Button onClick={handleDelete} color="error">
-												<DeleteIcon color="action" color="error" />
+												<DeleteIcon color="error" />
 												<Typography
 													display="inline"
 													sx={{ pl: 1, fontWeight: "bold" }}

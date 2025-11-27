@@ -1,7 +1,11 @@
 import axios from "axios";
 import Toastify from "toastify-js";
-const defaultHeaders = {
-  "Content-Type": "application/json",
+
+let routerInstance = null;
+let isRedirecting = false;
+
+export const setRouter = (router) => {
+  routerInstance = router;
 };
 
 export const getError = (e) => {
@@ -30,6 +34,24 @@ const createAPI = () => {
         error.response?.statusText === "Unauthorized"
       ) {
         localStorage.removeItem("token");
+
+        // Redirect to login with callback URL (only once)
+        if (routerInstance && window.location.pathname !== "/login" && !isRedirecting) {
+          isRedirecting = true;
+          const callbackUrl = encodeURIComponent(window.location.pathname + window.location.search);
+          routerInstance.navigate({
+            to: "/login",
+            search: { redirect: callbackUrl }
+          });
+
+          // Reset flag after navigation completes
+          setTimeout(() => {
+            isRedirecting = false;
+          }, 1000);
+        } else {
+          // Suppress error notification for subsequent 401 errors when already redirecting
+          error.handled = true;
+        }
       }
       return Promise.reject(error);
     }
