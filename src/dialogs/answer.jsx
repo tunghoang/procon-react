@@ -1,27 +1,4 @@
-import {
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	Stack,
-	Typography,
-	Select,
-	MenuItem,
-	FormControl,
-	Box,
-	Grid,
-	TextField,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	Paper,
-	Slider,
-	IconButton,
-} from "@mui/material";
+import * as mui from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import makeStyles from "@mui/styles/makeStyles";
 import { useContext, useState, useCallback } from "react";
@@ -62,13 +39,15 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 	});
 
 	return (
-		<Dialog
+		<mui.Dialog
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
 			onClose={close}>
-			<DialogTitle>{answer?.id ? "Edit Answer" : "Create Answer"}</DialogTitle>
-			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
-				<Stack spacing={1}>
+			<mui.DialogTitle>
+				{answer?.id ? "Edit Answer" : "Create Answer"}
+			</mui.DialogTitle>
+			<mui.DialogContent className={classes.root} style={{ minWidth: 500 }}>
+				<mui.Stack spacing={1}>
 					<CodeEditor
 						title="Answer Data"
 						height="180px"
@@ -80,10 +59,10 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 						}}
 						onError={() => setIsDisabled(true)}
 					/>
-					<Stack spacing={0}>
+					<mui.Stack spacing={0}>
 						<AccordionBoard
 							title={
-								<Box
+								<mui.Box
 									sx={{
 										display: "flex",
 										justifyContent: "space-between",
@@ -92,18 +71,18 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 										pr: 2,
 									}}>
 									<span>Board</span>
-									<Box sx={{ display: "flex", gap: 3, marginLeft: "16px" }}>
-										<Typography variant="caption" color="textSecondary">
+									<mui.Box sx={{ display: "flex", gap: 3, marginLeft: "16px" }}>
+										<mui.Typography variant="caption" color="textSecondary">
 											Match: {question?.match_factor ?? 1.0}
-										</Typography>
-										<Typography variant="caption" color="textSecondary">
+										</mui.Typography>
+										<mui.Typography variant="caption" color="textSecondary">
 											Step: {question?.step_factor ?? -0.05}
-										</Typography>
-										<Typography variant="caption" color="textSecondary">
+										</mui.Typography>
+										<mui.Typography variant="caption" color="textSecondary">
 											Resub: {question?.resub_factor ?? -10.0}
-										</Typography>
-									</Box>
-								</Box>
+										</mui.Typography>
+									</mui.Box>
+								</mui.Box>
 							}
 							copyContent={entities}
 							showCopy
@@ -128,16 +107,16 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
             >
               <CodeEditor defaultValue={general} readOnly />
             </AccordionBoard> */}
-					</Stack>
-				</Stack>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-				<Button onClick={save} disabled={isDisabled}>
+					</mui.Stack>
+				</mui.Stack>
+			</mui.DialogContent>
+			<mui.DialogActions>
+				<mui.Button onClick={close}>{tr({ id: "Cancel" })}</mui.Button>
+				<mui.Button onClick={save} disabled={isDisabled}>
 					{tr({ id: "Save" })}
-				</Button>
-			</DialogActions>
-		</Dialog>
+				</mui.Button>
+			</mui.DialogActions>
+		</mui.Dialog>
 	);
 };
 
@@ -149,15 +128,8 @@ const useScoreStyle = makeStyles({
 	},
 });
 
-const ScoreDataDialog = ({
-	open,
-	instance,
-	close,
-	title = "Score Data",
-	disabled = false,
-}) => {
+const ScoreDataDialog = ({ open, instance, close }) => {
 	const classes = useScoreStyle();
-	const { formatMessage: tr } = useIntl();
 
 	if (!instance) return null;
 
@@ -177,12 +149,9 @@ const ScoreDataDialog = ({
 	const question = instance.question || {};
 	const questionData = JSON.parse(question?.question_data || "{}");
 	const startBoard = questionData.field?.entities;
-	// const startBoard = questionData.board?.start;
-	// const goalBoard = questionData.board?.goal;
-	// const general = questionData.general;
 
 	return (
-		<Dialog
+		<mui.Dialog
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
 			onClose={close}
@@ -197,41 +166,41 @@ const ScoreDataDialog = ({
 					},
 				},
 			}}>
-			<DialogTitle>
-				<Stack
+			<mui.DialogTitle>
+				<mui.Stack
 					direction={"row"}
 					spacing={2}
 					justifyContent={"space-between"}
 					alignItems={"center"}>
-					<Stack direction={"row"} gap={3} alignItems={"center"}>
-						<Typography variant="h5" color={"blue"} fontSize={"22px"}>
+					<mui.Stack direction={"row"} gap={3} alignItems={"center"}>
+						<mui.Typography variant="h5" color={"blue"} fontSize={"22px"}>
 							{answer?.team?.name}
-						</Typography>
+						</mui.Typography>
 						<ScoreData scores={scoreData} />
-					</Stack>
-					<Stack direction={"row"} alignItems={"center"} spacing={1}>
-						<FormControl variant="standard" sx={{ m: 1, width: 120 }}>
+					</mui.Stack>
+					<mui.Stack direction={"row"} alignItems={"center"} spacing={1}>
+						<mui.FormControl variant="standard" sx={{ m: 1, width: 120 }}>
 							{team.is_admin && (
-								<Select
+								<mui.Select
 									defaultValue={0}
 									onChange={(e) => setAnswer(answers[e.target.value])}>
 									{answers.map((asw, idx) => {
 										return (
-											<MenuItem key={idx} value={idx}>
+											<mui.MenuItem key={idx} value={idx}>
 												{asw.team?.name}
-											</MenuItem>
+											</mui.MenuItem>
 										);
 									})}
-								</Select>
+								</mui.Select>
 							)}
-						</FormControl>
-						<IconButton onClick={close} size="small">
+						</mui.FormControl>
+						<mui.IconButton onClick={close} size="small">
 							<CloseIcon />
-						</IconButton>
-					</Stack>
-				</Stack>
-			</DialogTitle>
-			<DialogContent
+						</mui.IconButton>
+					</mui.Stack>
+				</mui.Stack>
+			</mui.DialogTitle>
+			<mui.DialogContent
 				className={classes.root}
 				style={{
 					minWidth: 800,
@@ -240,77 +209,97 @@ const ScoreDataDialog = ({
 					paddingTop: 8,
 					paddingBottom: 8,
 				}}>
-				<Stack
+				<mui.Stack
 					direction="row"
 					spacing={3}
 					sx={{ height: "100%", maxHeight: "100%" }}>
-					<Stack spacing={2} sx={{ width: 300, flexShrink: 0 }}>
-						<TableContainer component={Paper} variant="outlined">
-							<Table size="small">
-								<TableBody>
-									<TableRow>
-										<TableCell
+					<mui.Stack spacing={2} sx={{ width: 300, flexShrink: 0 }}>
+						<mui.TableContainer component={mui.Paper} variant="outlined">
+							<mui.Table size="small">
+								<mui.TableBody>
+									<mui.TableRow>
+										<mui.TableCell
 											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
 											Score
-										</TableCell>
-										<TableCell
-											align="right"
-											sx={{
-												fontWeight: "bold",
-												color: "green",
-											}}>
-											{scoreData?.match_count ?? "NA"}
-										</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Max
-										</TableCell>
-										<TableCell
+										</mui.TableCell>
+										<mui.TableCell
 											align="right"
 											sx={{
 												fontWeight: "bold",
 												color:
 													scoreData?.match_count !== scoreData?.max_match_count
 														? "red"
-														: "inherit",
+														: "#35ae35ff",
 											}}>
-											{scoreData?.max_match_count ?? "NA"}
-										</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell
+											{!isNaN(scoreData?.match_count)
+												? scoreData.match_count
+												: "NA"}
+											{scoreData?.match_count !== scoreData?.max_match_count &&
+												!isNaN(scoreData?.match_count) && (
+													<mui.Tooltip title="Điểm chưa đạt tối đa" arrow>
+														<span style={{ marginLeft: 4, cursor: "help" }}>
+															?
+														</span>
+													</mui.Tooltip>
+												)}
+										</mui.TableCell>
+									</mui.TableRow>
+									<mui.TableRow>
+										<mui.TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Max
+										</mui.TableCell>
+										<mui.TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "#35ae35ff",
+											}}>
+											{!isNaN(scoreData?.max_match_count)
+												? scoreData?.max_match_count
+												: "NA"}
+										</mui.TableCell>
+									</mui.TableRow>
+									<mui.TableRow>
+										<mui.TableCell
 											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
 											Steps
-										</TableCell>
-										<TableCell align="right" sx={{ fontWeight: "bold" }}>
-											{scoreData?.step_count ?? "NA"}
-										</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell
+										</mui.TableCell>
+										<mui.TableCell
+											align="right"
+											sx={{ fontWeight: "bold", color: "#e0941bff" }}>
+											{!isNaN(scoreData?.step_count)
+												? scoreData?.step_count
+												: "NA"}
+										</mui.TableCell>
+									</mui.TableRow>
+									<mui.TableRow>
+										<mui.TableCell
 											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
 											Resub
-										</TableCell>
-										<TableCell align="right" sx={{ fontWeight: "bold" }}>
-											{scoreData?.resubmission_count ?? "NA"}
-										</TableCell>
-									</TableRow>
-									<TableRow>
-										<TableCell
+										</mui.TableCell>
+										<mui.TableCell
+											align="right"
+											sx={{ fontWeight: "bold", color: "#d648b7ff" }}>
+											{!isNaN(scoreData?.resubmission_count)
+												? scoreData?.resubmission_count
+												: "NA"}
+										</mui.TableCell>
+									</mui.TableRow>
+									<mui.TableRow>
+										<mui.TableCell
 											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
 											Last Submitted
-										</TableCell>
-										<TableCell align="right" sx={{ fontWeight: "bold" }}>
+										</mui.TableCell>
+										<mui.TableCell align="right" sx={{ fontWeight: "bold" }}>
 											{scoreData?.submitted_time ?? "NA"}
-										</TableCell>
-									</TableRow>
-								</TableBody>
-							</Table>
-						</TableContainer>
+										</mui.TableCell>
+									</mui.TableRow>
+								</mui.TableBody>
+							</mui.Table>
+						</mui.TableContainer>
 						{!!sliderConfig.maxStep && (
-							<Slider
+							<mui.Slider
 								onChange={(_, val) => sliderConfig.onChange?.(val)}
 								defaultValue={sliderConfig.maxStep}
 								step={1}
@@ -320,8 +309,8 @@ const ScoreDataDialog = ({
 								key={sliderConfig.maxStep}
 							/>
 						)}
-					</Stack>
-					<Box
+					</mui.Stack>
+					<mui.Box
 						sx={{
 							flex: 1,
 							display: "flex",
@@ -337,10 +326,10 @@ const ScoreDataDialog = ({
 							onSliderReady={handleSliderReady}
 							fillContainer
 						/>
-					</Box>
-				</Stack>
-			</DialogContent>
-		</Dialog>
+					</mui.Box>
+				</mui.Stack>
+			</mui.DialogContent>
+		</mui.Dialog>
 	);
 };
 

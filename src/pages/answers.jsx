@@ -1,4 +1,4 @@
-import { Chip, IconButton, Paper } from "@mui/material";
+import { Chip, IconButton, Paper, Tooltip } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useState, useEffect } from "react";
@@ -88,34 +88,117 @@ const Answers = () => {
 			},
 		},
 		{
-			field: "score",
-			headerName: "Score Data",
-			flex: 1,
+			field: "match_score",
+			headerName: "Score",
+			width: 110,
 			headerClassName: "tableHeader",
 			filterable: true,
 			renderCell: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				const matchCount = scores?.match_count;
+				const maxMatchCount = scores?.max_match_count;
+				const isMax = matchCount === maxMatchCount;
 				return (
-					<>
-						<IconButton
-							onClick={async () => {
-								const question = await api(
-									`${import.meta.env.VITE_SERVICE_API}/question/${
-										row.question_id
-									}`
-								);
-								setDialogInstance({
-									answers: [row],
-									question,
-								});
-								setDialogName("ScoreDataDialog");
-							}}>
-							<VisibilityIcon />
-						</IconButton>
-						<ScoreData scores={JSON.parse(row.score_data || "{}")} />
-					</>
+					<span
+						style={{
+							color: isMax ? "#35ae35ff" : "red",
+							fontWeight: "bold",
+						}}>
+						{!isNaN(scores?.match_count) ? scores?.match_count : "NA"}
+						{!isMax && (
+							<Tooltip title="Điểm chưa đạt tối đa" arrow>
+								<span style={{ marginLeft: 4, cursor: "help" }}>?</span>
+							</Tooltip>
+						)}
+					</span>
 				);
 			},
-			valueGetter: ({ row }) => getScores(row.score_data),
+			valueGetter: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				return !isNaN(scores?.match_count) ? scores.match_count : "NA";
+			},
+		},
+		{
+			field: "max_match_score",
+			headerName: "Max Score",
+			width: 130,
+			headerClassName: "tableHeader",
+			filterable: true,
+			renderCell: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				return (
+					<span
+						style={{
+							color: "#35ae35ff",
+							fontWeight: "bold",
+						}}>
+						{!isNaN(scores?.max_match_count) ? scores?.max_match_count : "NA"}
+					</span>
+				);
+			},
+			valueGetter: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				return !isNaN(scores?.max_match_count) ? scores.max_match_count : "NA";
+			},
+		},
+		{
+			field: "step",
+			headerName: "Step",
+			width: 80,
+			headerClassName: "tableHeader",
+			filterable: true,
+			valueGetter: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				return (
+					<span style={{ fontWeight: "bold", color: "#e0941bff" }}>
+						{!isNaN(scores?.step_count) ? scores?.step_count : "NA"}
+					</span>
+				);
+			},
+		},
+		{
+			field: "resub_count",
+			headerName: "Resub Count",
+			width: 110,
+			headerClassName: "tableHeader",
+			filterable: true,
+			valueGetter: ({ row }) => {
+				const scores = JSON.parse(row.score_data || "{}");
+				return (
+					<span style={{ fontWeight: "bold", color: "#d648b7ff" }}>
+						{!isNaN(scores?.resubmission_count)
+							? scores?.resubmission_count
+							: "NA"}
+					</span>
+				);
+			},
+		},
+		{
+			field: "score_view",
+			headerName: "",
+			width: 50,
+			headerClassName: "tableHeader",
+			filterable: false,
+			sortable: false,
+			renderCell: ({ row }) => {
+				return (
+					<IconButton
+						onClick={async () => {
+							const question = await api(
+								`${import.meta.env.VITE_SERVICE_API}/question/${
+									row.question_id
+								}`
+							);
+							setDialogInstance({
+								answers: [row],
+								question,
+							});
+							setDialogName("ScoreDataDialog");
+						}}>
+						<VisibilityIcon />
+					</IconButton>
+				);
+			},
 		},
 	];
 

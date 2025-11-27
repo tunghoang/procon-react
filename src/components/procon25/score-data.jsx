@@ -1,36 +1,41 @@
-import "./score.css";
-
-const ScoreData = ({ scores, onlyFinal = false }) => {
-	const percentage = scores?.match_count / scores?.max_match_count;
-
-	if (onlyFinal)
-		return (
-			<span
-				className="ScoreData"
-				style={{
-					textAlign: "center",
-					fontSize: "45px",
-					width: "100%",
-					display: "inline-block",
-				}}>
-				<span className="final-score">
-					{!isNaN(percentage) ? `${(percentage * 100).toFixed(2)}%` : "NA"}
-				</span>
-			</span>
-		);
-
+const ScoreData = ({ scores }) => {
+	const isMax = scores?.match_count === scores?.max_match_count;
 	return (
-		<span className="ScoreData">
-			<span className="raw-score">
+		<span>
+			<span
+				style={{
+					fontStyle: "italic",
+					fontWeight: "bold",
+					marginRight: 10,
+					color: !isMax ? "red" : "#35ae35ff",
+				}}>
 				{!isNaN(scores?.match_count) ? scores?.match_count : "NA"}
 			</span>
-			<span className="max-score">
+			<span
+				style={{
+					fontStyle: "italic",
+					fontWeight: "bold",
+					marginRight: 10,
+					color: "#35ae35ff",
+				}}>
 				{!isNaN(scores?.max_match_count) ? scores?.max_match_count : "NA"}
 			</span>
-			<span className="penalty-score">
+			<span
+				style={{
+					fontStyle: "italic",
+					fontWeight: "bold",
+					marginRight: 10,
+					color: "#e0941bff",
+				}}>
 				{!isNaN(scores?.step_count) ? scores?.step_count : "NA"}
 			</span>
-			<span className="penalty-score">
+			<span
+				style={{
+					fontStyle: "italic",
+					fontWeight: "bold",
+					marginRight: 10,
+					color: "#d648b7ff",
+				}}>
 				{!isNaN(scores?.resubmission_count) ? scores?.resubmission_count : "NA"}
 			</span>
 		</span>

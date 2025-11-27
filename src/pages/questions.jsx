@@ -109,33 +109,6 @@ const Questions = () => {
 			},
 		},
 		{
-			field: "match_factor",
-			headerName: "Match Factor",
-			width: 120,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return params.row.match_factor ?? 1.0;
-			},
-		},
-		{
-			field: "step_factor",
-			headerName: "Step Factor",
-			width: 110,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return params.row.step_factor ?? -0.05;
-			},
-		},
-		{
-			field: "resub_factor",
-			headerName: "Resub Factor",
-			width: 120,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return params.row.resub_factor ?? -10.0;
-			},
-		},
-		{
 			field: "question_data",
 			headerName: "Question Data",
 			width: 120,
