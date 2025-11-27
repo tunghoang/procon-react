@@ -12,9 +12,19 @@ import {
 	Box,
 	Grid,
 	TextField,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Paper,
+	Slider,
+	IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useState } from "react";
+import { useContext, useState, useCallback } from "react";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import AccordionBoard from "../components/procon25/accordion-board";
@@ -154,7 +164,15 @@ const ScoreDataDialog = ({
 	const answers = instance.answers || [];
 	const [answer, setAnswer] = useState(answers[0]);
 	const [scoreData, setScoreData] = useState({});
+	const [sliderConfig, setSliderConfig] = useState({
+		maxStep: 0,
+		onChange: null,
+	});
 	const { team } = useContext(Context);
+
+	const handleSliderReady = useCallback((config) => {
+		setSliderConfig(config);
+	}, []);
 
 	const question = instance.question || {};
 	const questionData = JSON.parse(question?.question_data || "{}");
@@ -167,68 +185,161 @@ const ScoreDataDialog = ({
 		<Dialog
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
-			onClose={close}>
+			onClose={close}
+			maxWidth="xl"
+			fullWidth
+			slotProps={{
+				paper: {
+					sx: {
+						height: "90vh",
+						maxHeight: "90vh",
+						overflow: "hidden",
+					},
+				},
+			}}>
 			<DialogTitle>
-				<Stack direction={"row"} spacing={2} justifyContent={"space-between"}>
+				<Stack
+					direction={"row"}
+					spacing={2}
+					justifyContent={"space-between"}
+					alignItems={"center"}>
 					<Stack direction={"row"} gap={3} alignItems={"center"}>
 						<Typography variant="h5" color={"blue"} fontSize={"22px"}>
 							{answer?.team?.name}
 						</Typography>
 						<ScoreData scores={scoreData} />
 					</Stack>
-					<FormControl variant="standard" sx={{ m: 1, width: 120 }}>
-						{team.is_admin && (
-							<Select
-								defaultValue={0}
-								onChange={(e) => setAnswer(answers[e.target.value])}>
-								{answers.map((asw, idx) => {
-									return (
-										<MenuItem key={idx} value={idx}>
-											{asw.team?.name}
-										</MenuItem>
-									);
-								})}
-							</Select>
-						)}
-					</FormControl>
-				</Stack>
-			</DialogTitle>
-			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
-				<Stack spacing={3}>
-					<CodeEditor
-						title={title}
-						defaultValue={scoreData}
-						readOnly={disabled}
-					/>
-					<Stack spacing={0}>
-						<AccordionBoard title="Answer Board" defaultExpanded>
-							<AnswerBoard
-								answerId={answer?.id}
-								startBoard={startBoard}
-								onChange={(score) => setScoreData(score)}
-							/>
-						</AccordionBoard>
-						{/* <AccordionBoard title="Answer Board" defaultExpanded>
-              <AnswerBoard
-                answerId={answer?.id}
-                startBoard={startBoard}
-                goalBoard={goalBoard}
-                general={general}
-                onChange={(score) => setScoreData(score)}
-              />
-            </AccordionBoard>
-            <AccordionBoard title="Start Board">
-              <GameBoard board={startBoard} goal={goalBoard} />
-            </AccordionBoard>
-            <AccordionBoard title="Goal Board">
-              <GameBoard board={goalBoard} goal={goalBoard} />
-            </AccordionBoard> */}
+					<Stack direction={"row"} alignItems={"center"} spacing={1}>
+						<FormControl variant="standard" sx={{ m: 1, width: 120 }}>
+							{team.is_admin && (
+								<Select
+									defaultValue={0}
+									onChange={(e) => setAnswer(answers[e.target.value])}>
+									{answers.map((asw, idx) => {
+										return (
+											<MenuItem key={idx} value={idx}>
+												{asw.team?.name}
+											</MenuItem>
+										);
+									})}
+								</Select>
+							)}
+						</FormControl>
+						<IconButton onClick={close} size="small">
+							<CloseIcon />
+						</IconButton>
 					</Stack>
 				</Stack>
+			</DialogTitle>
+			<DialogContent
+				className={classes.root}
+				style={{
+					minWidth: 800,
+					height: "calc(100% - 80px)",
+					overflow: "hidden",
+					paddingTop: 8,
+					paddingBottom: 8,
+				}}>
+				<Stack
+					direction="row"
+					spacing={3}
+					sx={{ height: "100%", maxHeight: "100%" }}>
+					<Stack spacing={2} sx={{ width: 300, flexShrink: 0 }}>
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableBody>
+									<TableRow>
+										<TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Score
+										</TableCell>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "green",
+											}}>
+											{scoreData?.match_count ?? "NA"}
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Max
+										</TableCell>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color:
+													scoreData?.match_count !== scoreData?.max_match_count
+														? "red"
+														: "inherit",
+											}}>
+											{scoreData?.max_match_count ?? "NA"}
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Steps
+										</TableCell>
+										<TableCell align="right" sx={{ fontWeight: "bold" }}>
+											{scoreData?.step_count ?? "NA"}
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Resub
+										</TableCell>
+										<TableCell align="right" sx={{ fontWeight: "bold" }}>
+											{scoreData?.resubmission_count ?? "NA"}
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell
+											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+											Last Submitted
+										</TableCell>
+										<TableCell align="right" sx={{ fontWeight: "bold" }}>
+											{scoreData?.submitted_time ?? "NA"}
+										</TableCell>
+									</TableRow>
+								</TableBody>
+							</Table>
+						</TableContainer>
+						{!!sliderConfig.maxStep && (
+							<Slider
+								onChange={(_, val) => sliderConfig.onChange?.(val)}
+								defaultValue={sliderConfig.maxStep}
+								step={1}
+								min={0}
+								max={sliderConfig.maxStep}
+								valueLabelDisplay="auto"
+								key={sliderConfig.maxStep}
+							/>
+						)}
+					</Stack>
+					<Box
+						sx={{
+							flex: 1,
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "flex-start",
+							height: "100%",
+							overflow: "hidden",
+						}}>
+						<AnswerBoard
+							answerId={answer?.id}
+							startBoard={startBoard}
+							onChange={(score) => setScoreData(score)}
+							onSliderReady={handleSliderReady}
+							fillContainer
+						/>
+					</Box>
+				</Stack>
 			</DialogContent>
-			<DialogActions>
-				<Button onClick={close}>{tr({ id: "Close" })}</Button>
-			</DialogActions>
 		</Dialog>
 	);
 };

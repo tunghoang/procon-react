@@ -43,9 +43,9 @@ const Answers = () => {
 
 	const getScores = (scoreData) => {
 		const scores = JSON.parse(scoreData || "{}");
-		return isNaN(scores?.final_score)
+		return isNaN(scores?.match_count)
 			? Number.NEGATIVE_INFINITY
-			: scores.final_score;
+			: scores.match_count;
 	};
 
 	const columns = [

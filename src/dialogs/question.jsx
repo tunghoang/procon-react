@@ -109,61 +109,6 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 					</Box>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Match Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									name="match_factor"
-									value={instance?.match_factor ?? 1.0}
-									onChange={(evt) => {
-										handleChange({
-											match_factor: parseFloat(evt.target.value) || 1.0,
-										});
-									}}
-									helperText="Multiplier for matching pairs (default: 1.0)"
-								/>
-							</Grid>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Step Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									name="step_factor"
-									value={instance?.step_factor ?? -0.05}
-									onChange={(evt) => {
-										handleChange({
-											step_factor: parseFloat(evt.target.value) || -0.05,
-										});
-									}}
-									helperText="Penalty per step (default: -0.05)"
-								/>
-							</Grid>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Resubmission Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									name="resub_factor"
-									value={instance?.resub_factor ?? -10.0}
-									onChange={(evt) => {
-										handleChange({
-											resub_factor: parseFloat(evt.target.value) || -10.0,
-										});
-									}}
-									helperText="Penalty for resubmission (default: -10.0)"
-								/>
-							</Grid>
-						</Grid>
-					</Box>
-					<Box sx={{ mx: -1 }}>
-						<Grid container spacing={2}>
 							<Grid size={{ xs: 12 }}>
 								<TextField
 									margin="dense"
@@ -275,53 +220,6 @@ const QuestionDataDialog = ({
 			<DialogTitle></DialogTitle>
 			<DialogContent className={classes.root} style={{ minWidth: 500 }}>
 				<Stack spacing={1}>
-					<Box sx={{ mx: -1 }}>
-						<Grid container spacing={2}>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Match Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									value={instance?.match_factor ?? 1.0}
-									slotProps={{
-										input: {
-											readOnly: true,
-										},
-									}}
-								/>
-							</Grid>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Step Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									value={instance?.step_factor ?? -0.05}
-									slotProps={{
-										input: {
-											readOnly: true,
-										},
-									}}
-								/>
-							</Grid>
-							<Grid size={{ xs: 4 }}>
-								<TextField
-									margin="dense"
-									label="Resubmission Factor"
-									type="number"
-									fullWidth
-									variant="standard"
-									value={instance?.resub_factor ?? -10.0}
-									InputProps={{
-										readOnly: true,
-									}}
-								/>
-							</Grid>
-						</Grid>
-					</Box>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
 							<Grid size={{ xs: 12 }}>

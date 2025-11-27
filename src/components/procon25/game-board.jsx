@@ -2,7 +2,7 @@ import "./board.css";
 import { Stack } from "@mui/material";
 import { useMemo, memo } from "react";
 
-const GameBoard = ({ board, step = {} }) => {
+const GameBoard = ({ board, step = {}, cellSize, fillContainer = false }) => {
 	if (!board) return null;
 
 	const { x = -1, y = -1, n = 0 } = step;
@@ -89,20 +89,55 @@ const GameBoard = ({ board, step = {} }) => {
 	}, [board, correctMap, rows, cols, x, y, n]);
 
 	const screenSize = useMemo(() => {
-		if (rows <= 14) return "60vmin";
-		if (rows <= 18) return "80vmin";
-		return "100vh";
-	}, [rows]);
+		if (cellSize) return `${cellSize * cols}px`;
+		if (fillContainer) return "100%";
+		// Dynamic sizing based on board size to fit screen
+		// Assuming dialog takes ~350px for left panel and padding
+		const maxHeight = "100vh";
+		const maxWidth = "calc(100vw - 350px)";
+		return `min(${maxHeight}, ${maxWidth})`;
+	}, [rows, cols, cellSize, fillContainer]);
+
+	const containerStyle = fillContainer
+		? {
+				width: "100%",
+				height: "auto",
+				display: "flex",
+				alignItems: "flex-start",
+				justifyContent: "center",
+		  }
+		: {};
+
+	// Calculate size for fillContainer mode
+	const boardStyle = useMemo(() => {
+		if (!fillContainer) {
+			return {
+				gridTemplateColumns: `repeat(${cols}, 1fr)`,
+				width: screenSize,
+				height: screenSize,
+			};
+		}
+		// fillContainer mode: fit to available space while maintaining aspect ratio
+		// Board is square (rows === cols typically), so use full available height
+		const availableHeight = "calc(90vh - 100px)"; // dialog height minus header/padding
+		return {
+			gridTemplateColumns: `repeat(${cols}, 1fr)`,
+			height: "85%",
+			maxWidth: "100%",
+			maxHeight: "100%",
+		};
+	}, [fillContainer, cols, rows, screenSize]);
 
 	return (
-		<Stack spacing={2} alignItems={"center"}>
-			<div
-				className="GameBoard"
-				style={{
-					gridTemplateColumns: `repeat(${rows}, 1fr)`,
-					width: screenSize,
-					height: screenSize,
-				}}>
+		<Stack
+			spacing={0}
+			style={{
+				alignItems: "center",
+				justifyContent: "flex-start",
+				height: "100%",
+			}}
+			sx={containerStyle}>
+			<div className="GameBoard" style={boardStyle}>
 				{gridElements}
 			</div>
 		</Stack>
