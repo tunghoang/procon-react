@@ -139,9 +139,6 @@ const Questions = () => {
 			mode: 0,
 			type: "parameters",
 			raw_questions: [],
-			match_factor: 1.0,
-			step_factor: -0.05,
-			resub_factor: -10.0,
 		});
 		setDialogName("QuestionDialog");
 	};

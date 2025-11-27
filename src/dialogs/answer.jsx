@@ -71,17 +71,6 @@ const UserAnswerDialog = ({ open, instance, close, save, handleChange }) => {
 										pr: 2,
 									}}>
 									<span>Board</span>
-									<mui.Box sx={{ display: "flex", gap: 3, marginLeft: "16px" }}>
-										<mui.Typography variant="caption" color="textSecondary">
-											Match: {question?.match_factor ?? 1.0}
-										</mui.Typography>
-										<mui.Typography variant="caption" color="textSecondary">
-											Step: {question?.step_factor ?? -0.05}
-										</mui.Typography>
-										<mui.Typography variant="caption" color="textSecondary">
-											Resub: {question?.resub_factor ?? -10.0}
-										</mui.Typography>
-									</mui.Box>
 								</mui.Box>
 							}
 							copyContent={entities}
