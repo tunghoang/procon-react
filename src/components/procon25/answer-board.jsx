@@ -8,6 +8,7 @@ import { rotateSubBoard } from "./game-handler";
 
 const AnswerBoard = ({
 	answerId,
+	answerData = null, // Optional: pre-loaded answer data
 	startBoard,
 	onChange,
 	cellSize = 24,
@@ -84,11 +85,23 @@ const AnswerBoard = ({
 	}, 100);
 
 	useEffect(() => {
-		getAnswer();
-	}, [answerId]);
+		// If answerData is provided, use it directly (avoid extra fetch)
+		if (answerData) {
+			const ansData = JSON.parse(answerData.answer_data || "{}");
+			setMaxStep(ansData.ops?.length || 0);
+			setAnswer(answerData);
+		} else if (answerId) {
+			// Otherwise fetch from API
+			getAnswer();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [answerId, answerData]);
 
 	useEffect(() => {
-		handleBoardChange(maxStep);
+		if (answer?.id) {
+			handleBoardChange(maxStep);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [answer]);
 
 	// Notify parent about slider config when maxStep changes
@@ -99,6 +112,7 @@ const AnswerBoard = ({
 				onChange: handleBoardChangedb,
 			});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [maxStep]);
 
 	return (

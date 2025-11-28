@@ -1,55 +1,55 @@
 .GameBoard {
-  position: relative;
+	position: relative;
 }
 
 /* base cell */
 .GameBoard {
-  display: grid;
-  aspect-ratio: 1 / 1;
+	display: grid;
+	/* aspect-ratio: 1 / 1; */
 }
 
 .cell {
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(8px, 1vw, 14px);
-  border: 1px solid #333;
-  background: #f3f3f3;
-  box-sizing: border-box;
-  margin: 2px;
+	aspect-ratio: 1 / 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: clamp(8px, 1vw, 14px);
+	border: 1px solid #333;
+	background: #f3f3f3;
+	box-sizing: border-box;
+	margin: 2px;
 }
 /* correctness */
 .cell-correct {
-  background-color: #81c784;
+	background-color: #81c784;
 }
 .cell-wrong {
-  background-color: #ef9a9a;
+	background-color: #ef9a9a;
 }
 
 /* subboard wrapper: occupies an n x n grid area and contains inner cells as a grid */
 .subboard-wrapper {
-  border: 2px solid #ffd54f;
-  box-sizing: border-box;
-  overflow: hidden;
-  background: transparent;
-  display: grid;
-  gap: 2px;
-  padding: 2px;
+	border: 2px solid #ffd54f;
+	box-sizing: border-box;
+	overflow: hidden;
+	background: transparent;
+	display: grid;
+	gap: 2px;
+	padding: 2px;
 }
 
 /* rotating animation applied to the wrapper only */
 .subboard-wrapper.rotating {
-  transform-origin: center center;
-  animation: rotateSubboard 0.5s ease-in-out forwards;
+	transform-origin: center center;
+	animation: rotateSubboard 0.5s ease-in-out forwards;
 }
 
 /* rotate 90deg clockwise */
 @keyframes rotateSubboard {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(90deg);
-  }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(90deg);
+	}
 }

@@ -74,13 +74,13 @@ export default function Breadcrumb() {
 						: ""
 				}`}
 				active={!displayTournament && !displayRound}
-				href="/"
+				href="/tournament"
 			/>
 			{displayTournament && (
 				<BreadcrumbItem
 					title={tr({ id: "Rounds" })}
 					active={displayTournament && !displayRound}
-					href="/rounds"
+					href={`/tournament/${displayTournament.id}/rounds`}
 				/>
 			)}
 			{displayTournament && displayRound && (

@@ -1,7 +1,8 @@
 import * as mui from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import makeStyles from "@mui/styles/makeStyles";
-import { useContext, useState, useCallback } from "react";
+import { useContext, useState, useCallback, useEffect, useRef } from "react";
+import axios from "axios";
 import { useIntl } from "react-intl";
 import CodeEditor from "../components/code-editor";
 import AccordionBoard from "../components/procon25/accordion-board";
@@ -119,22 +120,83 @@ const useScoreStyle = makeStyles({
 
 const ScoreDataDialog = ({ open, instance, close }) => {
 	const classes = useScoreStyle();
-
-	if (!instance) return null;
-
-	const answers = instance.answers || [];
-	const [answer, setAnswer] = useState(answers[0]);
+	const [answer, setAnswer] = useState(null);
 	const [scoreData, setScoreData] = useState({});
 	const [sliderConfig, setSliderConfig] = useState({
 		maxStep: 0,
 		onChange: null,
 	});
+	const [loadingAnswer, setLoadingAnswer] = useState(false);
 	const { team } = useContext(Context);
+	const lastFetchedQuestionId = useRef(null);
 
 	const handleSliderReady = useCallback((config) => {
 		setSliderConfig(config);
 	}, []);
 
+	// Fetch full answer data for a specific answer
+	const fetchFullAnswer = useCallback(async (answerMetadata) => {
+		// If answer already has full data, just use it
+		if (answerMetadata.answer_data) {
+			setAnswer(answerMetadata);
+			return;
+		}
+
+		setLoadingAnswer(true);
+		try {
+			const fullAnswer = await axios.get(
+				`${import.meta.env.VITE_SERVICE_API}/answer/${answerMetadata.id}`,
+				{
+					headers: {
+						Authorization: localStorage.getItem("token"),
+					},
+				}
+			);
+			setAnswer(fullAnswer.data);
+		} catch (error) {
+			console.error("Failed to fetch full answer:", error);
+			setAnswer(answerMetadata);
+		} finally {
+			setLoadingAnswer(false);
+		}
+	}, []);
+
+	// Handle team selection from dropdown
+	const handleTeamSelect = useCallback(
+		(index, answersArray) => {
+			const selectedAnswer = answersArray[index];
+			fetchFullAnswer(selectedAnswer);
+		},
+		[fetchFullAnswer]
+	);
+
+	// Load first answer when dialog opens and instance is ready
+	useEffect(() => {
+		const currentQuestionId = instance?.question?.id;
+
+		// Only fetch if dialog is open, has answers, and we haven't fetched this question yet
+		if (
+			open &&
+			instance?.answers?.[0] &&
+			lastFetchedQuestionId.current !== currentQuestionId
+		) {
+			// Reset answer to prevent showing old data
+			setAnswer(null);
+			setScoreData({});
+			fetchFullAnswer(instance.answers[0]);
+			lastFetchedQuestionId.current = currentQuestionId;
+		}
+
+		// Reset tracking when dialog closes
+		if (!open) {
+			lastFetchedQuestionId.current = null;
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open, instance?.question?.id]);
+
+	if (!instance) return null;
+
+	const answers = instance.answers || [];
 	const question = instance.question || {};
 	const questionData = JSON.parse(question?.question_data || "{}");
 	const startBoard = questionData.field?.entities;
@@ -169,10 +231,11 @@ const ScoreDataDialog = ({ open, instance, close }) => {
 					</mui.Stack>
 					<mui.Stack direction={"row"} alignItems={"center"} spacing={1}>
 						<mui.FormControl variant="standard" sx={{ m: 1, width: 120 }}>
-							{team.is_admin && (
+							{team.is_admin && answers.length > 0 && (
 								<mui.Select
 									defaultValue={0}
-									onChange={(e) => setAnswer(answers[e.target.value])}>
+									onChange={(e) => handleTeamSelect(e.target.value, answers)}
+									disabled={loadingAnswer}>
 									{answers.map((asw, idx) => {
 										return (
 											<mui.MenuItem key={idx} value={idx}>
@@ -198,125 +261,158 @@ const ScoreDataDialog = ({ open, instance, close }) => {
 					paddingTop: 8,
 					paddingBottom: 8,
 				}}>
-				<mui.Stack
-					direction="row"
-					spacing={3}
-					sx={{ height: "100%", maxHeight: "100%" }}>
-					<mui.Stack spacing={2} sx={{ width: 300, flexShrink: 0 }}>
-						<mui.TableContainer component={mui.Paper} variant="outlined">
-							<mui.Table size="small">
-								<mui.TableBody>
-									<mui.TableRow>
-										<mui.TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Score
-										</mui.TableCell>
-										<mui.TableCell
-											align="right"
-											sx={{
-												fontWeight: "bold",
-												color:
-													scoreData?.match_count !== scoreData?.max_match_count
-														? "red"
-														: "#35ae35ff",
-											}}>
-											{!isNaN(scoreData?.match_count)
-												? scoreData.match_count
-												: "NA"}
-											{scoreData?.match_count !== scoreData?.max_match_count &&
-												!isNaN(scoreData?.match_count) && (
-													<mui.Tooltip title="Điểm chưa đạt tối đa" arrow>
-														<span style={{ marginLeft: 4, cursor: "help" }}>
-															?
-														</span>
-													</mui.Tooltip>
-												)}
-										</mui.TableCell>
-									</mui.TableRow>
-									<mui.TableRow>
-										<mui.TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Max
-										</mui.TableCell>
-										<mui.TableCell
-											align="right"
-											sx={{
-												fontWeight: "bold",
-												color: "#35ae35ff",
-											}}>
-											{!isNaN(scoreData?.max_match_count)
-												? scoreData?.max_match_count
-												: "NA"}
-										</mui.TableCell>
-									</mui.TableRow>
-									<mui.TableRow>
-										<mui.TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Steps
-										</mui.TableCell>
-										<mui.TableCell
-											align="right"
-											sx={{ fontWeight: "bold", color: "#e0941bff" }}>
-											{!isNaN(scoreData?.step_count)
-												? scoreData?.step_count
-												: "NA"}
-										</mui.TableCell>
-									</mui.TableRow>
-									<mui.TableRow>
-										<mui.TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Resub
-										</mui.TableCell>
-										<mui.TableCell
-											align="right"
-											sx={{ fontWeight: "bold", color: "#d648b7ff" }}>
-											{!isNaN(scoreData?.resubmission_count)
-												? scoreData?.resubmission_count
-												: "NA"}
-										</mui.TableCell>
-									</mui.TableRow>
-									<mui.TableRow>
-										<mui.TableCell
-											sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
-											Last Submitted
-										</mui.TableCell>
-										<mui.TableCell align="right" sx={{ fontWeight: "bold" }}>
-											{scoreData?.submitted_time ?? "NA"}
-										</mui.TableCell>
-									</mui.TableRow>
-								</mui.TableBody>
-							</mui.Table>
-						</mui.TableContainer>
-						{!!sliderConfig.maxStep && (
-							<mui.Slider
-								onChange={(_, val) => sliderConfig.onChange?.(val)}
-								defaultValue={sliderConfig.maxStep}
-								step={1}
-								min={0}
-								max={sliderConfig.maxStep}
-								valueLabelDisplay="auto"
-								key={sliderConfig.maxStep}
-							/>
-						)}
-					</mui.Stack>
+				{loadingAnswer ? (
 					<mui.Box
 						sx={{
-							flex: 1,
 							display: "flex",
 							justifyContent: "center",
-							alignItems: "flex-start",
+							alignItems: "center",
 							height: "100%",
-							overflow: "hidden",
 						}}>
-						<AnswerBoard
-							answerId={answer?.id}
-							startBoard={startBoard}
-							onChange={(score) => setScoreData(score)}
-							onSliderReady={handleSliderReady}
-							fillContainer
-						/>
+						<mui.CircularProgress />
 					</mui.Box>
-				</mui.Stack>
+				) : answers.length === 0 ? (
+					<mui.Box
+						sx={{
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							height: "100%",
+						}}>
+						<mui.Typography variant="h6" color="text.secondary">
+							No answers submitted yet
+						</mui.Typography>
+					</mui.Box>
+				) : (
+					<mui.Stack
+						direction="row"
+						spacing={3}
+						sx={{ height: "100%", maxHeight: "100%" }}>
+						<mui.Stack spacing={2} sx={{ width: 300, flexShrink: 0 }}>
+							<mui.TableContainer component={mui.Paper} variant="outlined">
+								<mui.Table size="small">
+									<mui.TableBody>
+										<mui.TableRow>
+											<mui.TableCell
+												sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+												Score
+											</mui.TableCell>
+											<mui.TableCell
+												align="right"
+												sx={{
+													fontWeight: "bold",
+													color:
+														scoreData?.match_count !==
+														scoreData?.max_match_count
+															? "red"
+															: "#35ae35ff",
+												}}>
+												{!isNaN(scoreData?.match_count)
+													? scoreData.match_count
+													: "NA"}
+												{scoreData?.match_count !==
+													scoreData?.max_match_count &&
+													!isNaN(scoreData?.match_count) && (
+														<mui.Tooltip title="Điểm chưa đạt tối đa" arrow>
+															<span style={{ marginLeft: 4, cursor: "help" }}>
+																?
+															</span>
+														</mui.Tooltip>
+													)}
+											</mui.TableCell>
+										</mui.TableRow>
+										<mui.TableRow>
+											<mui.TableCell
+												sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+												Max
+											</mui.TableCell>
+											<mui.TableCell
+												align="right"
+												sx={{
+													fontWeight: "bold",
+													color: "#35ae35ff",
+												}}>
+												{!isNaN(scoreData?.max_match_count)
+													? scoreData?.max_match_count
+													: "NA"}
+											</mui.TableCell>
+										</mui.TableRow>
+										<mui.TableRow>
+											<mui.TableCell
+												sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+												Steps
+											</mui.TableCell>
+											<mui.TableCell
+												align="right"
+												sx={{ fontWeight: "bold", color: "#e0941bff" }}>
+												{!isNaN(scoreData?.step_count)
+													? scoreData?.step_count
+													: "NA"}
+											</mui.TableCell>
+										</mui.TableRow>
+										<mui.TableRow>
+											<mui.TableCell
+												sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+												Resub
+											</mui.TableCell>
+											<mui.TableCell
+												align="right"
+												sx={{ fontWeight: "bold", color: "#d648b7ff" }}>
+												{!isNaN(scoreData?.resubmission_count)
+													? scoreData?.resubmission_count
+													: "NA"}
+											</mui.TableCell>
+										</mui.TableRow>
+										<mui.TableRow>
+											<mui.TableCell
+												sx={{ fontWeight: "bold", backgroundColor: "#e3f2fd" }}>
+												Last Submitted
+											</mui.TableCell>
+											<mui.TableCell align="right" sx={{ fontWeight: "bold" }}>
+												{scoreData?.submitted_time ?? "NA"}
+											</mui.TableCell>
+										</mui.TableRow>
+									</mui.TableBody>
+								</mui.Table>
+							</mui.TableContainer>
+							{!!sliderConfig.maxStep && (
+								<mui.Slider
+									onChange={(_, val) => sliderConfig.onChange?.(val)}
+									defaultValue={sliderConfig.maxStep}
+									step={1}
+									min={0}
+									max={sliderConfig.maxStep}
+									valueLabelDisplay="auto"
+									key={sliderConfig.maxStep}
+								/>
+							)}
+						</mui.Stack>
+						<mui.Box
+							sx={{
+								flex: 1,
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "flex-start",
+								height: "100%",
+								overflow: "hidden",
+							}}>
+							{answer?.id ? (
+								<AnswerBoard
+									answerId={answer.id}
+									answerData={answer}
+									startBoard={startBoard}
+									onChange={(score) => setScoreData(score)}
+									onSliderReady={handleSliderReady}
+									fillContainer
+								/>
+							) : (
+								<mui.Typography variant="body2" color="text.secondary">
+									No answer data
+								</mui.Typography>
+							)}
+						</mui.Box>
+					</mui.Stack>
+				)}
 			</mui.DialogContent>
 		</mui.Dialog>
 	);

@@ -1,13 +1,16 @@
-import { Chip, IconButton, Paper } from "@mui/material";
+import { Chip, IconButton, Paper, Tooltip } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useApi, useFetchData } from "../api";
+import { api } from "../api/commons";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
+import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useParams, useSearch } from "@tanstack/react-router";
+import { debugLog } from "../utils/debug";
 
 const Questions = () => {
 	const routeParams = useParams({ strict: false });
@@ -19,6 +22,7 @@ const Questions = () => {
 	const [question, setQuestion] = useState({});
 	const [dialogName, setDialogName] = useState("");
 	const [currentItem, setCurrentItem] = useState({});
+	const [answerInstance, setAnswerInstance] = useState(null);
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/question",
 		"Question"
@@ -115,19 +119,67 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
-					<IconButton
-						onClick={() => {
-							setQuestion(row);
-							setDialogName("QuestionDataDialog");
-						}}>
-						<VisibilityIcon />
-					</IconButton>
+					<Tooltip title="View Question Data">
+						<IconButton
+							onClick={() => {
+								setQuestion(row);
+								setDialogName("QuestionDataDialog");
+							}}>
+							<VisibilityIcon />
+						</IconButton>
+					</Tooltip>
+				);
+			},
+		},
+		{
+			field: "answers",
+			headerName: "Answer",
+			width: 120,
+			headerClassName: "tableHeader",
+			filterable: false,
+			sortable: false,
+			renderCell: ({ row }) => {
+				return (
+					<Tooltip title="View All Answers">
+						<IconButton color="primary" onClick={() => handleViewAnswers(row)}>
+							<VisibilityIcon />
+						</IconButton>
+					</Tooltip>
 				);
 			},
 		},
 	];
 
-	console.log(currentItem);
+	const handleViewAnswers = async (questionRow) => {
+		try {
+			// Fetch list of answers for this question
+			// Initially without full answer_data (will be loaded when user selects team)
+			const response = await api.get(
+				`${import.meta.env.VITE_SERVICE_API}/answer`,
+				{
+					params: {
+						eq_question_id: questionRow.id,
+					},
+				}
+			);
+
+			// Backend returns { count, data } format
+			const answersArray = response.data || [];
+
+			// Set instance for ScoreDataDialog
+			setAnswerInstance({
+				answers: answersArray,
+				question: questionRow,
+			});
+			setDialogName("ScoreDataDialog");
+		} catch (error) {
+			console.error("Failed to fetch answers:", error);
+			setAnswerInstance({
+				answers: [],
+				question: questionRow,
+			});
+		}
+	};
 
 	const clickNew = () => {
 		setCurrentItem({
@@ -159,7 +211,7 @@ const Questions = () => {
 		if (result.length) await refetch();
 	};
 	const saveInstance = async () => {
-		console.log("Saving question with data:", currentItem);
+		debugLog("Saving question with data:", currentItem);
 		let result;
 		if (currentItem.id) {
 			result = await apiEdit(currentItem.id, currentItem);
@@ -217,6 +269,11 @@ const Questions = () => {
 				instance={question}
 				close={closeDialog}
 				disabled
+			/>
+			<ScoreDataDialog
+				open={dialogName === "ScoreDataDialog"}
+				instance={answerInstance}
+				close={closeDialog}
 			/>
 		</>
 	);
