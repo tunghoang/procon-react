@@ -43,7 +43,9 @@ const DataTable = (props) => {
 	const [rowSelection, setRowSelection] = useState({});
 	const [columnFilters, setColumnFilters] = useState([]);
 	const [showFilters, setShowFilters] = useState(false);
-	const [columnVisibility, setColumnVisibility] = useState({});
+	const [columnVisibility, setColumnVisibility] = useState({
+		description: false, // Hide description column by default
+	});
 	const [anchorEl, setAnchorEl] = useState(null);
 	const prevSelectionRef = useRef("");
 

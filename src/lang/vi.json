@@ -15,15 +15,21 @@
   "Edit Role": "Chỉnh sửa quyền",
   "Remove": "Xoá bỏ",
   "Create": "Thêm mới",
+  "Add": "Thêm",
   "Save": "Lưu",
   "Cancel": "Huỷ bỏ",
   "Change Password": "Đổi mật khẩu",
   "Add Team": "Thêm đội",
+  "Remove Team": "Xóa đội",
+  "Manage Teams": "Quản lý đội",
+  "Delete All Teams": "Xóa tất cả đội",
   "Account": "Tài khoản",
   "Close": "Đóng",
   "Language": "Ngôn ngữ",
   "Vietnamese": "Tiếng Việt",
   "English": "Tiếng Anh",
   "Score": "Điểm",
-  "Detail": "Chi tiết"
+  "Detail": "Chi tiết",
+  "Activate": "Kích hoạt",
+  "Deactivate": "Vô hiệu hóa"
 }

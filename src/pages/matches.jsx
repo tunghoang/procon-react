@@ -1,30 +1,37 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import GroupsIcon from "@mui/icons-material/Groups";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
-	Badge,
+	Box,
+	Button,
 	Chip,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	IconButton,
 	Paper,
+	Popover,
 	Stack,
+	Switch,
+	Tooltip,
 	Typography,
-	Box,
-	TextField,
-	Button,
 } from "@mui/material";
-import { DashboardLayout } from "../components/dashboard-layout";
-import { useIntl } from "react-intl";
+import { useParams, useSearch } from "@tanstack/react-router";
 import { useContext, useState } from "react";
+import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
-import Context from "../context";
-import PageToolbar from "../components/page-toolbar";
-import DataTable from "../components/DataTable/data-table";
-import {
-	AddTeamMatchDialog,
-	MatchDialog,
-	TeamMatchDialog,
-} from "../dialogs/match";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import { api } from "../api/commons";
 import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
+import DataTable from "../components/DataTable/data-table";
+import { DashboardLayout } from "../components/dashboard-layout";
+import PageToolbar from "../components/page-toolbar";
+import Context from "../context";
+import { ManageTeamMatchDialog, MatchDialog } from "../dialogs/match";
 import { formatDateTime } from "../utils/commons";
-import { useSearch, useParams } from "@tanstack/react-router";
 
 const Matches = () => {
 	const routeParams = useParams({ strict: false });
@@ -39,6 +46,7 @@ const Matches = () => {
 	const [showTimeFilter, setShowTimeFilter] = useState(false);
 	const [timeFrom, setTimeFrom] = useState("");
 	const [timeTo, setTimeTo] = useState("");
+	const [matchActiveStates, setMatchActiveStates] = useState({});
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi("/match", "Match");
 	const apiDeleteMatch = useConfirmDelete();
 	const buildParams = () => {
@@ -58,7 +66,7 @@ const Matches = () => {
 
 	const {
 		data: matches,
-		refetch,
+		refetch: originalRefetch,
 		loading,
 	} = useFetchData({
 		path: "/match",
@@ -67,6 +75,11 @@ const Matches = () => {
 			params: buildParams(),
 		},
 	});
+
+	const refetch = async (...args) => {
+		setMatchActiveStates({});
+		return await originalRefetch(...args);
+	};
 
 	const filterOptions = [
 		{
@@ -96,6 +109,98 @@ const Matches = () => {
 		},
 	];
 
+	// Generate diverse color based on team id
+	const getTeamColor = (id) => {
+		const colors = [
+			"#1976d2", // blue
+			"#d32f2f", // red
+			"#388e3c", // green
+			"#f57c00", // orange
+			"#7b1fa2", // purple
+			"#0097a7", // cyan
+			"#c2185b", // pink
+			"#5d4037", // brown
+			"#455a64", // blue grey
+			"#00897b", // teal
+			"#6a1b9a", // deep purple
+			"#303f9f", // indigo
+		];
+		return colors[id % colors.length];
+	};
+
+	// Teams Cell Component with Popover
+	const TeamsCell = ({ teams }) => {
+		const [anchorEl, setAnchorEl] = useState(null);
+
+		if (!teams || teams.length === 0) {
+			return (
+				<Typography variant="caption" color="text.secondary">
+					No teams
+				</Typography>
+			);
+		}
+
+		const handlePopoverOpen = (event) => {
+			setAnchorEl(event.currentTarget);
+		};
+
+		const handlePopoverClose = () => {
+			setAnchorEl(null);
+		};
+
+		const open = Boolean(anchorEl);
+
+		return (
+			<>
+				<Stack
+					direction="row"
+					alignItems="center"
+					spacing={0.5}
+					sx={{ cursor: "pointer" }}
+					onMouseEnter={handlePopoverOpen}
+					onMouseLeave={handlePopoverClose}>
+					<VisibilityIcon fontSize="small" color="action" />
+					<Typography variant="body2" color="text.secondary">
+						{teams.length} {teams.length === 1 ? "team" : "teams"}
+					</Typography>
+				</Stack>
+				<Popover
+					sx={{
+						pointerEvents: "none",
+					}}
+					open={open}
+					anchorEl={anchorEl}
+					anchorOrigin={{
+						vertical: "bottom",
+						horizontal: "left",
+					}}
+					transformOrigin={{
+						vertical: "top",
+						horizontal: "left",
+					}}
+					onClose={handlePopoverClose}
+					disableRestoreFocus>
+					<Box sx={{ p: 2, maxWidth: 400 }}>
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+							{teams.map((team) => (
+								<Chip
+									key={team.id}
+									label={team.name}
+									size="small"
+									sx={{
+										backgroundColor: getTeamColor(team.id),
+										color: "#fff",
+										mb: 0.5,
+									}}
+								/>
+							))}
+						</Stack>
+					</Box>
+				</Popover>
+			</>
+		);
+	};
+
 	const columns = [
 		{
 			field: "id",
@@ -105,7 +210,15 @@ const Matches = () => {
 		{
 			field: "name",
 			headerName: "Name",
-			flex: 2,
+			flex: 1.5,
+		},
+		{
+			field: "teams",
+			headerName: "Teams",
+			filterable: false,
+			sortable: false,
+			flex: 1,
+			renderCell: ({ row }) => <TeamsCell teams={row.teams} />,
 		},
 		{
 			field: "description",
@@ -136,39 +249,73 @@ const Matches = () => {
 			filterable: false,
 			flex: 1,
 			renderCell: ({ row }) => {
+				const isActive =
+					matchActiveStates[row.id] !== undefined
+						? matchActiveStates[row.id]
+						: row.is_active;
+				if (isReadOnly) {
+					return isActive ? (
+						<Chip label="Active" color="success" />
+					) : (
+						<Chip label="Inactive" />
+					);
+				}
 				return (
-					<>
-						{row.is_active ? (
-							<Chip label="Active" color="success" />
-						) : (
-							<Chip label="Inactive" />
-						)}
-					</>
+					<Switch
+						checked={isActive}
+						onChange={() => handleToggleActive(row.id, isActive)}
+						color="success"
+						size="medium"
+					/>
 				);
 			},
 		},
 		{
-			field: "teams",
-			headerName: "Teams",
+			field: "actions",
+			headerName: "Actions",
 			filterable: false,
-			flex: 1.5,
+			sortable: false,
+			width: 160,
 			renderCell: ({ row }) => {
+				if (isReadOnly) return null;
 				return (
-					<Stack direction={"row"} spacing={2} alignItems="center">
-						<Typography>
-							{row.teams.length} {tr({ id: "Teams" })}
-						</Typography>
-						<IconButton
-							disabled={!row.teams.length}
-							onClick={() => {
-								setSelectedMatch({
-									id: row.id,
-									teams: row.teams,
-								});
-								setDialogName("TeamMatchDialog");
-							}}>
-							<VisibilityIcon />
-						</IconButton>
+					<Stack direction="row" spacing={0.5}>
+						<Tooltip title="Edit">
+							<IconButton
+								size="small"
+								color="primary"
+								onClick={() => {
+									setCurrentMatch({
+										...row,
+										teams: row?.teams || [],
+									});
+									setDialogName("MatchDialog");
+								}}>
+								<EditIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+						<Tooltip title="Manage Teams">
+							<IconButton
+								size="small"
+								color="primary"
+								onClick={() => {
+									setCurrentMatch({
+										...row,
+										teams: row?.teams || [],
+									});
+									setDialogName("ManageTeamMatchDialog");
+								}}>
+								<GroupsIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+						<Tooltip title="Delete">
+							<IconButton
+								size="small"
+								color="error"
+								onClick={() => handleDeleteMatch(row.id)}>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
 					</Stack>
 				);
 			},
@@ -176,6 +323,98 @@ const Matches = () => {
 	];
 	const [dialogName, setDialogName] = useState("");
 	const [currentMatch, setCurrentMatch] = useState({});
+	const [confirmDialog, setConfirmDialog] = useState({
+		open: false,
+		title: "",
+		message: "",
+		onConfirm: null,
+	});
+
+	const openConfirmDialog = (title, message, onConfirm) => {
+		setConfirmDialog({ open: true, title, message, onConfirm });
+	};
+
+	const closeConfirmDialog = () => {
+		setConfirmDialog((prev) => ({ ...prev, open: false }));
+	};
+
+	const handleToggleActive = async (matchId, currentStatus) => {
+		const newStatus = !currentStatus;
+		// Optimistic update
+		setMatchActiveStates((prev) => ({
+			...prev,
+			[matchId]: newStatus,
+		}));
+		try {
+			await api.put(`${import.meta.env.VITE_SERVICE_API}/match/${matchId}`, {
+				is_active: newStatus,
+			});
+		} catch (error) {
+			console.error("Failed to toggle match status:", error);
+			// Revert on error
+			setMatchActiveStates((prev) => ({
+				...prev,
+				[matchId]: currentStatus,
+			}));
+		}
+	};
+
+	const handleDeleteMatch = async (matchId) => {
+		const result = await apiDeleteMatch([matchId]);
+		if (result.length) await refetch();
+	};
+
+	const handleBulkToggleActive = async (activate) => {
+		const action = activate ? "activate" : "deactivate";
+		openConfirmDialog(
+			`${activate ? "Activate" : "Deactivate"} Matches`,
+			`Are you sure you want to ${action} ${selectedMatchIds.length} selected match(es)?`,
+			async () => {
+				// Optimistic update for all selected matches
+				const updates = {};
+				selectedMatchIds.forEach((id) => {
+					updates[id] = activate;
+				});
+				setMatchActiveStates((prev) => ({ ...prev, ...updates }));
+
+				try {
+					await Promise.all(
+						selectedMatchIds.map((id) =>
+							api.put(`${import.meta.env.VITE_SERVICE_API}/match/${id}`, {
+								is_active: activate,
+							})
+						)
+					);
+				} catch (error) {
+					console.error(`Failed to ${action} matches:`, error);
+					// Revert on error
+					await refetch();
+					setMatchActiveStates({});
+				}
+				closeConfirmDialog();
+			}
+		);
+	};
+
+	const handleManageTeams = () => {
+		// Get all unique teams from all selected matches
+		const selectedMatches = matches.filter((m) =>
+			selectedMatchIds.includes(m.id)
+		);
+		const allTeamsMap = new Map();
+		selectedMatches.forEach((match) => {
+			match.teams?.forEach((team) => {
+				allTeamsMap.set(team.id, team);
+			});
+		});
+		const allUniqueTeams = Array.from(allTeamsMap.values());
+
+		setCurrentMatch({
+			id: "bulk",
+			teams: allUniqueTeams,
+		});
+		setDialogName("BulkManageTeamMatchDialog");
+	};
 
 	const clickNew = () => {
 		setCurrentMatch({
@@ -185,11 +424,6 @@ const Matches = () => {
 			team_id: "",
 		});
 		setDialogName("MatchDialog");
-	};
-	const openDialog = (name) => {
-		const selectedMatch = matches.find((c) => c.id === selectedMatchIds[0]);
-		setCurrentMatch(selectedMatch);
-		setDialogName(name);
 	};
 	const closeDialog = () => {
 		setDialogName("");
@@ -222,7 +456,7 @@ const Matches = () => {
 			matchId = currentMatch.id;
 		} else if (action === "delete") {
 			apiAction = apiDeleteTeamMatch;
-			matchId = selectedMatch.id;
+			matchId = currentMatch.id;
 		} else return;
 
 		const result = await Promise.all(
@@ -232,29 +466,90 @@ const Matches = () => {
 		setDialogName("");
 	};
 
+	const handleBulkAction = async (teams, action) => {
+		let apiAction;
+		if (action === "add") {
+			apiAction = apiNewTeamMatch;
+		} else if (action === "delete") {
+			apiAction = apiDeleteTeamMatch;
+		} else return;
+
+		const result = await Promise.all(
+			selectedMatchIds.flatMap((matchId) =>
+				teams.map(async (team) => await apiAction(matchId, team.id))
+			)
+		);
+		if (result.length) await refetch();
+		setDialogName("");
+	};
+
+	const handleDeleteAllTeams = async () => {
+		openConfirmDialog(
+			"Delete All Teams",
+			`Are you sure you want to remove all teams from ${selectedMatchIds.length} selected match(es)?`,
+			async () => {
+				try {
+					// Get all selected matches
+					const selectedMatches = matches.filter((m) =>
+						selectedMatchIds.includes(m.id)
+					);
+
+					// For each match, delete only the teams that exist in that match
+					const deletePromises = [];
+					selectedMatches.forEach((match) => {
+						match.teams?.forEach((team) => {
+							deletePromises.push(apiDeleteTeamMatch(match.id, team.id));
+						});
+					});
+
+					if (deletePromises.length === 0) {
+						closeConfirmDialog();
+						return;
+					}
+
+					const result = await Promise.all(deletePromises);
+					if (result.length) await refetch();
+					setDialogName("");
+				} catch (error) {
+					console.error("Failed to delete all teams:", error);
+				}
+				closeConfirmDialog();
+			}
+		);
+	};
+
 	return (
 		<>
 			<PageToolbar
 				title={tr({ id: "Matches" })}
 				showNew={!isReadOnly}
-				showEdit={!isReadOnly && selectedMatchIds.length === 1}
 				showDelete={!isReadOnly && !!selectedMatchIds.length}
 				handleNew={clickNew}
-				editBtns={
-					isReadOnly
-						? []
-						: [
+				handleDelete={clickDelete}
+				customBtns={
+					!isReadOnly && selectedMatchIds.length > 0
+						? [
 								{
-									label: "Edit",
-									fn: () => openDialog("MatchDialog"),
+									label: "Manage Teams",
+									fn: handleManageTeams,
+									color: "primary",
+									icon: <GroupsIcon />,
 								},
 								{
-									label: "Add Team",
-									fn: () => openDialog("AddTeamMatchDialog"),
+									label: "Activate",
+									fn: () => handleBulkToggleActive(true),
+									color: "success",
+									icon: <ToggleOnIcon />,
+								},
+								{
+									label: "Deactivate",
+									fn: () => handleBulkToggleActive(false),
+									color: "warning",
+									icon: <ToggleOffIcon />,
 								},
 						  ]
+						: []
 				}
-				handleDelete={clickDelete}
 			/>
 			<Paper
 				component="main"
@@ -291,22 +586,41 @@ const Matches = () => {
 					handleChange={changeInstance}
 				/>
 			)}
-			{dialogName === "AddTeamMatchDialog" && (
-				<AddTeamMatchDialog
-					open={dialogName === "AddTeamMatchDialog"}
+			{dialogName === "ManageTeamMatchDialog" && (
+				<ManageTeamMatchDialog
+					open={dialogName === "ManageTeamMatchDialog"}
 					close={closeDialog}
 					teams={currentMatch.teams}
 					handleAdd={(teams) => handleAction(teams, "add")}
-				/>
-			)}
-			{dialogName === "TeamMatchDialog" && (
-				<TeamMatchDialog
-					open={dialogName === "TeamMatchDialog"}
-					teams={selectedMatch.teams}
-					close={closeDialog}
 					handleDelete={(teams) => handleAction(teams, "delete")}
 				/>
 			)}
+			{dialogName === "BulkManageTeamMatchDialog" && (
+				<ManageTeamMatchDialog
+					open={dialogName === "BulkManageTeamMatchDialog"}
+					close={closeDialog}
+					teams={currentMatch.teams}
+					handleAdd={(teams) => handleBulkAction(teams, "add")}
+					handleDelete={(teams) => handleBulkAction(teams, "delete")}
+					isBulkMode={true}
+					handleDeleteAll={handleDeleteAllTeams}
+				/>
+			)}
+			<Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
+				<DialogTitle>{confirmDialog.title}</DialogTitle>
+				<DialogContent>
+					<Typography>{confirmDialog.message}</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={closeConfirmDialog}>Cancel</Button>
+					<Button
+						onClick={confirmDialog.onConfirm}
+						color="error"
+						variant="contained">
+						Confirm
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</>
 	);
 };
