@@ -1,12 +1,14 @@
 import PropTypes from "prop-types";
 import {
 	Box,
+	Button,
 	Drawer,
 	Divider,
 	Typography,
 	useMediaQuery,
 	Stack,
 } from "@mui/material";
+import { Link, useSearch } from "@tanstack/react-router";
 import Logo from "./logo";
 import { NavItem } from "./nav-item";
 
@@ -14,6 +16,7 @@ import { Blackboard as BlackboardIcon } from "../icons/blackboard";
 import QuizIcon from "@mui/icons-material/Quiz";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import PeopleIcon from "@mui/icons-material/People";
+import WarningIcon from "@mui/icons-material/Warning";
 
 const items = [
 	{
@@ -40,6 +43,7 @@ const items = [
 
 export const DashboardSidebar = (props) => {
 	const { open, onClose } = props;
+	const searchParams = useSearch({ strict: false });
 	const lgUp = useMediaQuery((theme) => theme.breakpoints.up("lg"), {
 		defaultMatches: true,
 		noSsr: true,
@@ -64,6 +68,29 @@ export const DashboardSidebar = (props) => {
 						/>
 					))}
 					<Divider light={true} />
+				</Box>
+				<Box sx={{ pb: 2, px: 2 }}>
+					<Link
+						to="/admin/reset"
+						search={searchParams}
+						style={{ width: "100%", textDecoration: "none" }}>
+						<Button
+							fullWidth
+							startIcon={<WarningIcon />}
+							sx={{
+								backgroundColor: "#d32f2f",
+								color: "#fff",
+								justifyContent: "flex-start",
+								px: 3,
+								py: 1,
+								textTransform: "none",
+								"&:hover": {
+									backgroundColor: "#b71c1c",
+								},
+							}}>
+							Admin Actions
+						</Button>
+					</Link>
 				</Box>
 			</Box>
 		</>

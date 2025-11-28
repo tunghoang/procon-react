@@ -11,6 +11,7 @@ import Teams from "./pages/teams";
 import Rounds from "./pages/rounds";
 import Questions from "./pages/questions";
 import Answers from "./pages/answers";
+import Reset from "./pages/reset";
 import Login from "./pages/login";
 import NotFound from "./pages/not-found";
 import Forbidden from "./pages/forbidden";
@@ -132,6 +133,12 @@ const adminAnswersRoute = createRoute({
 	component: Answers,
 });
 
+const adminResetRoute = createRoute({
+	getParentRoute: () => adminLayoutRoute,
+	path: "/admin/reset",
+	component: Reset,
+});
+
 // Special routes
 const forbiddenRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -176,6 +183,7 @@ const routeTree = rootRoute.addChildren([
 		adminMatchesRoute,
 		adminQuestionsRoute,
 		adminAnswersRoute,
+		adminResetRoute,
 	]),
 	forbiddenRoute,
 	notFoundRoute,

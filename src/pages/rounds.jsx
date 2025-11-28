@@ -105,16 +105,20 @@ const Rounds = () => {
 													params: { tournamentId, roundId: round.id },
 												});
 											}}
-											handleEditDetail={() => {
-												updateContext({ round });
-												navigate({
-													to: `/admin/matches`,
-													search: {
-														tournament_id: parseInt(tournamentId),
-														round_id: round.id,
-													},
-												});
-											}}
+											handleEditDetail={
+												isReadOnly
+													? null
+													: () => {
+															updateContext({ round });
+															navigate({
+																to: `/admin/matches`,
+																search: {
+																	tournament_id: parseInt(tournamentId),
+																	round_id: round.id,
+																},
+															});
+													  }
+											}
 										/>
 									</Grid>
 								))

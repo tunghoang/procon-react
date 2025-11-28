@@ -8,7 +8,7 @@ export const RequireAdmin = ({ children }) => {
 
 	useEffect(() => {
 		if (team && !team.is_admin) {
-			navigate({ to: "/forbidden" });
+			navigate({ to: "/forbidden", replace: true });
 		}
 	}, [team, navigate]);
 
