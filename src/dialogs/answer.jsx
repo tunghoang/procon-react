@@ -230,7 +230,7 @@ const ScoreDataDialog = ({ open, instance, close }) => {
 						<ScoreData scores={scoreData} />
 					</mui.Stack>
 					<mui.Stack direction={"row"} alignItems={"center"} spacing={1}>
-						<mui.FormControl variant="standard" sx={{ m: 1, width: 120 }}>
+						<mui.FormControl variant="standard" sx={{ m: 1, width: 300 }}>
 							{team.is_admin && answers.length > 0 && (
 								<mui.Select
 									defaultValue={0}

@@ -31,5 +31,6 @@
   "Score": "Điểm",
   "Detail": "Chi tiết",
   "Activate": "Kích hoạt",
-  "Deactivate": "Vô hiệu hóa"
+  "Deactivate": "Vô hiệu hóa",
+  "Export to Excel": "Xuất ra Excel"
 }

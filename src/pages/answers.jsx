@@ -1,15 +1,15 @@
 import { Chip, IconButton, Paper, Tooltip } from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import { useApi, useFetchData } from "../api";
 import { api } from "../api/commons";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import DownloadIcon from "@mui/icons-material/Download";
 import Context from "../context";
-import ScoreData from "../components/procon25/score-data";
 import { useParams, useSearch } from "@tanstack/react-router";
 
 const Answers = () => {
@@ -210,12 +210,52 @@ const Answers = () => {
 		if (result.length) await refetch();
 	};
 
+	const handleExportToXlsx = async () => {
+		try {
+			const response = await fetch(
+				`${import.meta.env.VITE_SERVICE_API}/answer/export?round_id=${roundId}`,
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${localStorage.getItem("token")}`,
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Export failed");
+			}
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `answers_round_${roundId}.xlsx`;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+		} catch (error) {
+			console.error("Export error:", error);
+			alert("Export failed. Please try again.");
+		}
+	};
+
 	return (
 		<>
 			<PageToolbar
 				title={tr({ id: "Answers" })}
 				showDelete={(selectedIds || []).length}
 				handleDelete={clickDelete}
+				customBtns={[
+					{
+						label: "Export to Excel",
+						icon: <DownloadIcon />,
+						fn: handleExportToXlsx,
+						color: "success",
+					},
+				]}
 			/>
 			<Paper
 				className="Answer"
