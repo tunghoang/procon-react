@@ -44,5 +44,6 @@
   "score": "Score",
   "max-score": "Max Score",
   "step": "Step",
-  "resub-count": "Resub Count"
+  "resub-count": "Resub Count",
+  "last-submit": "Last Submit"
 }

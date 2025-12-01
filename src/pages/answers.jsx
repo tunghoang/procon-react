@@ -20,6 +20,7 @@ import Context from "../context";
 import { useParams, useSearch, useNavigate } from "@tanstack/react-router";
 import { useAnswers, useInvalidateAnswers } from "../api/useAnswerQuery";
 import { debugLog } from "../utils/debug";
+import { formatDateTime, shortFormatDateTime } from "../utils/commons";
 
 const Answers = () => {
 	const { formatMessage: tr } = useIntl();
@@ -137,7 +138,7 @@ const Answers = () => {
 			headerName: tr({ id: "score" }),
 			flex: 0.5,
 			headerClassName: "tableHeader",
-			filterable: true,
+			filterable: false,
 			renderCell: ({ row }) => {
 				const scores = JSON.parse(row.score_data || "{}");
 				const matchCount = scores?.match_count;
@@ -181,7 +182,7 @@ const Answers = () => {
 			headerName: tr({ id: "max-score" }),
 			flex: 0.5,
 			headerClassName: "tableHeader",
-			filterable: true,
+			filterable: false,
 			renderCell: ({ row }) => {
 				const scores = JSON.parse(row.score_data || "{}");
 				return (
@@ -205,7 +206,7 @@ const Answers = () => {
 			headerName: tr({ id: "step" }),
 			flex: 0.5,
 			headerClassName: "tableHeader",
-			filterable: true,
+			filterable: false,
 			renderCell: ({ row }) => {
 				const scores = JSON.parse(row.score_data || "{}");
 				return (
@@ -225,7 +226,7 @@ const Answers = () => {
 			headerName: tr({ id: "resub-count" }),
 			flex: 0.5,
 			headerClassName: "tableHeader",
-			filterable: true,
+			filterable: false,
 			renderCell: ({ row }) => {
 				const scores = JSON.parse(row.score_data || "{}");
 				return (
@@ -242,6 +243,19 @@ const Answers = () => {
 				return !isNaN(scores?.resubmission_count)
 					? scores.resubmission_count
 					: 0;
+			},
+		},
+		{
+			field: "last-submit",
+			headerName: tr({ id: "last-submit" }),
+			flex: 1,
+			headerClassName: "tableHeader",
+			filterable: false,
+			renderCell: ({ row }) => {
+				return <span>{shortFormatDateTime(row.submitted_time)}</span>;
+			},
+			valueGetter: ({ row }) => {
+				return row.submitted_time;
 			},
 		},
 		{

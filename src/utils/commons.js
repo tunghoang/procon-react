@@ -8,8 +8,23 @@ const formatDateTime = (dateString) => {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
+      timeZone: "Asia/Ho_Chi_Minh"
     })
     .replace(",", "");
+};
+
+const shortFormatDateTime = (dateString) => {
+  const date = new Date(dateString);
+  return date
+    .toLocaleString("en-GB", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+      timeZone: "Asia/Ho_Chi_Minh"
+    });
 };
 
 const setLocalStorage = (item, name) => {
@@ -32,4 +47,5 @@ const roundNumber = (number) => {
   return Math.round(number * 100) / 100;
 };
 
-export { formatDateTime, setLocalStorage, copyText, roundNumber };
+export { copyText, formatDateTime, roundNumber, setLocalStorage, shortFormatDateTime };
+

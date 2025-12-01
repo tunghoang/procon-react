@@ -50,5 +50,6 @@
   "score": "Điểm",
   "max-score": "Tối đa",
   "step": "Số bước",
-  "resub-count": "Nộp lại"
+  "resub-count": "Nộp lại",
+  "last-submit": "Nộp lần cuối"
 }
