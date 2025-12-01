@@ -4,22 +4,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import {
-	Box,
-	Button,
-	Chip,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
-	IconButton,
-	Paper,
-	Popover,
-	Stack,
-	Switch,
-	Tooltip,
-	Typography,
-} from "@mui/material";
+import * as mui from "@mui/material";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
@@ -41,7 +26,6 @@ const Matches = () => {
 	const { formatMessage: tr } = useIntl();
 	const { team } = useContext(Context);
 	const isReadOnly = !team || !team.is_admin;
-	const [selectedMatch, setSelectedMatch] = useState({});
 	const [selectedMatchIds, setSelectedMatchIds] = useState([]);
 	const [showTimeFilter, setShowTimeFilter] = useState(false);
 	const [timeFrom, setTimeFrom] = useState("");
@@ -134,14 +118,14 @@ const Matches = () => {
 
 		if (!teams || teams.length === 0) {
 			return (
-				<Typography
+				<mui.Typography
 					variant="caption"
 					sx={{
 						color: "error.main",
 						fontWeight: "bold",
 					}}>
 					No teams
-				</Typography>
+				</mui.Typography>
 			);
 		}
 
@@ -157,7 +141,7 @@ const Matches = () => {
 
 		return (
 			<>
-				<Stack
+				<mui.Stack
 					direction="row"
 					alignItems="center"
 					spacing={0.5}
@@ -165,11 +149,11 @@ const Matches = () => {
 					onMouseEnter={handlePopoverOpen}
 					onMouseLeave={handlePopoverClose}>
 					<VisibilityIcon fontSize="small" color="action" />
-					<Typography variant="body2" color="text.secondary">
+					<mui.Typography variant="body2" color="text.secondary">
 						{teams.length} {teams.length === 1 ? "team" : "teams"}
-					</Typography>
-				</Stack>
-				<Popover
+					</mui.Typography>
+				</mui.Stack>
+				<mui.Popover
 					sx={{
 						pointerEvents: "none",
 					}}
@@ -185,10 +169,10 @@ const Matches = () => {
 					}}
 					onClose={handlePopoverClose}
 					disableRestoreFocus>
-					<Box sx={{ p: 2, maxWidth: 400 }}>
-						<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+					<mui.Box sx={{ p: 2, maxWidth: 400 }}>
+						<mui.Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
 							{teams.map((team) => (
-								<Chip
+								<mui.Chip
 									key={team.id}
 									label={team.name}
 									size="small"
@@ -199,9 +183,9 @@ const Matches = () => {
 									}}
 								/>
 							))}
-						</Stack>
-					</Box>
-				</Popover>
+						</mui.Stack>
+					</mui.Box>
+				</mui.Popover>
 			</>
 		);
 	};
@@ -210,16 +194,16 @@ const Matches = () => {
 		{
 			field: "id",
 			headerName: "ID",
-			width: 100,
+			flex: 0.5,
 		},
 		{
 			field: "name",
-			headerName: "Name",
+			headerName: tr({ id: "name" }),
 			flex: 1.5,
 		},
 		{
 			field: "teams",
-			headerName: "Teams",
+			headerName: tr({ id: "teams" }),
 			filterable: false,
 			sortable: false,
 			flex: 1,
@@ -227,12 +211,12 @@ const Matches = () => {
 		},
 		{
 			field: "description",
-			headerName: "Description",
+			headerName: tr({ id: "description" }),
 			flex: 2,
 		},
 		{
 			field: "start_time",
-			headerName: "Start Time",
+			headerName: tr({ id: "start-time" }),
 			filterable: false,
 			flex: 1.5,
 			valueGetter: ({ value }) => {
@@ -241,7 +225,7 @@ const Matches = () => {
 		},
 		{
 			field: "end_time",
-			headerName: "End Time",
+			headerName: tr({ id: "end-time" }),
 			filterable: false,
 			flex: 1.5,
 			valueGetter: ({ value }) => {
@@ -250,9 +234,9 @@ const Matches = () => {
 		},
 		{
 			field: "is_active",
-			headerName: "Active",
+			headerName: tr({ id: "active" }),
 			filterable: false,
-			flex: 1,
+			flex: 1.2,
 			renderCell: ({ row }) => {
 				const isActive =
 					matchActiveStates[row.id] !== undefined
@@ -260,13 +244,13 @@ const Matches = () => {
 						: row.is_active;
 				if (isReadOnly) {
 					return isActive ? (
-						<Chip label="Active" color="success" />
+						<mui.Chip label="Active" color="success" />
 					) : (
-						<Chip label="Inactive" />
+						<mui.Chip label="Inactive" />
 					);
 				}
 				return (
-					<Switch
+					<mui.Switch
 						checked={isActive}
 						onChange={() => handleToggleActive(row.id, isActive)}
 						color="success"
@@ -277,16 +261,16 @@ const Matches = () => {
 		},
 		{
 			field: "actions",
-			headerName: "Actions",
+			headerName: tr({ id: "actions" }),
 			filterable: false,
 			sortable: false,
 			width: 160,
 			renderCell: ({ row }) => {
 				if (isReadOnly) return null;
 				return (
-					<Stack direction="row" spacing={0.5}>
-						<Tooltip title="Edit">
-							<IconButton
+					<mui.Stack direction="row" spacing={0.5}>
+						<mui.Tooltip title="Edit">
+							<mui.IconButton
 								size="small"
 								color="primary"
 								onClick={() => {
@@ -297,10 +281,10 @@ const Matches = () => {
 									setDialogName("MatchDialog");
 								}}>
 								<EditIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-						<Tooltip title="Manage Teams">
-							<IconButton
+							</mui.IconButton>
+						</mui.Tooltip>
+						<mui.Tooltip title="Manage Teams">
+							<mui.IconButton
 								size="small"
 								color="primary"
 								onClick={() => {
@@ -311,17 +295,17 @@ const Matches = () => {
 									setDialogName("ManageTeamMatchDialog");
 								}}>
 								<GroupsIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-						<Tooltip title="Delete">
-							<IconButton
+							</mui.IconButton>
+						</mui.Tooltip>
+						<mui.Tooltip title="Delete">
+							<mui.IconButton
 								size="small"
 								color="error"
 								onClick={() => handleDeleteMatch(row.id)}>
 								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					</Stack>
+							</mui.IconButton>
+						</mui.Tooltip>
+					</mui.Stack>
 				);
 			},
 		},
@@ -351,8 +335,8 @@ const Matches = () => {
 			const match = matches.find((m) => m.id === matchId);
 			if (!match?.teams || match.teams.length === 0) {
 				openConfirmDialog(
-					"⚠️ No Teams Assigned",
-					"This match has no teams assigned yet. Are you sure you want to activate it?",
+					tr({ id: "no-teams-assigned" }),
+					tr({ id: "no-teams-assigned-message" }),
 					async () => {
 						await toggleMatchActive(matchId, currentStatus, newStatus);
 						closeConfirmDialog();
@@ -609,7 +593,7 @@ const Matches = () => {
 						: []
 				}
 			/>
-			<Paper
+			<mui.Paper
 				component="main"
 				sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}>
 				<DataTable
@@ -634,7 +618,7 @@ const Matches = () => {
 					loading={loading}
 					onRefresh={refetch}
 				/>
-			</Paper>
+			</mui.Paper>
 			{dialogName === "MatchDialog" && (
 				<MatchDialog
 					open={dialogName === "MatchDialog"}
@@ -664,21 +648,21 @@ const Matches = () => {
 					handleDeleteAll={handleDeleteAllTeams}
 				/>
 			)}
-			<Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
-				<DialogTitle>{confirmDialog.title}</DialogTitle>
-				<DialogContent>
-					<Typography>{confirmDialog.message}</Typography>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={closeConfirmDialog}>Cancel</Button>
-					<Button
+			<mui.Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
+				<mui.DialogTitle>{confirmDialog.title}</mui.DialogTitle>
+				<mui.DialogContent>
+					<mui.Typography>{confirmDialog.message}</mui.Typography>
+				</mui.DialogContent>
+				<mui.DialogActions>
+					<mui.Button onClick={closeConfirmDialog}>Cancel</mui.Button>
+					<mui.Button
 						onClick={confirmDialog.onConfirm}
 						color="error"
 						variant="contained">
 						Confirm
-					</Button>
-				</DialogActions>
-			</Dialog>
+					</mui.Button>
+				</mui.DialogActions>
+			</mui.Dialog>
 		</>
 	);
 };

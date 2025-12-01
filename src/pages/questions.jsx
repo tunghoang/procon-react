@@ -77,21 +77,27 @@ const Questions = () => {
 
 	const columns = [
 		{
+			field: "id",
+			headerName: "ID",
+			flex: 0.5,
+			headerClassName: "tableHeader",
+		},
+		{
 			field: "name",
-			headerName: "Name",
-			width: 120,
+			headerName: tr({ id: "name" }),
+			flex: 1.5,
 			headerClassName: "tableHeader",
 		},
 		{
 			field: "description",
-			headerName: "Description",
-			width: 200,
+			headerName: tr({ id: "description" }),
+			flex: 2,
 			headerClassName: "tableHeader",
 		},
 		{
 			field: "match",
-			headerName: "Match",
-			width: 150,
+			headerName: tr({ id: "match" }),
+			flex: 1,
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
@@ -104,8 +110,8 @@ const Questions = () => {
 		},
 		{
 			field: "size",
-			headerName: "Size",
-			width: 80,
+			headerName: tr({ id: "size" }),
+			flex: 1,
 			headerClassName: "tableHeader",
 			valueGetter: (params) => {
 				const data = JSON.parse(params.row.question_data || "{}");
@@ -114,8 +120,8 @@ const Questions = () => {
 		},
 		{
 			field: "question_data",
-			headerName: "Question Data",
-			width: 120,
+			headerName: tr({ id: "question-data" }),
+			flex: 1,
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
@@ -133,8 +139,8 @@ const Questions = () => {
 		},
 		{
 			field: "answers",
-			headerName: "Answer",
-			width: 120,
+			headerName: tr({ id: "answer-data" }),
+			flex: 1,
 			headerClassName: "tableHeader",
 			filterable: false,
 			sortable: false,

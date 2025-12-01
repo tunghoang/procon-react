@@ -96,7 +96,7 @@ const Answers = () => {
 	const columns = [
 		{
 			field: "team",
-			headerName: "Team",
+			headerName: tr({ id: "teams" }),
 			flex: 1,
 			headerClassName: "tableHeader",
 			filterable: true,
@@ -106,7 +106,7 @@ const Answers = () => {
 		},
 		{
 			field: "question",
-			headerName: "Question",
+			headerName: tr({ id: "question" }),
 			flex: 1,
 			headerClassName: "tableHeader",
 			filterable: true,
@@ -116,7 +116,7 @@ const Answers = () => {
 		},
 		{
 			field: "match",
-			headerName: "Match",
+			headerName: tr({ id: "match" }),
 			flex: 1,
 			headerClassName: "tableHeader",
 			filterable: true,
@@ -134,8 +134,8 @@ const Answers = () => {
 		},
 		{
 			field: "match_score",
-			headerName: "Score",
-			width: 110,
+			headerName: tr({ id: "score" }),
+			flex: 0.5,
 			headerClassName: "tableHeader",
 			filterable: true,
 			renderCell: ({ row }) => {
@@ -178,8 +178,8 @@ const Answers = () => {
 		},
 		{
 			field: "max_match_score",
-			headerName: "Max Score",
-			width: 130,
+			headerName: tr({ id: "max-score" }),
+			flex: 0.5,
 			headerClassName: "tableHeader",
 			filterable: true,
 			renderCell: ({ row }) => {
@@ -202,8 +202,8 @@ const Answers = () => {
 		},
 		{
 			field: "step",
-			headerName: "Step",
-			width: 80,
+			headerName: tr({ id: "step" }),
+			flex: 0.5,
 			headerClassName: "tableHeader",
 			filterable: true,
 			renderCell: ({ row }) => {
@@ -222,8 +222,8 @@ const Answers = () => {
 		},
 		{
 			field: "resub_count",
-			headerName: "Resub Count",
-			width: 110,
+			headerName: tr({ id: "resub-count" }),
+			flex: 0.5,
 			headerClassName: "tableHeader",
 			filterable: true,
 			renderCell: ({ row }) => {
@@ -247,7 +247,7 @@ const Answers = () => {
 		{
 			field: "score_view",
 			headerName: "",
-			width: 50,
+			flex: 0.5,
 			headerClassName: "tableHeader",
 			filterable: false,
 			sortable: false,
@@ -396,7 +396,7 @@ const Answers = () => {
 				handleDelete={clickDelete}
 				customBtns={[
 					{
-						label: "Export to Excel",
+						label: tr({ id: "export-to-excel" }),
 						icon: <DownloadIcon />,
 						fn: handleExportToXlsx,
 						color: "success",

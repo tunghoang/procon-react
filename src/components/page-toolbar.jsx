@@ -33,7 +33,7 @@ const PageToolbar = ({
 				editBtns.map((item, idx) => (
 					<Button key={idx} onClick={item.fn}>
 						<EditIcon />
-						{tr({ id: item.label })}
+						{item.label}
 					</Button>
 				))
 			) : (
@@ -45,7 +45,7 @@ const PageToolbar = ({
 					onClick={item.fn}
 					color={item.color || "primary"}>
 					{item.icon}
-					{tr({ id: item.label })}
+					{item.label}
 				</Button>
 			))}
 			{showDelete ? (
