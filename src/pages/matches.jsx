@@ -134,7 +134,12 @@ const Matches = () => {
 
 		if (!teams || teams.length === 0) {
 			return (
-				<Typography variant="caption" color="text.secondary">
+				<Typography
+					variant="caption"
+					sx={{
+						color: "error.main",
+						fontWeight: "bold",
+					}}>
 					No teams
 				</Typography>
 			);
@@ -340,6 +345,28 @@ const Matches = () => {
 
 	const handleToggleActive = async (matchId, currentStatus) => {
 		const newStatus = !currentStatus;
+
+		// Check if trying to activate a match without teams
+		if (newStatus) {
+			const match = matches.find((m) => m.id === matchId);
+			if (!match?.teams || match.teams.length === 0) {
+				openConfirmDialog(
+					"⚠️ No Teams Assigned",
+					"This match has no teams assigned yet. Are you sure you want to activate it?",
+					async () => {
+						await toggleMatchActive(matchId, currentStatus, newStatus);
+						closeConfirmDialog();
+					}
+				);
+				return;
+			}
+		}
+
+		// If no warning needed, toggle directly
+		await toggleMatchActive(matchId, currentStatus, newStatus);
+	};
+
+	const toggleMatchActive = async (matchId, currentStatus, newStatus) => {
 		// Optimistic update
 		setMatchActiveStates((prev) => ({
 			...prev,
@@ -366,34 +393,65 @@ const Matches = () => {
 
 	const handleBulkToggleActive = async (activate) => {
 		const action = activate ? "activate" : "deactivate";
+
+		// Check if trying to activate matches without teams
+		if (activate) {
+			const selectedMatches = matches.filter((m) =>
+				selectedMatchIds.includes(m.id)
+			);
+			const matchesWithoutTeams = selectedMatches.filter(
+				(m) => !m.teams || m.teams.length === 0
+			);
+
+			if (matchesWithoutTeams.length > 0) {
+				const matchNames = matchesWithoutTeams.map((m) => m.name).join(", ");
+				openConfirmDialog(
+					"⚠️ Some Matches Have No Teams",
+					`The following ${matchesWithoutTeams.length} match(es) have no teams assigned: ${matchNames}. Are you sure you want to activate them?`,
+					async () => {
+						await performBulkToggle(activate);
+						closeConfirmDialog();
+					}
+				);
+				return;
+			}
+		}
+
+		// If no warning needed, show normal confirmation
 		openConfirmDialog(
 			`${activate ? "Activate" : "Deactivate"} Matches`,
 			`Are you sure you want to ${action} ${selectedMatchIds.length} selected match(es)?`,
 			async () => {
-				// Optimistic update for all selected matches
-				const updates = {};
-				selectedMatchIds.forEach((id) => {
-					updates[id] = activate;
-				});
-				setMatchActiveStates((prev) => ({ ...prev, ...updates }));
-
-				try {
-					await Promise.all(
-						selectedMatchIds.map((id) =>
-							api.put(`${import.meta.env.VITE_SERVICE_API}/match/${id}`, {
-								is_active: activate,
-							})
-						)
-					);
-				} catch (error) {
-					console.error(`Failed to ${action} matches:`, error);
-					// Revert on error
-					await refetch();
-					setMatchActiveStates({});
-				}
+				await performBulkToggle(activate);
 				closeConfirmDialog();
 			}
 		);
+	};
+
+	const performBulkToggle = async (activate) => {
+		const action = activate ? "activate" : "deactivate";
+
+		// Optimistic update for all selected matches
+		const updates = {};
+		selectedMatchIds.forEach((id) => {
+			updates[id] = activate;
+		});
+		setMatchActiveStates((prev) => ({ ...prev, ...updates }));
+
+		try {
+			await Promise.all(
+				selectedMatchIds.map((id) =>
+					api.put(`${import.meta.env.VITE_SERVICE_API}/match/${id}`, {
+						is_active: activate,
+					})
+				)
+			);
+		} catch (error) {
+			console.error(`Failed to ${action} matches:`, error);
+			// Revert on error
+			await refetch();
+			setMatchActiveStates({});
+		}
 	};
 
 	const handleManageTeams = () => {

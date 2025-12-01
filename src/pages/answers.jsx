@@ -77,6 +77,8 @@ const Answers = () => {
 	} = useAnswers(roundId, filters, pagination, {
 		// Only fetch if roundId exists
 		enabled: !!roundId,
+		refetchInterval: 5000,
+		staleTime: 60000,
 	});
 
 	// Extract answers and pagination metadata
