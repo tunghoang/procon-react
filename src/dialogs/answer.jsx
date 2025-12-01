@@ -314,7 +314,17 @@ const ScoreDataDialog = ({ open, instance, close }) => {
 													scoreData?.max_match_count &&
 													!isNaN(scoreData?.match_count) && (
 														<mui.Tooltip title="Điểm chưa đạt tối đa" arrow>
-															<span style={{ marginLeft: 4, cursor: "help" }}>
+															<span
+																style={{
+																	marginLeft: 4,
+																	cursor: "help",
+																	color: "white",
+																	backgroundColor: "#ccc",
+																	display: "inline-block",
+																	width: "20px",
+																	textAlign: "center",
+																	borderRadius: "50%",
+																}}>
 																?
 															</span>
 														</mui.Tooltip>

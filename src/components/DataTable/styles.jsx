@@ -98,4 +98,13 @@ export const filterInputStyles = {
 export const filterRowStyles = {
 	backgroundColor: "#eef2ff",
 	borderBottom: "2px solid #c7d2fe",
+	position: "sticky",
+	top: 56, // Height of the main header row
+	zIndex: 10,
+	"& th": {
+		backgroundColor: "#eef2ff",
+		position: "sticky",
+		top: 56,
+		zIndex: 10,
+	},
 };
