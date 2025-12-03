@@ -104,7 +104,13 @@ const ScoreSummary = () => {
 										</mui.Typography>
 									</mui.Box>
 
-									<mui.TableContainer>
+									<mui.TableContainer
+										sx={{
+											transform: "rotateX(180deg)",
+											"& > table": {
+												transform: "rotateX(180deg)",
+											},
+										}}>
 										<mui.Table size="small">
 											<mui.TableHead>
 												<mui.TableRow>
