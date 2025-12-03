@@ -7,6 +7,7 @@ import Context from "../context";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog, debugError } from "../utils/debug";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const ScoreSummary = () => {
 	const { formatMessage: tr } = useIntl();
@@ -45,6 +46,38 @@ const ScoreSummary = () => {
 		fetchScoreSummary();
 	}, [roundId]);
 
+	const handleExportToXlsx = async () => {
+		try {
+			const response = await fetch(
+				`${import.meta.env.VITE_SERVICE_API}/answer/export?round_id=${roundId}`,
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${localStorage.getItem("token")}`,
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Export failed");
+			}
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `score_summary_round_${roundId}.xlsx`;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+		} catch (error) {
+			console.error("Export error:", error);
+			alert("Export failed. Please try again.");
+		}
+	};
+
 	if (!roundId) {
 		return (
 			<mui.Box sx={{ p: 3 }}>
@@ -65,6 +98,14 @@ const ScoreSummary = () => {
 						icon: <RefreshIcon />,
 						onClick: fetchScoreSummary,
 						tooltip: "Refresh",
+					},
+				]}
+				customBtns={[
+					{
+						label: tr({ id: "export-to-excel" }),
+						icon: <DownloadIcon />,
+						fn: handleExportToXlsx,
+						color: "success",
 					},
 				]}
 			/>
