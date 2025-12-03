@@ -12,7 +12,6 @@ import { useApi, useFetchData } from "../api";
 import { api } from "../api/commons";
 import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
 import DataTable from "../components/DataTable/data-table";
-import { DashboardLayout } from "../components/dashboard-layout";
 import PageToolbar from "../components/page-toolbar";
 import Context from "../context";
 import { ManageTeamMatchDialog, MatchDialog } from "../dialogs/match";
@@ -666,7 +665,6 @@ const Matches = () => {
 		</>
 	);
 };
-Matches.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
 Matches.wName = "Matches";
 

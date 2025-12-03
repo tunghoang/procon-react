@@ -1,5 +1,4 @@
 import { Paper, Chip, Box } from "@mui/material";
-import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useSearch } from "@tanstack/react-router";
@@ -227,7 +226,6 @@ const Teams = () => {
 		</>
 	);
 };
-Teams.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
 Teams.wName = "Teams";
 

@@ -1,13 +1,5 @@
 import PropTypes from "prop-types";
-import {
-	Box,
-	Button,
-	Drawer,
-	Divider,
-	Typography,
-	useMediaQuery,
-	Stack,
-} from "@mui/material";
+import { Box, Button, Divider } from "@mui/material";
 import { Link, useSearch } from "@tanstack/react-router";
 import Logo from "./logo";
 import { NavItem } from "./nav-item";
@@ -17,6 +9,7 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import PeopleIcon from "@mui/icons-material/People";
 import WarningIcon from "@mui/icons-material/Warning";
+import SummarizeIcon from "@mui/icons-material/Summarize";
 
 const items = [
 	{
@@ -39,23 +32,40 @@ const items = [
 		icon: <QuestionAnswerIcon fontSize="small" />,
 		title: "Answers",
 	},
+	{
+		href: "/admin/score-summary",
+		icon: <SummarizeIcon fontSize="small" />,
+		title: "score-summary",
+	},
 ];
 
 export const DashboardSidebar = (props) => {
-	const { open, onClose } = props;
+	const { open, width = 280 } = props;
 	const searchParams = useSearch({ strict: false });
-	const lgUp = useMediaQuery((theme) => theme.breakpoints.up("lg"), {
-		defaultMatches: true,
-		noSsr: true,
-	});
 
-	const content = (
-		<>
+	return (
+		<Box
+			component="nav"
+			sx={{
+				width: open ? width : 0,
+				flexShrink: 0,
+				transition: "width 0.3s ease",
+				overflow: "hidden",
+			}}>
 			<Box
 				sx={{
+					position: "fixed",
+					top: 0,
+					left: 0,
+					width,
+					height: "100vh",
+					backgroundColor: "neutral.900",
+					color: "#FFFFFF",
+					transform: open ? "translateX(0)" : `translateX(-${width}px)`,
+					transition: "transform 0.3s ease",
 					display: "flex",
 					flexDirection: "column",
-					height: "100%",
+					zIndex: 1200,
 				}}>
 				<Logo sx={{ p: 3 }} />
 				<Box sx={{ flexGrow: 1 }}>
@@ -93,48 +103,11 @@ export const DashboardSidebar = (props) => {
 					</Link>
 				</Box>
 			</Box>
-		</>
-	);
-
-	if (lgUp) {
-		return (
-			<Drawer
-				anchor="left"
-				PaperProps={{
-					sx: {
-						backgroundColor: "neutral.900",
-						color: "#FFFFFF",
-						width: 280,
-					},
-				}}
-				variant="permanent">
-				{content}
-			</Drawer>
-		);
-	}
-
-	return (
-		<Drawer
-			anchor="left"
-			onClose={onClose}
-			open={open}
-			PaperProps={{
-				sx: {
-					backgroundColor: "neutral.900",
-					color: "#FFFFFF",
-					width: 280,
-				},
-			}}
-			sx={{ zIndex: (theme) => theme.zIndex.appBar + 100 }}
-			variant="temporary"
-			disableEnforceFocus
-			disableRestoreFocus>
-			{content}
-		</Drawer>
+		</Box>
 	);
 };
 
 DashboardSidebar.propTypes = {
-	onClose: PropTypes.func,
 	open: PropTypes.bool,
+	width: PropTypes.number,
 };

@@ -16,7 +16,6 @@ import {
 	DialogContentText,
 	DialogActions,
 } from "@mui/material";
-import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useSearch } from "@tanstack/react-router";
 import Context from "../context";
@@ -358,7 +357,5 @@ const Reset = () => {
 		</Box>
 	);
 };
-
-Reset.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
 export default Reset;

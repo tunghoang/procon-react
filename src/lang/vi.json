@@ -51,5 +51,6 @@
   "max-score": "Tối đa",
   "step": "Số bước",
   "resub-count": "Nộp lại",
-  "last-submit": "Nộp lần cuối"
+  "last-submit": "Nộp lần cuối",
+  "score-summary": "Tổng hợp điểm"
 }

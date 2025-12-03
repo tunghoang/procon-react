@@ -6,7 +6,6 @@ import {
 	Box,
 	Typography,
 } from "@mui/material";
-import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useContext, useState } from "react";
 import { useApi } from "../api";
@@ -459,8 +458,7 @@ const Answers = () => {
 		</>
 	);
 };
-Answers.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
-Answers.wName = "Ansers";
+Answers.wName = "Answers";
 
 export default Answers;

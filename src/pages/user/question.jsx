@@ -9,7 +9,6 @@ import {
 	Button,
 	Stack,
 } from "@mui/material";
-import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../../api";
@@ -18,9 +17,16 @@ import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import Context from "../../context";
 import LoadingPage from "../../components/loading-page";
+import { useParams, useSearch } from "@tanstack/react-router";
 
 const UserQuestion = () => {
 	const { userMatch } = useContext(Context);
+	const routeParams = useParams({ strict: false });
+	const searchParams = useSearch({ strict: false });
+
+	// Get matchId from URL params first, then from context
+	const matchId = routeParams.matchId || searchParams.matchId || searchParams.match_id || userMatch?.id;
+
 	const [dialogName, setDialogName] = useState("");
 	const [currentItem, setCurrentItem] = useState(null);
 	const [payload, setPayload] = useState(null);
@@ -30,7 +36,7 @@ const UserQuestion = () => {
 		name: "Question",
 		config: {
 			params: {
-				"match[eq_id]": userMatch?.id,
+				"match[eq_id]": matchId,
 			},
 		},
 	});
@@ -43,7 +49,7 @@ const UserQuestion = () => {
 		name: "Answer",
 		config: {
 			params: {
-				"match[eq_id]": userMatch?.id,
+				"match[eq_id]": matchId,
 			},
 		},
 	});
@@ -61,6 +67,24 @@ const UserQuestion = () => {
 	const changeInstance = (changes) => {
 		setPayload({ ...payload, ...changes });
 	};
+
+	if (!matchId) {
+		return (
+			<>
+				<DashboardNavbar
+					position="fixed"
+					sx={{ left: 0, width: "100%" }}
+				/>
+				<Box sx={{ pt: 10, minHeight: "100vh" }} className="UserQuestion">
+					<Container maxWidth="lg">
+						<Typography variant="h5" color="error">
+							Please select a match to view questions
+						</Typography>
+					</Container>
+				</Box>
+			</>
+		);
+	}
 
 	if (qloading || aloading) return <LoadingPage />;
 
@@ -161,25 +185,19 @@ const UserQuestion = () => {
 
 	return (
 		<>
-			<DashboardLayoutRoot
-				style={{ paddingLeft: "0px", marginTop: "20px" }}
-				className="UserQuestion">
-				<Box
-					sx={{
-						display: "flex",
-						flex: "1 1 auto",
-						flexDirection: "column",
-						width: "100%",
-					}}>
-					<Container maxWidth="lg">
-						<Typography variant="h5">{tr({ id: "Questions" })}</Typography>
-						<Toolbar />
-						<Grid container spacing={3}>
-							{renderQuestions()}
-						</Grid>
-					</Container>
-				</Box>
-			</DashboardLayoutRoot>
+			<DashboardNavbar
+				position="fixed"
+				sx={{ left: 0, width: "100%" }}
+			/>
+			<Box sx={{ pt: 10, minHeight: "100vh" }} className="UserQuestion">
+				<Container maxWidth="lg">
+					<Typography variant="h5">{tr({ id: "Questions" })}</Typography>
+					<Toolbar />
+					<Grid container spacing={3}>
+						{renderQuestions()}
+					</Grid>
+				</Container>
+			</Box>
 			{dialogName === "UserAnswerDialog" && (
 				<UserAnswerDialog
 					open={dialogName === "UserAnswerDialog"}
@@ -197,14 +215,6 @@ const UserQuestion = () => {
 					disabled
 				/>
 			)}
-			<DashboardNavbar
-				sx={{
-					left: 0,
-					width: {
-						lg: "100%",
-					},
-				}}
-			/>
 		</>
 	);
 };

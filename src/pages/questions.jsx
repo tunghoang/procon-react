@@ -1,5 +1,4 @@
 import * as mui from "@mui/material";
-import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useApi, useFetchData } from "../api";
@@ -404,7 +403,6 @@ const Questions = () => {
 		</>
 	);
 };
-Questions.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
 Questions.wName = "Questions";
 

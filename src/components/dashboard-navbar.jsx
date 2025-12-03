@@ -37,7 +37,7 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 
 export const DashboardNavbar = (props) => {
-	const { onSidebarOpen, isSidebarOpen, ...other } = props;
+	const { onSidebarOpen, onSidebarClose, isSidebarOpen, ...other } = props;
 	const { team, updateLocalStorage } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
 	const navigate = useNavigate();
@@ -78,16 +78,21 @@ export const DashboardNavbar = (props) => {
 		setPassword(password);
 	};
 
+	const toggleSidebar = () => {
+		if (isSidebarOpen) {
+			onSidebarClose?.();
+		} else {
+			onSidebarOpen?.();
+		}
+	};
+
 	return (
 		<>
 			<DashboardNavbarRoot
+				position="sticky"
 				sx={{
-					left: {
-						lg: 280,
-					},
-					width: {
-						lg: "calc(100% - 280px)",
-					},
+					top: 0,
+					zIndex: 1100,
 				}}
 				{...other}>
 				<Toolbar
@@ -97,26 +102,11 @@ export const DashboardNavbar = (props) => {
 						left: 0,
 						px: 2,
 					}}>
-					<IconButton
-						onClick={onSidebarOpen}
-						sx={{
-							display: {
-								xs: "inline-flex",
-								lg: "none",
-							},
-						}}>
+					<IconButton onClick={toggleSidebar}>
 						<MenuIcon fontSize="small" />
 					</IconButton>
 					<Stack direction={"row"} flexGrow={1} alignItems="center" spacing={2}>
-						<Box
-							sx={{
-								display: {
-									xs: "none",
-									lg: isSidebarOpen ? "none" : "inline-flex",
-								},
-							}}>
-							<Logo sx={{ color: "#000" }} />
-						</Box>
+						{!isSidebarOpen && <Logo sx={{ color: "#000" }} />}
 						<Breadcrumb />
 					</Stack>
 					<Stack direction={"row"} spacing={3} alignItems="center">
@@ -204,4 +194,6 @@ export const DashboardNavbar = (props) => {
 
 DashboardNavbar.propTypes = {
 	onSidebarOpen: PropTypes.func,
+	onSidebarClose: PropTypes.func,
+	isSidebarOpen: PropTypes.bool,
 };

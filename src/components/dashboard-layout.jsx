@@ -1,45 +1,32 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { DashboardNavbar } from "./dashboard-navbar";
 import { DashboardSidebar } from "./dashboard-sidebar";
 
-export const DashboardLayoutRoot = styled("div")(({ theme }) => ({
-  display: "flex",
-  flex: "1 1 auto",
-  maxWidth: "100%",
-  paddingTop: 64,
-  [theme.breakpoints.up("lg")]: {
-    paddingLeft: 280,
-  },
-}));
+const SIDEBAR_WIDTH = 280;
 
 export const DashboardLayout = (props) => {
-  const { children } = props;
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+	const { children } = props;
+	const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  return (
-    <>
-      <DashboardLayoutRoot>
-        <Box
-          sx={{
-            display: "flex",
-            flex: "1 1 auto",
-            flexDirection: "column",
-            width: "100%",
-          }}
-        >
-          {children}
-        </Box>
-      </DashboardLayoutRoot>
-      <DashboardNavbar
-        onSidebarOpen={() => setSidebarOpen(true)}
-        isSidebarOpen={isSidebarOpen}
-      />
-      <DashboardSidebar
-        onClose={() => setSidebarOpen(false)}
-        open={isSidebarOpen}
-      />
-    </>
-  );
+	return (
+		<Box sx={{ display: "flex", minHeight: "100vh" }}>
+			<DashboardSidebar open={isSidebarOpen} width={SIDEBAR_WIDTH} />
+			<Box
+				component="main"
+				sx={{
+					flexGrow: 1,
+					display: "flex",
+					flexDirection: "column",
+					minWidth: 0,
+				}}>
+				<DashboardNavbar
+					onSidebarOpen={() => setSidebarOpen(true)}
+					onSidebarClose={() => setSidebarOpen(false)}
+					isSidebarOpen={isSidebarOpen}
+				/>
+				<Box sx={{ flexGrow: 1, overflow: "auto" }}>{children}</Box>
+			</Box>
+		</Box>
+	);
 };

@@ -7,7 +7,6 @@ import {
 	Typography,
 	Toolbar,
 } from "@mui/material";
-import { DashboardLayoutRoot } from "../components/dashboard-layout";
 import { DashboardNavbar } from "../components/dashboard-navbar";
 import Context from "../context";
 import TournamentDialog from "../dialogs/tournament";
@@ -50,73 +49,66 @@ const Tournaments = () => {
 
 	return (
 		<>
-			<DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }}>
-				<Box
-					sx={{
-						display: "flex",
-						flex: "1 1 auto",
-						flexDirection: "column",
-						width: "100%",
-					}}>
-					<Container maxWidth="lg">
-						<Toolbar
-							sx={{ justifyContent: "space-between" }}
-							style={{ padding: 0, marginBottom: "16px" }}>
-							<Typography variant="h5">{tr({ id: "Tournaments" })}</Typography>
-							{!isReadOnly && (
-								<Button
-									onClick={() => {
-										setCurrentTournament({ name: "", description: "" });
-										setShowDialog(true);
-									}}>
-									<AddIcon />
-									{tr({ id: "Create" })}
-								</Button>
-							)}
-						</Toolbar>
-						<Grid container spacing={3}>
-							{tournaments.length ? (
-								tournaments.map((tournament) => (
-									<Grid key={tournament.id} size={{ lg: 4, md: 6, xs: 12 }}>
-										<CardData
-											name={tournament.name}
-											description={tournament.description}
-											handleDelete={
-												isReadOnly ? null : () => handleDelete(tournament)
-											}
-											handleEdit={
-												isReadOnly
-													? null
-													: () => {
-															setCurrentTournament(tournament);
-															setShowDialog(true);
-													  }
-											}
-											handleSelect={() => {
-												updateContext({
-													tournament,
-												});
-												navigate({ to: `/tournament/${tournament.id}/rounds` });
-											}}
-										/>
-									</Grid>
-								))
-							) : (
-								<Typography
-									variant="h4"
-									m="auto"
-									sx={{
-										opacity: 0.3,
-										verticalAlign: "middle",
-										lineHeight: "300px",
-									}}>
-									Create new tournament
-								</Typography>
-							)}
-						</Grid>
-					</Container>
-				</Box>
-			</DashboardLayoutRoot>
+			<DashboardNavbar position="fixed" sx={{ left: 0, width: "100%" }} />
+			<Box sx={{ pt: 10, minHeight: "100vh" }}>
+				<Container maxWidth="lg">
+					<Toolbar
+						sx={{ justifyContent: "space-between" }}
+						style={{ padding: 0, marginBottom: "16px" }}>
+						<Typography variant="h5">{tr({ id: "Tournaments" })}</Typography>
+						{!isReadOnly && (
+							<Button
+								onClick={() => {
+									setCurrentTournament({ name: "", description: "" });
+									setShowDialog(true);
+								}}>
+								<AddIcon />
+								{tr({ id: "Create" })}
+							</Button>
+						)}
+					</Toolbar>
+					<Grid container spacing={3}>
+						{tournaments.length ? (
+							tournaments.map((tournament) => (
+								<Grid key={tournament.id} size={{ lg: 4, md: 6, xs: 12 }}>
+									<CardData
+										name={tournament.name}
+										description={tournament.description}
+										handleDelete={
+											isReadOnly ? null : () => handleDelete(tournament)
+										}
+										handleEdit={
+											isReadOnly
+												? null
+												: () => {
+														setCurrentTournament(tournament);
+														setShowDialog(true);
+												  }
+										}
+										handleSelect={() => {
+											updateContext({
+												tournament,
+											});
+											navigate({ to: `/tournament/${tournament.id}/rounds` });
+										}}
+									/>
+								</Grid>
+							))
+						) : (
+							<Typography
+								variant="h4"
+								m="auto"
+								sx={{
+									opacity: 0.3,
+									verticalAlign: "middle",
+									lineHeight: "300px",
+								}}>
+								Create new tournament
+							</Typography>
+						)}
+					</Grid>
+				</Container>
+			</Box>
 			<TournamentDialog
 				open={showDialog}
 				tournament={currentTournament}
@@ -130,14 +122,6 @@ const Tournaments = () => {
 				}}
 				handleChange={(change) => {
 					setCurrentTournament({ ...currentTournament, ...change });
-				}}
-			/>
-			<DashboardNavbar
-				sx={{
-					left: 0,
-					width: {
-						lg: "100%",
-					},
 				}}
 			/>
 		</>

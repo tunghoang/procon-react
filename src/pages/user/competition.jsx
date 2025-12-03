@@ -9,7 +9,6 @@ import {
 	Stack,
 	Button,
 } from "@mui/material";
-import { DashboardLayoutRoot } from "../../components/dashboard-layout";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../../api";
@@ -154,38 +153,26 @@ const Competition = () => {
 
 	return (
 		<>
-			<DashboardLayoutRoot style={{ paddingLeft: "0px", marginTop: "20px" }}>
-				<Box
-					sx={{
-						display: "flex",
-						flex: "1 1 auto",
-						flexDirection: "column",
-						width: "100%",
-					}}>
-					<Container maxWidth="lg">
-						<Toolbar
-							sx={{ justifyContent: "space-between" }}
-							style={{ padding: 0, marginBottom: "16px" }}>
-							<Typography variant="h5">{tr({ id: "Matches" })}</Typography>
-							<Button
-								variant="outlined"
-								startIcon={<TournamentIcon />}
-								onClick={() => navigate({ to: "/tournament" })}>
-								{tr({ id: "Tournaments" })}
-							</Button>
-						</Toolbar>
-						<Box>{renderMatches()}</Box>
-					</Container>
-				</Box>
-			</DashboardLayoutRoot>
 			<DashboardNavbar
-				sx={{
-					left: 0,
-					width: {
-						lg: "100%",
-					},
-				}}
+				position="fixed"
+				sx={{ left: 0, width: "100%" }}
 			/>
+			<Box sx={{ pt: 10, minHeight: "100vh" }}>
+				<Container maxWidth="lg">
+					<Toolbar
+						sx={{ justifyContent: "space-between" }}
+						style={{ padding: 0, marginBottom: "16px" }}>
+						<Typography variant="h5">{tr({ id: "Matches" })}</Typography>
+						<Button
+							variant="outlined"
+							startIcon={<TournamentIcon />}
+							onClick={() => navigate({ to: "/tournament" })}>
+							{tr({ id: "Tournaments" })}
+						</Button>
+					</Toolbar>
+					<Box>{renderMatches()}</Box>
+				</Container>
+			</Box>
 		</>
 	);
 };
