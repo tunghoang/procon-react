@@ -90,7 +90,7 @@ export const doPut = async (route, headers, payload) => {
     throw e;
   }
 };
-export function showMessage(msg, severity, duration) {
+export function showMessage(msg, severity, duration = 2000) {
   let t = Toastify({
     text: msg,
     duration: duration * 2 || 5000,

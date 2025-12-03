@@ -1,14 +1,17 @@
-import { Chip, IconButton, Paper, Tooltip } from "@mui/material";
+import * as mui from "@mui/material";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useApi, useFetchData } from "../api";
-import { api } from "../api/commons";
+import { api, showMessage } from "../api/commons";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog } from "../utils/debug";
 
@@ -23,6 +26,14 @@ const Questions = () => {
 	const [dialogName, setDialogName] = useState("");
 	const [currentItem, setCurrentItem] = useState({});
 	const [answerInstance, setAnswerInstance] = useState(null);
+	const [confirmDialog, setConfirmDialog] = useState({
+		open: false,
+		title: "",
+		message: "",
+		onConfirm: null,
+		confirmColor: "primary",
+		showCancel: true,
+	});
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/question",
 		"Question"
@@ -101,7 +112,7 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
-					<Chip
+					<mui.Chip
 						label={row.match.name}
 						color={row.match.is_active ? "success" : "default"}
 					/>
@@ -125,15 +136,15 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
-					<Tooltip title="View Question Data">
-						<IconButton
+					<mui.Tooltip title="View Question Data">
+						<mui.IconButton
 							onClick={() => {
 								setQuestion(row);
 								setDialogName("QuestionDataDialog");
 							}}>
 							<VisibilityIcon />
-						</IconButton>
-					</Tooltip>
+						</mui.IconButton>
+					</mui.Tooltip>
 				);
 			},
 		},
@@ -146,11 +157,50 @@ const Questions = () => {
 			sortable: false,
 			renderCell: ({ row }) => {
 				return (
-					<Tooltip title="View All Answers">
-						<IconButton color="primary" onClick={() => handleViewAnswers(row)}>
+					<mui.Tooltip title="View All Answers">
+						<mui.IconButton
+							color="primary"
+							onClick={() => handleViewAnswers(row)}>
 							<VisibilityIcon />
-						</IconButton>
-					</Tooltip>
+						</mui.IconButton>
+					</mui.Tooltip>
+				);
+			},
+		},
+		{
+			field: "actions",
+			headerName: tr({ id: "actions" }),
+			filterable: false,
+			sortable: false,
+			width: 160,
+			renderCell: ({ row }) => {
+				return (
+					<mui.Stack direction="row" spacing={0.5}>
+						<mui.Tooltip title="Regenerate">
+							<mui.IconButton
+								size="small"
+								color="warning"
+								onClick={() => handleRegenerateQuestion(row.id)}>
+								<AutorenewIcon fontSize="small" />
+							</mui.IconButton>
+						</mui.Tooltip>
+						<mui.Tooltip title="Edit">
+							<mui.IconButton
+								size="small"
+								color="primary"
+								onClick={() => handleEditQuestion(row)}>
+								<EditIcon fontSize="small" />
+							</mui.IconButton>
+						</mui.Tooltip>
+						<mui.Tooltip title="Delete">
+							<mui.IconButton
+								size="small"
+								color="error"
+								onClick={() => handleDeleteQuestion(row.id)}>
+								<DeleteIcon fontSize="small" />
+							</mui.IconButton>
+						</mui.Tooltip>
+					</mui.Stack>
 				);
 			},
 		},
@@ -187,6 +237,73 @@ const Questions = () => {
 		}
 	};
 
+	const handleEditQuestion = (questionRow) => {
+		const question_data = JSON.parse(questionRow.question_data || "{}");
+		setCurrentItem({
+			...questionRow,
+			...question_data,
+		});
+		setDialogName("QuestionDialog");
+	};
+
+	const handleDeleteQuestion = async (questionId) => {
+		const result = await apiDeleteDialog([questionId]);
+		if (result.length) await refetch();
+	};
+
+	const openConfirmDialog = (
+		title,
+		message,
+		onConfirm,
+		confirmColor = "primary",
+		showCancel = true
+	) => {
+		setConfirmDialog({
+			open: true,
+			title,
+			message,
+			onConfirm,
+			confirmColor,
+			showCancel,
+		});
+	};
+
+	const closeConfirmDialog = () => {
+		setConfirmDialog((prev) => ({ ...prev, open: false }));
+	};
+
+	const handleRegenerateQuestion = async (questionId) => {
+		openConfirmDialog(
+			"⚠️ Regenerate Question",
+			"Are you sure you want to regenerate this question? This will:\n• Generate a completely new board\n• Delete ALL existing answers for this question\n• Cannot be undone\n\nDo you want to continue?",
+			async () => {
+				try {
+					const response = await api.put(
+						`${
+							import.meta.env.VITE_SERVICE_API
+						}/question/${questionId}/regenerate`
+					);
+					await refetch();
+					closeConfirmDialog();
+
+					// Show success message with deleted answers count
+					const deletedCount = response.data?.deletedAnswers || 0;
+					showMessage(
+						`Question regenerated successfully. ${deletedCount} answer(s) were deleted.`,
+						"success"
+					);
+				} catch (error) {
+					debugLog("Failed to regenerate question:", error);
+					const errorMessage =
+						error.response?.data?.message || "Failed to regenerate question";
+					closeConfirmDialog();
+					showMessage(errorMessage, "error");
+				}
+			},
+			"warning"
+		);
+	};
+
 	const clickNew = () => {
 		setCurrentItem({
 			name: "New Question",
@@ -199,15 +316,6 @@ const Questions = () => {
 			raw_questions: [],
 		});
 		setDialogName("QuestionDialog");
-	};
-	const openDialog = (name) => {
-		const selected = questions.find((c) => c.id === selectedIds[0]);
-		const question_data = JSON.parse(selected.question_data || "{}");
-		setCurrentItem({
-			...selected,
-			...question_data,
-		});
-		setDialogName(name);
 	};
 	const closeDialog = () => {
 		setDialogName("");
@@ -237,18 +345,11 @@ const Questions = () => {
 			<PageToolbar
 				title={tr({ id: "Questions" })}
 				showNew={true}
-				showEdit={(selectedIds || []).length === 1}
 				showDelete={(selectedIds || []).length}
 				handleNew={clickNew}
-				editBtns={[
-					{
-						label: "Edit",
-						fn: () => openDialog("QuestionDialog"),
-					},
-				]}
 				handleDelete={clickDelete}
 			/>
-			<Paper
+			<mui.Paper
 				component="main"
 				sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}>
 				<DataTable
@@ -262,7 +363,7 @@ const Questions = () => {
 					loading={loading}
 					onRefresh={refetch}
 				/>
-			</Paper>
+			</mui.Paper>
 			<QuestionDialog
 				open={dialogName === "QuestionDialog"}
 				instance={currentItem}
@@ -281,6 +382,25 @@ const Questions = () => {
 				instance={answerInstance}
 				close={closeDialog}
 			/>
+			<mui.Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
+				<mui.DialogTitle>{confirmDialog.title}</mui.DialogTitle>
+				<mui.DialogContent>
+					<mui.Typography sx={{ whiteSpace: "pre-line" }}>
+						{confirmDialog.message}
+					</mui.Typography>
+				</mui.DialogContent>
+				<mui.DialogActions>
+					{confirmDialog.showCancel && (
+						<mui.Button onClick={closeConfirmDialog}>Cancel</mui.Button>
+					)}
+					<mui.Button
+						onClick={confirmDialog.onConfirm}
+						color={confirmDialog.confirmColor || "primary"}
+						variant="contained">
+						{confirmDialog.showCancel ? "Confirm" : "OK"}
+					</mui.Button>
+				</mui.DialogActions>
+			</mui.Dialog>
 		</>
 	);
 };

@@ -148,18 +148,20 @@ export const DashboardNavbar = (props) => {
 								<SportsMmaIcon />
 							</IconButton>
 						</Tooltip>
-						{team?.is_admin && (
-							<Tooltip title="Admin Only">
-								<IconButton onClick={() => navigate({ to: "/tournament" })}>
-									<AdminPanelSettingsIcon />
-								</IconButton>
-							</Tooltip>
-						)}
 						<Tooltip title="Password">
 							<IconButton onClick={() => setDialogName("TeamPasswordDialog")}>
 								<HttpsIcon />
 							</IconButton>
 						</Tooltip>
+						{team?.is_admin && (
+							<Tooltip title="Admin Only">
+								<IconButton
+									onClick={() => navigate({ to: "/tournament" })}
+									color="error">
+									<AdminPanelSettingsIcon />
+								</IconButton>
+							</Tooltip>
+						)}
 						<LanguageTrans />
 						<Tooltip title={team?.name || ""}>
 							<Avatar
@@ -168,7 +170,11 @@ export const DashboardNavbar = (props) => {
 									height: 40,
 									width: 40,
 								}}
-								src="/static/images/avatars/avatar_1.png">
+								src={
+									team?.is_admin
+										? "/static/images/avatars/gigachad.png"
+										: "/static/images/avatars/avatar_1.png"
+								}>
 								<UserCircleIcon fontSize="small" />
 							</Avatar>
 						</Tooltip>
