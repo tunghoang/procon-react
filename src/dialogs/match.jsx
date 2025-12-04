@@ -11,6 +11,8 @@ import {
 	Autocomplete,
 	Checkbox,
 	Box,
+	Typography,
+	Divider,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -233,21 +235,9 @@ const ManageTeamMatchDialog = ({
 	const [selectedTeamsToAdd, setSelectedTeamsToAdd] = useState([]);
 	const [selectedTeamsToRemove, setSelectedTeamsToRemove] = useState([]);
 
-	const filterTeams = allTeams.filter(
+	const availableTeams = allTeams.filter(
 		(item) => !teams?.find((team) => team.id === item.id)
 	);
-
-	const handleSelectToRemove = (e, team) => {
-		if (e.target.checked)
-			setSelectedTeamsToRemove([...selectedTeamsToRemove, team]);
-		else {
-			const rmIdx = selectedTeamsToRemove.findIndex(
-				(item) => item.id === team.id
-			);
-			selectedTeamsToRemove.splice(rmIdx, 1);
-			setSelectedTeamsToRemove([...selectedTeamsToRemove]);
-		}
-	};
 
 	const handleAddTeams = async () => {
 		if (selectedTeamsToAdd.length > 0) {
@@ -263,22 +253,57 @@ const ManageTeamMatchDialog = ({
 		}
 	};
 
+	const handleClose = () => {
+		setSelectedTeamsToAdd([]);
+		setSelectedTeamsToRemove([]);
+		close();
+	};
+
 	return (
 		<Dialog
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
-			onClose={close}
+			onClose={handleClose}
 			maxWidth="sm"
 			fullWidth>
 			<DialogTitle>{tr({ id: "Manage Teams" })}</DialogTitle>
 			<DialogContent className={classes.root}>
-				<Stack spacing={3}>
+				<Stack spacing={3} sx={{ mt: 1 }}>
 					{/* Add Teams Section */}
 					<Box>
+						<Stack
+							direction="row"
+							justifyContent="space-between"
+							alignItems="center"
+							sx={{ mb: 1 }}>
+							<Typography variant="subtitle2" color="primary">
+								➕ {tr({ id: "Add Teams" })}:
+							</Typography>
+							<Stack direction="row" spacing={1}>
+								{selectedTeamsToAdd.length < availableTeams.length &&
+									availableTeams.length > 0 && (
+										<Button
+											size="small"
+											variant="outlined"
+											onClick={() => setSelectedTeamsToAdd(availableTeams)}>
+											Select All ({availableTeams.length})
+										</Button>
+									)}
+								{selectedTeamsToAdd.length > 0 && (
+									<Button
+										size="small"
+										variant="outlined"
+										color="secondary"
+										onClick={() => setSelectedTeamsToAdd([])}>
+										Deselect All
+									</Button>
+								)}
+							</Stack>
+						</Stack>
 						<Autocomplete
 							multiple
 							disableCloseOnSelect
-							options={filterTeams}
+							options={availableTeams}
 							value={selectedTeamsToAdd}
 							getOptionLabel={(option) => option.name}
 							isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -315,34 +340,84 @@ const ManageTeamMatchDialog = ({
 
 					{/* Remove Teams Section */}
 					{teams && teams.length > 0 && (
-						<Box>
-							<Stack spacing={0.5}>
-								{teams.map((item) => (
-									<FormControlLabel
-										key={item.id}
-										control={<Checkbox />}
-										onChange={(e) => handleSelectToRemove(e, item)}
-										label={item.name}
-									/>
-								))}
-							</Stack>
-							{selectedTeamsToRemove.length > 0 && (
-								<Button
-									sx={{ mt: 1 }}
-									variant="contained"
-									color="error"
-									size="small"
-									startIcon={<DeleteIcon />}
-									onClick={handleRemoveTeams}>
-									{tr({ id: "Remove" })} ({selectedTeamsToRemove.length})
-								</Button>
-							)}
-						</Box>
+						<>
+							<Divider />
+							<Box>
+								<Stack
+									direction="row"
+									justifyContent="space-between"
+									alignItems="center"
+									sx={{ mb: 1 }}>
+									<Typography variant="subtitle2" color="error">
+										➖ {tr({ id: "Remove Teams" })}:
+									</Typography>
+									<Stack direction="row" spacing={1}>
+										{selectedTeamsToRemove.length < teams.length && (
+											<Button
+												size="small"
+												variant="outlined"
+												color="error"
+												onClick={() => setSelectedTeamsToRemove(teams)}>
+												Select All ({teams.length})
+											</Button>
+										)}
+										{selectedTeamsToRemove.length > 0 && (
+											<Button
+												size="small"
+												variant="outlined"
+												color="secondary"
+												onClick={() => setSelectedTeamsToRemove([])}>
+												Deselect All
+											</Button>
+										)}
+									</Stack>
+								</Stack>
+								<Autocomplete
+									multiple
+									disableCloseOnSelect
+									options={teams}
+									value={selectedTeamsToRemove}
+									getOptionLabel={(option) => option.name}
+									isOptionEqualToValue={(option, value) =>
+										option.id === value.id
+									}
+									renderOption={(props, option, { selected }) => {
+										const { key, ...optionProps } = props;
+										return (
+											<Box key={key} {...optionProps}>
+												<Checkbox size="small" sx={{ mr: 1 }} checked={selected} />
+												{option.name}
+											</Box>
+										);
+									}}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											placeholder="Select teams to remove"
+											variant="outlined"
+											size="small"
+										/>
+									)}
+									onChange={(_, values) => setSelectedTeamsToRemove(values)}
+								/>
+								{selectedTeamsToRemove.length > 0 && (
+									<Button
+										sx={{ mt: 1 }}
+										variant="contained"
+										color="error"
+										size="small"
+										startIcon={<DeleteIcon />}
+										onClick={handleRemoveTeams}>
+										{tr({ id: "Remove" })} ({selectedTeamsToRemove.length})
+									</Button>
+								)}
+							</Box>
+						</>
 					)}
 				</Stack>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={close}>{tr({ id: "Close" })}</Button>
+				<Button onClick={handleClose}>{tr({ id: "Close" })}</Button>
 				{isBulkMode && (
 					<Button
 						onClick={handleDeleteAll}
