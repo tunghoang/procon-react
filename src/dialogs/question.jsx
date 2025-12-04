@@ -59,7 +59,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				<Stack spacing={1}>
 					<Box sx={{ mx: -1 }}>
 						<Grid container spacing={2}>
-							<Grid size={{ xs: 4 }}>
+							<Grid size={{ xs: 6 }}>
 								<TextField
 									margin="dense"
 									label="Name"
@@ -71,21 +71,6 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 									onChange={(evt) => {
 										handleChange({ name: evt.target.value });
 									}}
-								/>
-							</Grid>
-							<Grid size={{ xs: 2 }}>
-								<TextField
-									margin="dense"
-									label="Order"
-									type="number"
-									fullWidth
-									variant="standard"
-									name="order"
-									value={instance?.order ?? 0}
-									onChange={(evt) => {
-										handleChange({ order: parseInt(evt.target.value) || 0 });
-									}}
-									helperText="Sort order"
 								/>
 							</Grid>
 							<Grid size={{ xs: 6 }}>

@@ -214,7 +214,7 @@ const ScoreSummary = () => {
 																	backgroundColor: "#f5f5f5",
 																	borderLeft: "2px solid #90caf9",
 																}}>
-																Match score
+																Pair score
 															</mui.TableCell>
 															<mui.TableCell
 																align="center"
@@ -244,7 +244,7 @@ const ScoreSummary = () => {
 															backgroundColor: "#fff3e0",
 															borderLeft: "2px solid #ffb74d",
 														}}>
-														Match score
+														Pair score
 													</mui.TableCell>
 													<mui.TableCell
 														align="center"

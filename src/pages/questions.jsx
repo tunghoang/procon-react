@@ -11,6 +11,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog } from "../utils/debug";
 
@@ -93,6 +95,39 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 		},
 		{
+			field: "order",
+			headerName: "Order",
+			flex: 0.8,
+			headerClassName: "tableHeader",
+			filterable: false,
+			renderCell: ({ row }) => {
+				const currentIndex = questions.findIndex((q) => q.id === row.id);
+				const isFirst = currentIndex === 0;
+				const isLast = currentIndex === questions.length - 1;
+				return (
+					<mui.Stack direction="row" alignItems="center" spacing={0}>
+						<mui.Typography
+							variant="body2"
+							sx={{ minWidth: 24, textAlign: "center" }}>
+							{row.order ?? "-"}
+						</mui.Typography>
+						<mui.IconButton
+							size="small"
+							disabled={isFirst}
+							onClick={() => handleMoveQuestion(row.id, "up")}>
+							<KeyboardArrowUpIcon fontSize="small" />
+						</mui.IconButton>
+						<mui.IconButton
+							size="small"
+							disabled={isLast}
+							onClick={() => handleMoveQuestion(row.id, "down")}>
+							<KeyboardArrowDownIcon fontSize="small" />
+						</mui.IconButton>
+					</mui.Stack>
+				);
+			},
+		},
+		{
 			field: "name",
 			headerName: tr({ id: "name" }),
 			flex: 1.5,
@@ -121,11 +156,50 @@ const Questions = () => {
 		{
 			field: "size",
 			headerName: tr({ id: "size" }),
-			flex: 1,
+			flex: 0.7,
 			headerClassName: "tableHeader",
 			valueGetter: (params) => {
 				const data = JSON.parse(params.row.question_data || "{}");
 				return data.field?.size || data.parameters?.size || "-";
+			},
+		},
+		{
+			field: "max_ops",
+			headerName: "Max Ops",
+			flex: 0.7,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => params.row.max_ops ?? "-",
+		},
+		{
+			field: "rotations",
+			headerName: "Rotations",
+			flex: 0.7,
+			headerClassName: "tableHeader",
+			valueGetter: (params) => params.row.rotations ?? "-",
+		},
+		{
+			field: "mode",
+			headerName: "Mode",
+			flex: 0.8,
+			headerClassName: "tableHeader",
+			renderCell: ({ row }) => {
+				const isManual =
+					row.mode === null || row.max_ops == null || row.rotations == null;
+				let modeLabel, modeColor;
+				if (isManual) {
+					modeLabel = "Manual";
+					modeColor = "error";
+				} else if (row.mode === 0) {
+					modeLabel = "Random";
+					modeColor = "info";
+				} else if (row.mode === 1) {
+					modeLabel = "Special";
+					modeColor = "warning";
+				} else {
+					modeLabel = "-";
+					modeColor = "default";
+				}
+				return <mui.Chip label={modeLabel} color={modeColor} size="small" />;
 			},
 		},
 		{
@@ -173,15 +247,23 @@ const Questions = () => {
 			sortable: false,
 			width: 160,
 			renderCell: ({ row }) => {
+				const isManual =
+					row.mode === null || row.max_ops == null || row.rotations == null;
 				return (
 					<mui.Stack direction="row" spacing={0.5}>
-						<mui.Tooltip title="Regenerate">
-							<mui.IconButton
-								size="small"
-								color="warning"
-								onClick={() => handleRegenerateQuestion(row.id)}>
-								<AutorenewIcon fontSize="small" />
-							</mui.IconButton>
+						<mui.Tooltip
+							title={
+								isManual ? "Cannot regenerate manual question" : "Regenerate"
+							}>
+							<span>
+								<mui.IconButton
+									size="small"
+									color="warning"
+									disabled={isManual}
+									onClick={() => handleRegenerateQuestion(row.id)}>
+									<AutorenewIcon fontSize="small" />
+								</mui.IconButton>
+							</span>
 						</mui.Tooltip>
 						<mui.Tooltip title="Edit">
 							<mui.IconButton
@@ -286,7 +368,7 @@ const Questions = () => {
 					closeConfirmDialog();
 
 					// Show success message with deleted answers count
-					const deletedCount = response.data?.deletedAnswers || 0;
+					const deletedCount = response?.deletedAnswers || 0;
 					showMessage(
 						`Question regenerated successfully. ${deletedCount} answer(s) were deleted.`,
 						"success"
@@ -301,6 +383,42 @@ const Questions = () => {
 			},
 			"warning"
 		);
+	};
+
+	const handleMoveQuestion = async (questionId, direction) => {
+		try {
+			const currentIndex = questions.findIndex((q) => q.id === questionId);
+			if (currentIndex === -1) return;
+
+			const targetIndex =
+				direction === "up" ? currentIndex - 1 : currentIndex + 1;
+			if (targetIndex < 0 || targetIndex >= questions.length) return;
+
+			const currentQuestion = questions[currentIndex];
+			const targetQuestion = questions[targetIndex];
+
+			// Swap orders
+			const currentOrder = currentQuestion.order ?? currentIndex;
+			const targetOrder = targetQuestion.order ?? targetIndex;
+
+			// Update both questions silently (without showing success messages)
+			await Promise.all([
+				api.put(
+					`${import.meta.env.VITE_SERVICE_API}/question/${currentQuestion.id}`,
+					{ order: targetOrder }
+				),
+				api.put(
+					`${import.meta.env.VITE_SERVICE_API}/question/${targetQuestion.id}`,
+					{ order: currentOrder }
+				),
+			]);
+			showMessage("Question order changed successfully", "success");
+
+			await refetch();
+		} catch (error) {
+			debugLog("Failed to move question:", error);
+			showMessage("Failed to change order", "error");
+		}
 	};
 
 	const clickNew = () => {
