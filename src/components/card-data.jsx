@@ -11,6 +11,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { useIntl } from "react-intl";
 
 const CardData = ({
@@ -24,6 +25,7 @@ const CardData = ({
 	disabled = false,
 	action,
 	handleEditDetail = null,
+	handleManageTeams = null,
 	...rest
 }) => {
 	const [zDepth, setZDepth] = useState(false);
@@ -94,6 +96,18 @@ const CardData = ({
 										)}
 									</Grid>
 									<Grid sx={{ alignItems: "center", display: "flex" }}>
+										{handleManageTeams && (
+											<Button onClick={handleManageTeams} color="primary">
+												<GroupsIcon color="primary" />
+												<Typography
+													color="primary"
+													display="inline"
+													sx={{ pl: 1 }}
+													variant="body2">
+													{tr({ id: "Teams" })}
+												</Typography>
+											</Button>
+										)}
 										{handleEditDetail && (
 											<Button onClick={handleEditDetail}>
 												<SettingsIcon color="action" />

@@ -10,7 +10,7 @@ import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
 import { api } from "../api/commons";
-import { apiDeleteTeamMatch, apiNewTeamMatch } from "../api/match";
+import { apiBulkAddTeams, apiBulkRemoveTeams } from "../api/match";
 import DataTable from "../components/DataTable/data-table";
 import PageToolbar from "../components/page-toolbar";
 import Context from "../context";
@@ -490,37 +490,31 @@ const Matches = () => {
 	};
 
 	const handleAction = async (teams, action) => {
-		let apiAction;
-		let matchId;
+		const matchIds = [currentMatch.id];
+		const teamIds = teams.map((t) => t.id);
+
+		let result;
 		if (action === "add") {
-			apiAction = apiNewTeamMatch;
-			matchId = currentMatch.id;
+			result = await apiBulkAddTeams(matchIds, teamIds);
 		} else if (action === "delete") {
-			apiAction = apiDeleteTeamMatch;
-			matchId = currentMatch.id;
+			result = await apiBulkRemoveTeams(matchIds, teamIds);
 		} else return;
 
-		const result = await Promise.all(
-			teams.map(async (team) => await apiAction(matchId, team.id))
-		);
-		if (result.length) await refetch();
+		if (result) await refetch();
 		setDialogName("");
 	};
 
 	const handleBulkAction = async (teams, action) => {
-		let apiAction;
+		const teamIds = teams.map((t) => t.id);
+
+		let result;
 		if (action === "add") {
-			apiAction = apiNewTeamMatch;
+			result = await apiBulkAddTeams(selectedMatchIds, teamIds);
 		} else if (action === "delete") {
-			apiAction = apiDeleteTeamMatch;
+			result = await apiBulkRemoveTeams(selectedMatchIds, teamIds);
 		} else return;
 
-		const result = await Promise.all(
-			selectedMatchIds.flatMap((matchId) =>
-				teams.map(async (team) => await apiAction(matchId, team.id))
-			)
-		);
-		if (result.length) await refetch();
+		if (result) await refetch();
 		setDialogName("");
 	};
 
@@ -535,21 +529,20 @@ const Matches = () => {
 						selectedMatchIds.includes(m.id)
 					);
 
-					// For each match, delete only the teams that exist in that match
-					const deletePromises = [];
-					selectedMatches.forEach((match) => {
-						match.teams?.forEach((team) => {
-							deletePromises.push(apiDeleteTeamMatch(match.id, team.id));
-						});
-					});
+					// Get all unique team IDs from selected matches
+					const allTeamIds = [
+						...new Set(
+							selectedMatches.flatMap((m) => m.teams?.map((t) => t.id) || [])
+						),
+					];
 
-					if (deletePromises.length === 0) {
+					if (allTeamIds.length === 0) {
 						closeConfirmDialog();
 						return;
 					}
 
-					const result = await Promise.all(deletePromises);
-					if (result.length) await refetch();
+					const result = await apiBulkRemoveTeams(selectedMatchIds, allTeamIds);
+					if (result) await refetch();
 					setDialogName("");
 				} catch (error) {
 					console.error("Failed to delete all teams:", error);

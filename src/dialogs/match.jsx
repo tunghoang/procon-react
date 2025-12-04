@@ -186,14 +186,16 @@ const AddTeamMatchDialog = ({ open, close, teams, handleAdd }) => {
 				<DialogContent className={classes.root} sx={{ width: 500 }}>
 					<Autocomplete
 						multiple
+						disableCloseOnSelect
 						options={filterTeams}
 						getOptionLabel={(option) => option.name}
 						isOptionEqualToValue={(option, value) => option.id === value.id}
-						renderOption={(props, option) => {
+						renderOption={(props, option, { selected }) => {
 							const { key, ...optionProps } = props;
 							return (
 								<Box key={key} {...optionProps}>
-									{option.name} {option.added}
+									<Checkbox size="small" sx={{ mr: 1 }} checked={selected} />
+									{option.name}
 								</Box>
 							);
 						}}
@@ -275,14 +277,16 @@ const ManageTeamMatchDialog = ({
 					<Box>
 						<Autocomplete
 							multiple
+							disableCloseOnSelect
 							options={filterTeams}
 							value={selectedTeamsToAdd}
 							getOptionLabel={(option) => option.name}
 							isOptionEqualToValue={(option, value) => option.id === value.id}
-							renderOption={(props, option) => {
+							renderOption={(props, option, { selected }) => {
 								const { key, ...optionProps } = props;
 								return (
 									<Box key={key} {...optionProps}>
+										<Checkbox size="small" sx={{ mr: 1 }} checked={selected} />
 										{option.name}
 									</Box>
 								);
