@@ -13,6 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog } from "../utils/debug";
 
@@ -34,6 +35,11 @@ const Questions = () => {
 		onConfirm: null,
 		confirmColor: "primary",
 		showCancel: true,
+	});
+	const [optimalAnswersDialog, setOptimalAnswersDialog] = useState({
+		open: false,
+		questionName: "",
+		moves: [],
 	});
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/question",
@@ -245,10 +251,12 @@ const Questions = () => {
 			headerName: tr({ id: "actions" }),
 			filterable: false,
 			sortable: false,
-			width: 160,
+			flex: 1,
 			renderCell: ({ row }) => {
 				const isManual =
 					row.mode === null || row.max_ops == null || row.rotations == null;
+				const isSpecial =
+					row.mode === 1 && row.max_ops != null && row.rotations != null;
 				return (
 					<mui.Stack direction="row" spacing={0.5}>
 						<mui.Tooltip
@@ -281,6 +289,16 @@ const Questions = () => {
 								<DeleteIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
+						{isSpecial && (
+							<mui.Tooltip title="View Optimal Answers">
+								<mui.IconButton
+									size="small"
+									color="success"
+									onClick={() => handleViewOptimalAnswers(row)}>
+									<VisibilityIcon fontSize="small" />
+								</mui.IconButton>
+							</mui.Tooltip>
+						)}
 					</mui.Stack>
 				);
 			},
@@ -421,6 +439,24 @@ const Questions = () => {
 		}
 	};
 
+	const handleViewOptimalAnswers = async (questionRow) => {
+		try {
+			const response = await api.get(
+				`${import.meta.env.VITE_SERVICE_API}/question/${
+					questionRow.id
+				}/optimal-answers`
+			);
+			setOptimalAnswersDialog({
+				open: true,
+				questionName: questionRow.name,
+				moves: response.moves || [],
+			});
+		} catch (error) {
+			debugLog("Failed to fetch optimal answers:", error);
+			showMessage("Failed to fetch optimal answers", "error");
+		}
+	};
+
 	const clickNew = () => {
 		setCurrentItem({
 			name: "New Question",
@@ -515,6 +551,67 @@ const Questions = () => {
 						color={confirmDialog.confirmColor || "primary"}
 						variant="contained">
 						{confirmDialog.showCancel ? "Confirm" : "OK"}
+					</mui.Button>
+				</mui.DialogActions>
+			</mui.Dialog>
+			<mui.Dialog
+				open={optimalAnswersDialog.open}
+				onClose={() =>
+					setOptimalAnswersDialog({ open: false, questionName: "", moves: [] })
+				}
+				maxWidth="md"
+				fullWidth>
+				<mui.DialogTitle>
+					Optimal Answers - {optimalAnswersDialog.questionName}
+				</mui.DialogTitle>
+				<mui.DialogContent>
+					{optimalAnswersDialog.moves.length > 0 ? (
+						<mui.Box sx={{ mt: 1 }}>
+							<mui.Typography variant="subtitle2" gutterBottom>
+								Total moves: {optimalAnswersDialog.moves.length}
+							</mui.Typography>
+							<mui.Paper
+								variant="outlined"
+								sx={{
+									p: 2,
+									maxHeight: 400,
+									overflow: "auto",
+									bgcolor: "grey.50",
+									fontFamily: "monospace",
+								}}>
+								<pre style={{ margin: 0 }}>
+									{JSON.stringify(optimalAnswersDialog.moves, null, 2)}
+								</pre>
+							</mui.Paper>
+						</mui.Box>
+					) : (
+						<mui.Typography color="text.secondary">
+							No optimal answers available for this question.
+						</mui.Typography>
+					)}
+				</mui.DialogContent>
+				<mui.DialogActions>
+					{optimalAnswersDialog.moves.length > 0 && (
+						<mui.Button
+							startIcon={<ContentCopyIcon />}
+							onClick={() => {
+								navigator.clipboard.writeText(
+									JSON.stringify(optimalAnswersDialog.moves)
+								);
+								showMessage("Copied to clipboard!", "success");
+							}}>
+							Copy
+						</mui.Button>
+					)}
+					<mui.Button
+						onClick={() =>
+							setOptimalAnswersDialog({
+								open: false,
+								questionName: "",
+								moves: [],
+							})
+						}>
+						Close
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>
