@@ -166,6 +166,76 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 							</Box>
 						</Box>
 					)}
+					{instance?.id && instance?.mode != null && (
+						<Box sx={{ mt: 2 }}>
+							<Box
+								sx={{
+									p: 2,
+									bgcolor: "warning.light",
+									borderRadius: 1,
+									mb: 2,
+								}}>
+								<span style={{ fontWeight: "bold" }}>⚠️ Warning:</span> Changing
+								size, mode, max_ops or rotations will regenerate the question
+								and <strong>delete all existing answers</strong>.
+							</Box>
+							<Grid container spacing={2}>
+								<Grid size={{ xs: 3 }}>
+									<TextField
+										label="Size"
+										type="number"
+										fullWidth
+										variant="outlined"
+										value={instance?.size || ""}
+										onChange={(evt) =>
+											handleChange({ size: parseInt(evt.target.value) || 0 })
+										}
+										inputProps={{ min: 4, max: 24, step: 2 }}
+									/>
+								</Grid>
+								<Grid size={{ xs: 3 }}>
+									<TextField
+										label="Mode"
+										type="number"
+										fullWidth
+										variant="outlined"
+										value={instance?.mode ?? ""}
+										onChange={(evt) =>
+											handleChange({ mode: parseInt(evt.target.value) || 0 })
+										}
+										helperText="0: Random, 1: Special"
+										inputProps={{ min: 0, max: 1 }}
+									/>
+								</Grid>
+								<Grid size={{ xs: 3 }}>
+									<TextField
+										label="Max Ops"
+										type="number"
+										fullWidth
+										variant="outlined"
+										value={instance?.max_ops ?? ""}
+										onChange={(evt) =>
+											handleChange({ max_ops: parseInt(evt.target.value) || 0 })
+										}
+									/>
+								</Grid>
+								<Grid size={{ xs: 3 }}>
+									<TextField
+										label="Rotations"
+										type="number"
+										fullWidth
+										variant="outlined"
+										value={instance?.rotations ?? ""}
+										onChange={(evt) =>
+											handleChange({
+												rotations: parseInt(evt.target.value) || 0,
+											})
+										}
+									/>
+								</Grid>
+							</Grid>
+						</Box>
+					)}
 				</Stack>
 			</DialogContent>
 			<DialogActions>

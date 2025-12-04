@@ -41,6 +41,7 @@ const Questions = () => {
 		questionName: "",
 		moves: [],
 	});
+	const [originalParams, setOriginalParams] = useState(null);
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/question",
 		"Question"
@@ -338,9 +339,19 @@ const Questions = () => {
 
 	const handleEditQuestion = (questionRow) => {
 		const question_data = JSON.parse(questionRow.question_data || "{}");
+		const size =
+			question_data.field?.size || question_data.parameters?.size || 12;
 		setCurrentItem({
 			...questionRow,
 			...question_data,
+			size,
+		});
+		// Store original params for comparison
+		setOriginalParams({
+			size,
+			mode: questionRow.mode,
+			max_ops: questionRow.max_ops,
+			rotations: questionRow.rotations,
 		});
 		setDialogName("QuestionDialog");
 	};
@@ -479,6 +490,59 @@ const Questions = () => {
 	};
 	const saveInstance = async () => {
 		debugLog("Saving question with data:", currentItem);
+
+		// Check if editing and parameters changed (for non-manual questions)
+		if (currentItem.id && originalParams && currentItem.mode != null) {
+			const paramsChanged =
+				originalParams.size !== currentItem.size ||
+				originalParams.mode !== currentItem.mode ||
+				originalParams.max_ops !== currentItem.max_ops ||
+				originalParams.rotations !== currentItem.rotations;
+
+			if (paramsChanged) {
+				// Show warning dialog
+				openConfirmDialog(
+					"⚠️ Regenerate Question",
+					"You have changed the question parameters (size, mode, max_ops, or rotations).\n\nThis will:\n• Generate a completely new board\n• Delete ALL existing answers for this question\n• Cannot be undone\n\nDo you want to continue?",
+					async () => {
+						try {
+							await api.put(
+								`${import.meta.env.VITE_SERVICE_API}/question/${
+									currentItem.id
+								}/regenerate-with-params`,
+								{
+									size: currentItem.size,
+									mode: currentItem.mode,
+									max_ops: currentItem.max_ops,
+									rotations: currentItem.rotations,
+									name: currentItem.name,
+									description: currentItem.description,
+								}
+							);
+							showMessage(
+								"Question updated and regenerated successfully",
+								"success"
+							);
+							await refetch();
+							closeConfirmDialog();
+							setDialogName("");
+							setOriginalParams(null);
+						} catch (error) {
+							debugLog("Failed to regenerate question:", error);
+							const errorMessage =
+								error.response?.data?.message ||
+								"Failed to regenerate question";
+							showMessage(errorMessage, "error");
+							closeConfirmDialog();
+						}
+					},
+					"warning"
+				);
+				return;
+			}
+		}
+
+		// Normal save (no params changed or creating new)
 		let result;
 		if (currentItem.id) {
 			result = await apiEdit(currentItem.id, currentItem);
@@ -488,6 +552,7 @@ const Questions = () => {
 		}
 		if (result) await refetch();
 		setDialogName("");
+		setOriginalParams(null);
 	};
 	const changeInstance = (changes) => {
 		setCurrentItem({ ...currentItem, ...changes });
