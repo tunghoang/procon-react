@@ -2,7 +2,13 @@ import "./board.css";
 import { Stack } from "@mui/material";
 import { useMemo, memo } from "react";
 
-const GameBoard = ({ board, step = {}, cellSize, fillContainer = false }) => {
+const GameBoard = ({
+	board,
+	step = {},
+	cellSize,
+	fillContainer = false,
+	animate = true,
+}) => {
 	if (!board) return null;
 
 	const { x = -1, y = -1, n = 0 } = step;
@@ -50,7 +56,7 @@ const GameBoard = ({ board, step = {}, cellSize, fillContainer = false }) => {
 
 					out.push(
 						<div
-							className="subboard-wrapper rotating"
+							className={`subboard-wrapper ${animate ? "rotating" : ""}`}
 							key={`subboard-${r}-${c}`}
 							style={{
 								gridRow: `${r + 1} / span ${n}`,

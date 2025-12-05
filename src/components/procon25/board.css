@@ -29,7 +29,7 @@
 
 /* subboard wrapper: occupies an n x n grid area and contains inner cells as a grid */
 .subboard-wrapper {
-	border: 2px solid #ffd54f;
+	border: 5px solid red;
 	box-sizing: border-box;
 	overflow: hidden;
 	background: transparent;
@@ -44,6 +44,11 @@
 	animation: rotateSubboard 0.5s ease-in-out forwards;
 }
 
+/* Counter-rotate inner cells to keep text upright */
+.subboard-wrapper.rotating .cell {
+	animation: counterRotateSubboard 0.5s ease-in-out forwards;
+}
+
 /* rotate 90deg clockwise */
 @keyframes rotateSubboard {
 	from {
@@ -51,5 +56,15 @@
 	}
 	to {
 		transform: rotate(90deg);
+	}
+}
+
+/* rotate -90deg (counter-clockwise) to compensate */
+@keyframes counterRotateSubboard {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(-90deg);
 	}
 }

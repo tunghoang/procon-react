@@ -18,6 +18,7 @@ const AnswerBoard = ({
 	const [answer, setAnswer] = useState({});
 	const [maxStep, setMaxStep] = useState(0);
 	const [answerBoard, setAnswerBoard] = useState(startBoard);
+	const [animate, setAnimate] = useState(false);
 	const [currentStep, setCurrentStep] = useState({});
 
 	/** Apply rotations sequentially up to the given step index */
@@ -61,7 +62,7 @@ const AnswerBoard = ({
 	};
 
 	/** Handle board and score update when slider changes */
-	const handleBoardChange = (val) => {
+	const handleBoardChange = (val, shouldAnimate = true) => {
 		const ops = JSON.parse(answer.answer_data || "{}").ops || [];
 		const score = JSON.parse(answer.score_data || "{}");
 
@@ -77,11 +78,12 @@ const AnswerBoard = ({
 
 		onChange(score);
 		setAnswerBoard(curBoard);
-		setCurrentStep(ops[val] || {});
+		setCurrentStep(val > 0 ? ops[val - 1] : {});
+		setAnimate(shouldAnimate);
 	};
 
 	const handleBoardChangedb = debounce((val) => {
-		handleBoardChange(val);
+		handleBoardChange(val, true);
 	}, 100);
 
 	useEffect(() => {
@@ -99,7 +101,7 @@ const AnswerBoard = ({
 
 	useEffect(() => {
 		if (answer?.id) {
-			handleBoardChange(maxStep);
+			handleBoardChange(maxStep, false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [answer]);
@@ -133,6 +135,7 @@ const AnswerBoard = ({
 				step={currentStep}
 				cellSize={fillContainer ? null : cellSize}
 				fillContainer={fillContainer}
+				animate={animate}
 			/>
 		</>
 	);

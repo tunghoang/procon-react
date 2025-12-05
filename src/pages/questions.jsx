@@ -200,7 +200,7 @@ const Questions = () => {
 					modeLabel = "Random";
 					modeColor = "info";
 				} else if (row.mode === 1) {
-					modeLabel = "Special";
+					modeLabel = "Manual*";
 					modeColor = "warning";
 				} else {
 					modeLabel = "-";
