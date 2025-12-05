@@ -3,6 +3,7 @@ import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useApi, useFetchData } from "../api";
 import { api, showMessage } from "../api/commons";
+import { apiBulkDeleteQuestions } from "../api/question";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
@@ -42,11 +43,7 @@ const Questions = () => {
 		moves: [],
 	});
 	const [originalParams, setOriginalParams] = useState(null);
-	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
-		"/question",
-		"Question"
-	);
-	const apiDeleteDialog = useConfirmDelete();
+	const { apiCreate, apiEdit } = useApi("/question", "Question");
 	const {
 		data: questions,
 		refetch,
@@ -158,6 +155,9 @@ const Questions = () => {
 						color={row.match.is_active ? "success" : "default"}
 					/>
 				);
+			},
+			valueGetter: (params) => {
+				return params.row.match.name;
 			},
 		},
 		{
@@ -357,8 +357,16 @@ const Questions = () => {
 	};
 
 	const handleDeleteQuestion = async (questionId) => {
-		const result = await apiDeleteDialog([questionId]);
-		if (result.length) await refetch();
+		openConfirmDialog(
+			"Delete Question",
+			"Are you sure you want to delete this question? This will also delete all associated answers.",
+			async () => {
+				const result = await apiBulkDeleteQuestions([questionId]);
+				if (result) await refetch();
+				closeConfirmDialog();
+			},
+			"error"
+		);
 	};
 
 	const openConfirmDialog = (
@@ -485,8 +493,19 @@ const Questions = () => {
 		setDialogName("");
 	};
 	const clickDelete = async () => {
-		const result = await apiDeleteDialog(selectedIds);
-		if (result.length) await refetch();
+		openConfirmDialog(
+			"Delete Questions",
+			`Are you sure you want to delete ${selectedIds.length} question(s)? This will also delete all associated answers.`,
+			async () => {
+				const result = await apiBulkDeleteQuestions(selectedIds);
+				if (result) {
+					await refetch();
+					setSelectedIds([]);
+				}
+				closeConfirmDialog();
+			},
+			"error"
+		);
 	};
 	const saveInstance = async () => {
 		debugLog("Saving question with data:", currentItem);

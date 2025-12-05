@@ -5,7 +5,9 @@ import {
 	Tooltip,
 	Box,
 	Typography,
+	CircularProgress,
 } from "@mui/material";
+import { Suspense } from "react";
 import { useIntl } from "react-intl";
 import { useContext, useState } from "react";
 import { useApi } from "../api";
@@ -71,7 +73,6 @@ const Answers = () => {
 	// Use React Query to fetch answers with caching
 	const {
 		data: answerResponse,
-		isLoading,
 		error,
 		refetch,
 	} = useAnswers(roundId, filters, pagination, {
@@ -79,6 +80,7 @@ const Answers = () => {
 		enabled: !!roundId,
 		refetchInterval: 5000,
 		staleTime: 60000,
+		suspense: true,
 	});
 
 	// Extract answers and pagination metadata
@@ -426,26 +428,39 @@ const Answers = () => {
 						<Typography>Error loading answers: {error.message}</Typography>
 					</Box>
 				)}
-				<DataTable
-					rows={answers}
-					onRefresh={invalidateAnswers}
-					onFilterChange={handleFilterChange}
-					initialFilters={filters}
-					columns={columns}
-					onSelectionModelChange={(ids) => {
-						setSelectedIds(ids);
-					}}
-					loading={isLoading}
-					pagination={pagination}
-					onPaginationChange={handlePaginationChange}
-					totalCount={totalCount}
-					totalPages={totalPages}
-					initialState={{
-						sorting: {
-							sortModel: [{ field: "score", sort: "desc" }],
-						},
-					}}
-				/>
+				<Suspense
+					fallback={
+						<Box
+							sx={{
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "100%",
+							}}>
+							<CircularProgress />
+						</Box>
+					}>
+					<DataTable
+						rows={answers}
+						onRefresh={invalidateAnswers}
+						onFilterChange={handleFilterChange}
+						initialFilters={filters}
+						columns={columns}
+						onSelectionModelChange={(ids) => {
+							setSelectedIds(ids);
+						}}
+						loading={false}
+						pagination={pagination}
+						onPaginationChange={handlePaginationChange}
+						totalCount={totalCount}
+						totalPages={totalPages}
+						initialState={{
+							sorting: {
+								sortModel: [{ field: "score", sort: "desc" }],
+							},
+						}}
+					/>
+				</Suspense>
 			</Paper>
 			{dialogName === "ScoreDataDialog" && (
 				<ScoreDataDialog
