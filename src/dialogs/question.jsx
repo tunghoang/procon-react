@@ -12,11 +12,14 @@ import {
 	Tab,
 	Box,
 	Grid,
+    IconButton,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../api";
-import { useContext, useState, useMemo } from "react";
+import { showMessage } from "../api/commons";
+import { useContext, useState, useMemo, useEffect } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
 import GameBoard from "../components/procon25/game-board";
@@ -41,6 +44,13 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			},
 		},
 	});
+
+	useEffect(() => {
+		if (open) {
+			const isManual = instance?.mode === null;
+			setTabValue(isManual ? 1 : 0);
+		}
+	}, [open, instance?.mode]);
 
 	const handleTabChange = (event, newValue) => {
 		setTabValue(newValue);
@@ -110,30 +120,111 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 							</Grid>
 						</Grid>
 					</Box>
-					{!instance?.id && (
-						<Box>
-							<Tabs value={tabValue} onChange={handleTabChange}>
-								<Tab label="Parameters" />
-								<Tab label="Manual" />
-							</Tabs>
-							<Box sx={{ mt: 2 }}>
-								{tabValue === 0 && (
-									<CodeEditor
-										title="Parameters"
-										subTitle={"mode= 0: random; 1: optimal solution"}
-										readOnly={!!instance?.id}
-										defaultValue={{
-											size: 12,
-											mode: 0,
-											max_ops: 2,
-											rotations: 3,
-										}}
-										onValueChange={(value) =>
-											handleChange({ ...value, type: "parameters" })
-										}
-									/>
-								)}
-								{tabValue === 1 && (
+
+					<Box>
+						<Tabs value={tabValue} onChange={handleTabChange}>
+							<Tab label="Parameters" />
+							<Tab label="Manual" />
+						</Tabs>
+						<Box sx={{ mt: 2 }}>
+							{tabValue === 0 && (
+								<>
+									{!instance?.id ? (
+										<CodeEditor
+											title="Parameters"
+											subTitle={"mode= 0: random; 1: optimal solution"}
+											readOnly={!!instance?.id}
+											defaultValue={{
+												size: 12,
+												mode: 0,
+												max_ops: 2,
+												rotations: 3,
+											}}
+											onValueChange={(value) =>
+												handleChange({ ...value, type: "parameters" })
+											}
+										/>
+									) : (
+										<Box sx={{ mt: 2 }}>
+											<Box
+												sx={{
+													p: 2,
+													bgcolor: "warning.light",
+													borderRadius: 1,
+													mb: 2,
+												}}>
+												<span style={{ fontWeight: "bold" }}>⚠️ Warning:</span>{" "}
+												Changing size, mode, max_ops or rotations will
+												regenerate the question and{" "}
+												<strong>delete all existing answers</strong>.
+											</Box>
+											<Grid container spacing={2}>
+												<Grid size={{ xs: 3 }}>
+													<TextField
+														label="Size"
+														type="number"
+														fullWidth
+														variant="outlined"
+														value={instance?.size || ""}
+														onChange={(evt) =>
+															handleChange({
+																size: parseInt(evt.target.value) || 0,
+															})
+														}
+														inputProps={{ min: 4, max: 24, step: 2 }}
+													/>
+												</Grid>
+												<Grid size={{ xs: 3 }}>
+													<TextField
+														label="Mode"
+														type="number"
+														fullWidth
+														variant="outlined"
+														value={instance?.mode ?? ""}
+														onChange={(evt) =>
+															handleChange({
+																mode: parseInt(evt.target.value) || 0,
+															})
+														}
+														helperText="0: Random, 1: Special"
+														inputProps={{ min: 0, max: 1 }}
+													/>
+												</Grid>
+												<Grid size={{ xs: 3 }}>
+													<TextField
+														label="Max Ops"
+														type="number"
+														fullWidth
+														variant="outlined"
+														value={instance?.max_ops ?? ""}
+														onChange={(evt) =>
+															handleChange({
+																max_ops: parseInt(evt.target.value) || 0,
+															})
+														}
+													/>
+												</Grid>
+												<Grid size={{ xs: 3 }}>
+													<TextField
+														label="Rotations"
+														type="number"
+														fullWidth
+														variant="outlined"
+														value={instance?.rotations ?? ""}
+														onChange={(evt) =>
+															handleChange({
+																rotations: parseInt(evt.target.value) || 0,
+															})
+														}
+													/>
+												</Grid>
+											</Grid>
+										</Box>
+									)}
+								</>
+							)}
+							{tabValue === 1 && (
+                                <Box sx={{ position: "relative" }}>
 									<TextField
 										label="Raw Question Data"
 										multiline
@@ -144,6 +235,8 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 										value={
 											instance?.raw_questions
 												? JSON.stringify(instance.raw_questions)
+												: instance?.field?.entities
+												? JSON.stringify(instance.field.entities)
 												: ""
 										}
 										onChange={(evt) => {
@@ -151,91 +244,69 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												const parsedArray = JSON.parse(evt.target.value);
 												handleChange({
 													type: "manual",
+													mode: null, // Clear mode to indicate manual
 													raw_questions: parsedArray,
 												});
 											} catch (e) {
 												// Keep the text even if invalid JSON
+												// Note: Changes won't persist to raw_questions if invalid JSON,
+												// but we typically need a local state for the text input if we want to allow invalid typing.
+												// However, current implementation relies on instance state.
+												// For now, let's just update raw_questions as string?
+												// Actually, better to parse. If parse fails, we might just not call handleChange or pass raw string?
+												// The existing code passed parsed value.
+												// I will stick to existing pattern but maybe I should have let it stay as string until save?
+												// But `handleChange` updates parent state which feeds back into `value`.
+												// If I don't update parent state, typing is blocked.
+												// If I update with invalid string, JSON.stringify might escape it or it might break logic expecting array.
+												// Let's assume user pastes valid JSON or types carefully.
+												// Or better: store raw text in local state or pass raw value?
+												// Given the tool limits, I'll update it to try to handle it.
+											}
+											// To allow typing, we technically need to store the input string if it's invalid.
+											// But 'instance.raw_questions' is expected to be array.
+											// I'll assume valid input for now or minimal support.
+											// Wait, the previous code had a fallback:
+											// handleChange({ type: "manual", raw_questions: evt.target.value }) inside catch.
+											// But JSON.stringify(evt.target.value) would be valid JSON string "..."
+											// So it "works" but it's improper data structure. I'll restore that fallback.
+											try {
+												const parsedArray = JSON.parse(evt.target.value);
 												handleChange({
 													type: "manual",
+													mode: null,
+													raw_questions: parsedArray,
+												});
+											} catch (e) {
+												handleChange({
+													type: "manual",
+													mode: null,
 													raw_questions: evt.target.value,
 												});
 											}
 										}}
 									/>
-								)}
-							</Box>
+                                    <IconButton
+                                        size="small"
+                                        title="Copy raw data"
+                                        sx={{ position: "absolute", top: 8, right: 8 }}
+                                        onClick={() => {
+                                            const text = instance?.raw_questions
+                                                ? JSON.stringify(instance.raw_questions)
+                                                : instance?.field?.entities
+                                                ? JSON.stringify(instance.field.entities)
+                                                : "";
+                                            if (text) {
+                                                navigator.clipboard.writeText(text);
+                                                showMessage("Copied to clipboard", "success");
+                                            }
+                                        }}>
+                                        <ContentCopyIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+							)}
 						</Box>
-					)}
-					{instance?.id && instance?.mode != null && (
-						<Box sx={{ mt: 2 }}>
-							<Box
-								sx={{
-									p: 2,
-									bgcolor: "warning.light",
-									borderRadius: 1,
-									mb: 2,
-								}}>
-								<span style={{ fontWeight: "bold" }}>⚠️ Warning:</span> Changing
-								size, mode, max_ops or rotations will regenerate the question
-								and <strong>delete all existing answers</strong>.
-							</Box>
-							<Grid container spacing={2}>
-								<Grid size={{ xs: 3 }}>
-									<TextField
-										label="Size"
-										type="number"
-										fullWidth
-										variant="outlined"
-										value={instance?.size || ""}
-										onChange={(evt) =>
-											handleChange({ size: parseInt(evt.target.value) || 0 })
-										}
-										inputProps={{ min: 4, max: 24, step: 2 }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 3 }}>
-									<TextField
-										label="Mode"
-										type="number"
-										fullWidth
-										variant="outlined"
-										value={instance?.mode ?? ""}
-										onChange={(evt) =>
-											handleChange({ mode: parseInt(evt.target.value) || 0 })
-										}
-										helperText="0: Random, 1: Special"
-										inputProps={{ min: 0, max: 1 }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 3 }}>
-									<TextField
-										label="Max Ops"
-										type="number"
-										fullWidth
-										variant="outlined"
-										value={instance?.max_ops ?? ""}
-										onChange={(evt) =>
-											handleChange({ max_ops: parseInt(evt.target.value) || 0 })
-										}
-									/>
-								</Grid>
-								<Grid size={{ xs: 3 }}>
-									<TextField
-										label="Rotations"
-										type="number"
-										fullWidth
-										variant="outlined"
-										value={instance?.rotations ?? ""}
-										onChange={(evt) =>
-											handleChange({
-												rotations: parseInt(evt.target.value) || 0,
-											})
-										}
-									/>
-								</Grid>
-							</Grid>
-						</Box>
-					)}
+					</Box>
 				</Stack>
 			</DialogContent>
 			<DialogActions>
@@ -317,6 +388,16 @@ const QuestionDataDialog = ({
 				</Stack>
 			</DialogContent>
 			<DialogActions>
+				{entities && (
+					<Button
+						startIcon={<ContentCopyIcon />}
+						onClick={() => {
+							navigator.clipboard.writeText(JSON.stringify(entities));
+							showMessage("Copied question to clipboard", "success");
+						}}>
+						Copy
+					</Button>
+				)}
 				<Button onClick={close}>{tr({ id: "Close" })}</Button>
 			</DialogActions>
 		</Dialog>
