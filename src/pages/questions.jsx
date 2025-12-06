@@ -507,6 +507,34 @@ const Questions = () => {
 	const saveInstance = async () => {
 		debugLog("Saving question with data:", currentItem);
 
+		// Handle Manual Update for Existing Question
+		// If type is explicitly 'manual' (set by QuestionDialog when editing manual field)
+		if (currentItem.id && currentItem.type === "manual") {
+			openConfirmDialog(
+				"⚠️ Update Manual Question",
+				"You have updated the question data manually.\n\nThis will:\n• Update the board\n• Delete ALL existing answers for this question\n• Cannot be undone\n\nDo you want to continue?",
+				async () => {
+					try {
+						// apiEdit calls updateQuestion in backend, which we updated to delete answers if type=manual & raw_questions present
+						await apiEdit(currentItem.id, currentItem);
+						showMessage("Question updated manually", "success");
+						await refetch();
+						closeConfirmDialog();
+						setDialogName("");
+						setOriginalParams(null);
+					} catch (error) {
+						debugLog("Failed to update manual question:", error);
+						const errorMessage =
+							error.response?.data?.message || "Failed to update question";
+						showMessage(errorMessage, "error");
+						closeConfirmDialog();
+					}
+				},
+				"warning"
+			);
+			return;
+		}
+
 		// Check if editing and parameters changed (for non-manual questions)
 		if (currentItem.id && originalParams && currentItem.mode != null) {
 			const paramsChanged =

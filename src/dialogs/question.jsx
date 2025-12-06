@@ -224,7 +224,21 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 								</>
 							)}
 							{tabValue === 1 && (
-                                <Box sx={{ position: "relative" }}>
+                                <Box>
+                                    {instance?.id && (
+                                        <Box
+                                            sx={{
+                                                p: 2,
+                                                bgcolor: "warning.light",
+                                                borderRadius: 1,
+                                                mb: 2,
+                                            }}>
+                                            <span style={{ fontWeight: "bold" }}>⚠️ Warning:</span> Changing
+                                            question data will update the board and{" "}
+                                            <strong>delete all existing answers</strong>.
+                                        </Box>
+                                    )}
+                                    <Box sx={{ position: "relative" }}>
 									<TextField
 										label="Raw Question Data"
 										multiline
@@ -303,6 +317,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
                                         }}>
                                         <ContentCopyIcon fontSize="small" />
                                     </IconButton>
+                                    </Box>
                                 </Box>
 							)}
 						</Box>
