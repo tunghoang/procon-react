@@ -1,6 +1,7 @@
 import "./board.css";
 import { Stack } from "@mui/material";
-import { useMemo, memo } from "react";
+import { useMemo, memo, useState, useEffect, useRef } from "react";
+import { rotateSubBoard } from "./game-handler";
 
 const GameBoard = ({
 	board,
@@ -16,7 +17,7 @@ const GameBoard = ({
 	const cols = board[0]?.length || 0;
 
 	// mark matching horizontal/vertical pairs - memoized
-	const correctMap = useMemo(() => {
+	const finalMap = useMemo(() => {
 		const map = Array.from({ length: rows }, () => Array(cols).fill(false));
 		for (let i = 0; i < rows; i++) {
 			for (let j = 0; j < cols; j++) {
@@ -31,8 +32,39 @@ const GameBoard = ({
 		return map;
 	}, [board, rows, cols]);
 
+	const [displayMap, setDisplayMap] = useState(finalMap);
+	const prevMapRef = useRef(finalMap);
+
+	useEffect(() => {
+		// If animating and we have a previous map and a rotation occurred
+		if (animate && prevMapRef.current && n > 0) {
+			// Clone and rotate the PREVIOUS map to align with the NEW board geometry
+			// This makes the cells "look" like they have their old correctness status
+			const oldMapRotated = JSON.parse(JSON.stringify(prevMapRef.current));
+			rotateSubBoard(oldMapRotated, x, y, n);
+
+			// Show this old status immediately
+			setDisplayMap(oldMapRotated);
+
+			// After animation finishes (plus delay), switch to the new actual correctness
+			const timer = setTimeout(() => {
+				setDisplayMap(finalMap);
+			}, 800); // 0.5s animation + 1s delay
+
+			prevMapRef.current = finalMap;
+			return () => clearTimeout(timer);
+		} else {
+			// No animation or initial load: show correct map immediately
+			setDisplayMap(finalMap);
+			prevMapRef.current = finalMap;
+		}
+	}, [finalMap, animate, x, y, n]);
+
 	// render logic: when we hit (y,x) and a valid n, render subboard wrapper - memoized
 	const gridElements = useMemo(() => {
+		// Use displayMap for colors, if not ready yet fallback to finalMap
+		const currentCorrectMap = displayMap || finalMap;
+
 		const out = [];
 		for (let r = 0; r < rows; r++) {
 			for (let c = 0; c < cols; c++) {
@@ -44,7 +76,7 @@ const GameBoard = ({
 						for (let sc = 0; sc < n; sc++) {
 							const rr = y + sr;
 							const cc = x + sc;
-							const isCorrect = correctMap[rr][cc];
+							const isCorrect = currentCorrectMap[rr][cc];
 							const cls = `cell ${isCorrect ? "cell-correct" : "cell-wrong"}`;
 							subCells.push(
 								<div className={cls} key={`sub-${sr}-${sc}`}>
@@ -78,7 +110,7 @@ const GameBoard = ({
 						continue;
 					}
 
-					const isCorrect = correctMap[r][c];
+					const isCorrect = currentCorrectMap[r][c];
 					const cls = `cell ${isCorrect ? "cell-correct" : "cell-wrong"}`;
 					out.push(
 						<div
@@ -92,7 +124,7 @@ const GameBoard = ({
 			}
 		}
 		return out;
-	}, [board, correctMap, rows, cols, x, y, n]);
+	}, [board, displayMap, finalMap, rows, cols, x, y, n]);
 
 	const screenSize = useMemo(() => {
 		if (cellSize) return `${cellSize * cols}px`;

@@ -41,30 +41,30 @@
 /* rotating animation applied to the wrapper only */
 .subboard-wrapper.rotating {
 	transform-origin: center center;
-	animation: rotateSubboard 0.5s ease-in-out forwards;
+	animation: rotateSubboard 0.8s ease-in-out forwards;
 }
 
 /* Counter-rotate inner cells to keep text upright */
 .subboard-wrapper.rotating .cell {
-	animation: counterRotateSubboard 0.5s ease-in-out forwards;
+	/* animation: counterRotateSubboard 0.2s ease-in-out forwards; */
 }
 
-/* rotate 90deg clockwise */
+/* rotate 90deg clockwise (animate from -90 to 0) */
 @keyframes rotateSubboard {
 	from {
-		transform: rotate(0deg);
+		transform: rotate(-90deg);
 	}
 	to {
-		transform: rotate(90deg);
+		transform: rotate(0deg);
 	}
 }
 
-/* rotate -90deg (counter-clockwise) to compensate */
+/* Counter-rotate inner cells to keep text upright */
 @keyframes counterRotateSubboard {
 	from {
-		transform: rotate(0deg);
+		transform: rotate(90deg);
 	}
 	to {
-		transform: rotate(-90deg);
+		transform: rotate(0deg);
 	}
 }
