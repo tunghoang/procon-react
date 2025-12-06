@@ -11,6 +11,7 @@ import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
 import { api } from "../api/commons";
 import { apiBulkAddTeams, apiBulkRemoveTeams } from "../api/match";
+import { SERVICE_API } from "../config/env";
 import DataTable from "../components/DataTable/data-table";
 import PageToolbar from "../components/page-toolbar";
 import Context from "../context";
@@ -356,7 +357,7 @@ const Matches = () => {
 			[matchId]: newStatus,
 		}));
 		try {
-			await api.put(`${import.meta.env.VITE_SERVICE_API}/match/${matchId}`, {
+			await api.put(`${SERVICE_API}/match/${matchId}`, {
 				is_active: newStatus,
 			});
 		} catch (error) {
@@ -424,7 +425,7 @@ const Matches = () => {
 		try {
 			await Promise.all(
 				selectedMatchIds.map((id) =>
-					api.put(`${import.meta.env.VITE_SERVICE_API}/match/${id}`, {
+					api.put(`${SERVICE_API}/match/${id}`, {
 						is_active: activate,
 					})
 				)

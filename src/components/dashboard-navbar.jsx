@@ -22,6 +22,7 @@ import { useIntl } from "react-intl";
 import { useNavigate } from "@tanstack/react-router";
 import { Box } from "@mui/system";
 import { api, getError, showMessage } from "../api/commons";
+import { SERVICE_API } from "../config/env";
 import Context from "../context";
 import LanguageTrans from "./language-trans";
 import Logo from "./logo";
@@ -33,8 +34,6 @@ const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 	backgroundColor: theme.palette.background.paper,
 	boxShadow: theme.shadows[3],
 }));
-
-const SERVICE_API = import.meta.env.VITE_SERVICE_API;
 
 export const DashboardNavbar = (props) => {
 	const { onSidebarOpen, onSidebarClose, isSidebarOpen, ...other } = props;

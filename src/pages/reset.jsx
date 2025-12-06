@@ -20,6 +20,7 @@ import { useIntl } from "react-intl";
 import { useSearch } from "@tanstack/react-router";
 import Context from "../context";
 import { api } from "../api/commons";
+import { SERVICE_API } from "../config/env";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -65,7 +66,7 @@ const Reset = () => {
 		setResult((prev) => ({ ...prev, recalculate: null }));
 		try {
 			const response = await api.post(
-				`${import.meta.env.VITE_SERVICE_API}/answer/recalculate`,
+				`${SERVICE_API}/answer/recalculate`,
 				{ round_id: roundId }
 			);
 			setResult((prev) => ({ ...prev, recalculate: { success: response } }));
@@ -99,7 +100,7 @@ const Reset = () => {
 		setResult((prev) => ({ ...prev, deleteAnswers: null }));
 		try {
 			const response = await api.post(
-				`${import.meta.env.VITE_SERVICE_API}/answer/delete-by-round`,
+				`${SERVICE_API}/answer/delete-by-round`,
 				{ round_id: roundId }
 			);
 			setResult((prev) => ({ ...prev, deleteAnswers: { success: response } }));
@@ -133,7 +134,7 @@ const Reset = () => {
 		setResult((prev) => ({ ...prev, activateMatches: null }));
 		try {
 			const response = await api.post(
-				`${import.meta.env.VITE_SERVICE_API}/match/activate-by-round`,
+				`${SERVICE_API}/match/activate-by-round`,
 				{ round_id: roundId }
 			);
 			setResult((prev) => ({

@@ -5,6 +5,7 @@ import { api, getError, showMessage } from "../../api/commons";
 import { formatDateTime } from "../../utils/commons";
 import { dieCutting, getDieFromIdx } from "./game-handler";
 import { debounce } from "lodash";
+import { SERVICE_API } from "../../config/env";
 
 const AnswerBoard = ({
 	answerId,
@@ -41,7 +42,7 @@ const AnswerBoard = ({
 	const getAnswer = async () => {
 		try {
 			const result = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/answer/${answerId}`
+				`${SERVICE_API}/answer/${answerId}`
 			);
 			const ansData = JSON.parse(result.answer_data || "{}");
 			setMaxStep(ansData.n);

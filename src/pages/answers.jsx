@@ -22,6 +22,7 @@ import { useParams, useSearch, useNavigate } from "@tanstack/react-router";
 import { useAnswers, useInvalidateAnswers } from "../api/useAnswerQuery";
 import { debugLog } from "../utils/debug";
 import { formatDateTime, shortFormatDateTime } from "../utils/commons";
+import { SERVICE_API } from "../config/env";
 
 const Answers = () => {
 	const { formatMessage: tr } = useIntl();
@@ -271,9 +272,7 @@ const Answers = () => {
 					<IconButton
 						onClick={async () => {
 							const question = await api(
-								`${import.meta.env.VITE_SERVICE_API}/question/${
-									row.question_id
-								}`
+								`${SERVICE_API}/question/${row.question_id}`
 							);
 							setDialogInstance({
 								answers: [row],
@@ -374,7 +373,7 @@ const Answers = () => {
 	const handleExportToXlsx = async () => {
 		try {
 			const response = await fetch(
-				`${import.meta.env.VITE_SERVICE_API}/answer/export?round_id=${roundId}`,
+				`${SERVICE_API}/answer/export?round_id=${roundId}`,
 				{
 					method: "GET",
 					headers: {

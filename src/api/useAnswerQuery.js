@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { debugError, debugLog, debugWarn } from "../utils/debug";
 import { api } from "./commons";
+import { SERVICE_API } from "../config/env";
 
 /**
  * Query key factory for answers
@@ -59,7 +60,7 @@ const fetchAnswers = async (roundId, filters = {}, pagination = {}) => {
   debugLog("📡 Fetching answers with params:", params);
 
   try {
-    const response = await api.get(`${import.meta.env.VITE_SERVICE_API}/answer`, { params });
+    const response = await api.get(`${SERVICE_API}/answer`, { params });
 
     // api.get() already returns response.data due to interceptor (commons.js line 29)
     // Backend response format: { count, data, page, limit, totalPages }
@@ -126,7 +127,7 @@ export const useCreateAnswer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => api.post(`${import.meta.env.VITE_SERVICE_API}/answer`, data),
+    mutationFn: (data) => api.post(`${SERVICE_API}/answer`, data),
     onSuccess: () => {
       // Invalidate all answer queries to refetch
       queryClient.invalidateQueries({ queryKey: answerKeys.all });
@@ -142,7 +143,7 @@ export const useUpdateAnswer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }) => api.put(`${import.meta.env.VITE_SERVICE_API}/answer/${id}`, data),
+    mutationFn: ({ id, data }) => api.put(`${SERVICE_API}/answer/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: answerKeys.all });
     },
@@ -157,7 +158,7 @@ export const useDeleteAnswer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id) => api.delete(`${import.meta.env.VITE_SERVICE_API}/answer/${id}`),
+    mutationFn: (id) => api.delete(`${SERVICE_API}/answer/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: answerKeys.all });
     },

@@ -8,6 +8,7 @@ import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog, debugError } from "../utils/debug";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
+import { SERVICE_API } from "../config/env";
 
 const ScoreSummary = () => {
 	const { formatMessage: tr } = useIntl();
@@ -27,7 +28,7 @@ const ScoreSummary = () => {
 		setLoading(true);
 		try {
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/answer/summary`,
+				`${SERVICE_API}/answer/summary`,
 				{
 					params: { round_id: roundId },
 				}
@@ -49,7 +50,7 @@ const ScoreSummary = () => {
 	const handleExportToXlsx = async () => {
 		try {
 			const response = await fetch(
-				`${import.meta.env.VITE_SERVICE_API}/answer/export?round_id=${roundId}`,
+				`${SERVICE_API}/answer/export?round_id=${roundId}`,
 				{
 					method: "GET",
 					headers: {

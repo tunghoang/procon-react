@@ -2,6 +2,18 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Runtime configuration (SERVICE_API)
+
+- Build-time env `VITE_SERVICE_API` continues to work for local dev/CI builds.
+- At runtime you can override it by mounting `runtime-config.js` to the web root.
+- Example content to mount (already scaffolded under `public/runtime-config.js`):
+  ```js
+  window.__RUNTIME_CONFIG__ = {
+    VITE_SERVICE_API: "https://api.example.com"
+  };
+  ```
+- When running the nginx image, mount your file to `/usr/share/nginx/html/runtime-config.js` (read-only is fine). The app will prefer this value over the build-time one.
+
 ## Available Scripts
 
 In the project directory, you can run:

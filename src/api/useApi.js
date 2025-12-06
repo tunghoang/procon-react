@@ -9,7 +9,7 @@ import {
   showMessage,
 } from "./commons";
 
-const SERVICE_API = import.meta.env.VITE_SERVICE_API;
+import { SERVICE_API } from "../config/env";
 
 export const useApi = (pathName, apiName) => {
   const URL = SERVICE_API + pathName;

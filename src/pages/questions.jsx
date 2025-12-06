@@ -17,6 +17,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { debugLog } from "../utils/debug";
+import { SERVICE_API } from "../config/env";
 
 const Questions = () => {
 	const routeParams = useParams({ strict: false });
@@ -311,7 +312,7 @@ const Questions = () => {
 			// Fetch list of answers for this question
 			// Initially without full answer_data (will be loaded when user selects team)
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/answer`,
+				`${SERVICE_API}/answer`,
 				{
 					params: {
 						eq_question_id: questionRow.id,
@@ -397,9 +398,7 @@ const Questions = () => {
 			async () => {
 				try {
 					const response = await api.put(
-						`${
-							import.meta.env.VITE_SERVICE_API
-						}/question/${questionId}/regenerate`
+						`${SERVICE_API}/question/${questionId}/regenerate`
 					);
 					await refetch();
 					closeConfirmDialog();
@@ -441,11 +440,11 @@ const Questions = () => {
 			// Update both questions silently (without showing success messages)
 			await Promise.all([
 				api.put(
-					`${import.meta.env.VITE_SERVICE_API}/question/${currentQuestion.id}`,
+					`${SERVICE_API}/question/${currentQuestion.id}`,
 					{ order: targetOrder }
 				),
 				api.put(
-					`${import.meta.env.VITE_SERVICE_API}/question/${targetQuestion.id}`,
+					`${SERVICE_API}/question/${targetQuestion.id}`,
 					{ order: currentOrder }
 				),
 			]);
@@ -461,9 +460,7 @@ const Questions = () => {
 	const handleViewOptimalAnswers = async (questionRow) => {
 		try {
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/question/${
-					questionRow.id
-				}/optimal-answers`
+				`${SERVICE_API}/question/${questionRow.id}/optimal-answers`
 			);
 			setOptimalAnswersDialog({
 				open: true,
@@ -526,9 +523,7 @@ const Questions = () => {
 					async () => {
 						try {
 							await api.put(
-								`${import.meta.env.VITE_SERVICE_API}/question/${
-									currentItem.id
-								}/regenerate-with-params`,
+								`${SERVICE_API}/question/${currentItem.id}/regenerate-with-params`,
 								{
 									size: currentItem.size,
 									mode: currentItem.mode,

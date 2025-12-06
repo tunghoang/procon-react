@@ -10,6 +10,7 @@ import ScoreData from "../components/procon25/score-data";
 import AnswerBoard from "../components/procon25/answer-board";
 import GameBoard from "../components/procon25/game-board";
 import Context from "../context";
+import { SERVICE_API } from "../config/env";
 
 const useStyles = makeStyles({
 	root: {
@@ -145,7 +146,7 @@ const ScoreDataDialog = ({ open, instance, close }) => {
 		setLoadingAnswer(true);
 		try {
 			const fullAnswer = await axios.get(
-				`${import.meta.env.VITE_SERVICE_API}/answer/${answerMetadata.id}`,
+				`${SERVICE_API}/answer/${answerMetadata.id}`,
 				{
 					headers: {
 						Authorization: localStorage.getItem("token"),

@@ -4,8 +4,7 @@ import { useIntl } from "react-intl";
 import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import Context from "../context";
 import { api } from "../api/commons";
-
-const SERVICE_API = import.meta.env.VITE_SERVICE_API;
+import { SERVICE_API } from "../config/env";
 
 export default function Breadcrumb() {
 	const location = useLocation();

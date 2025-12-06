@@ -12,6 +12,7 @@ import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
 import { apiBulkAddTeams, apiBulkRemoveTeams } from "../api/match";
 import { api } from "../api/commons";
+import { SERVICE_API } from "../config/env";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import Context from "../context";
 import RoundDialog from "../dialogs/round";
@@ -63,7 +64,7 @@ const Rounds = () => {
 		setLoadingMatches(true);
 		try {
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/match`,
+				`${SERVICE_API}/match`,
 				{ params: { eq_round_id: round.id } }
 			);
 			setRoundMatches(response.data || []);
@@ -84,7 +85,7 @@ const Rounds = () => {
 			await apiBulkAddTeams(matchIds, teamIds);
 			// Refetch matches to update the dialog
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/match`,
+				`${SERVICE_API}/match`,
 				{ params: { eq_round_id: selectedRound.id } }
 			);
 			setRoundMatches(response.data || []);
@@ -102,7 +103,7 @@ const Rounds = () => {
 			await apiBulkRemoveTeams(matchIds, teamIds);
 			// Refetch matches to update the dialog
 			const response = await api.get(
-				`${import.meta.env.VITE_SERVICE_API}/match`,
+				`${SERVICE_API}/match`,
 				{ params: { eq_round_id: selectedRound.id } }
 			);
 			setRoundMatches(response.data || []);

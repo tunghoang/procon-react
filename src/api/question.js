@@ -1,6 +1,5 @@
 import { doPost, getError, showMessage } from "./commons";
-
-const SERVICE_API = import.meta.env.VITE_SERVICE_API;
+import { SERVICE_API } from "../config/env";
 const QUESTION_URL = SERVICE_API + "/question";
 
 // Bulk delete questions
