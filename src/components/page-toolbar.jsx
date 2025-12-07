@@ -2,10 +2,11 @@ import { Toolbar, Button, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-
+import { TimeIs } from "./time-is";
 import { useIntl } from "react-intl";
 const PageToolbar = ({
 	title,
+  showTimeIs = false,
 	showNew,
 	showEdit,
 	showDelete,
@@ -18,9 +19,14 @@ const PageToolbar = ({
 	const { formatMessage: tr } = useIntl();
 	return (
 		<Toolbar variant="dense" {...others}>
-			<Typography sx={{ flex: 1 }} variant="h6">
+			<Typography sx={{ flex: showTimeIs ? "unset" : 1 }} variant="h6">
 				{title}
 			</Typography>
+			{showTimeIs ? (
+				<TimeIs sx={{ flex: 1 }} />
+			) : (
+				<></>
+			)}
 			{showNew ? (
 				<Button onClick={handleNew}>
 					<AddIcon />

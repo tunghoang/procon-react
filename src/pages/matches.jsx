@@ -17,6 +17,7 @@ import PageToolbar from "../components/page-toolbar";
 import Context from "../context";
 import { ManageTeamMatchDialog, MatchDialog } from "../dialogs/match";
 import { formatDateTime } from "../utils/commons";
+import { TimeIs } from "../components/time-is";
 
 const Matches = () => {
 	const routeParams = useParams({ strict: false });
@@ -558,6 +559,7 @@ const Matches = () => {
 			<PageToolbar
 				title={tr({ id: "Matches" })}
 				showNew={!isReadOnly}
+        showTimeIs={true}
 				showDelete={!isReadOnly && !!selectedMatchIds.length}
 				handleNew={clickNew}
 				handleDelete={clickDelete}
