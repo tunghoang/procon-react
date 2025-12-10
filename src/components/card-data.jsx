@@ -108,6 +108,8 @@ const CardData = ({
 												</Typography>
 											</Button>
 										)}
+									</Grid>
+									<Grid sx={{ alignItems: "center", display: "flex" }}>
 										{handleEditDetail && (
 											<Button onClick={handleEditDetail}>
 												<SettingsIcon color="action" />

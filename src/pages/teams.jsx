@@ -28,39 +28,6 @@ const Teams = () => {
 		},
 	});
 
-	const filterOptions = [
-		{
-			key: "match_id",
-			label: "ID",
-			type: "text",
-		},
-		{
-			key: "match_name",
-			label: "Name",
-			type: "text",
-		},
-		{
-			key: "match_account",
-			label: "Account",
-			type: "text",
-		},
-		{
-			key: "match_is_admin",
-			label: "Role",
-			type: "boolean",
-			options: [
-				{
-					label: "Admin",
-					value: 1,
-				},
-				{
-					label: "User",
-					value: 0,
-				},
-			],
-		},
-	];
-
 	// Predefined colors for chips based on match id
 	const chipColors = [
 		{ bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" }, // violet
@@ -137,6 +104,9 @@ const Teams = () => {
 					})}
 				</Box>
 			),
+			valueGetter: (params) => {
+				return params.row.Matches?.map((match) => match.name);
+			},
 		},
 	];
 	const [dialogName, setDialogName] = useState("");
@@ -147,7 +117,9 @@ const Teams = () => {
 		setDialogName("TeamDialog");
 	};
 	const openDialog = (name) => {
-		const selectedTeam = teams.find((c) => c.id === selectedTeamIds[0]);
+		const selectedTeam = teams.find(
+			(c) => c.id === parseInt(selectedTeamIds[0])
+		);
 		if (name === "TeamPasswordDialog") selectedTeam.password = "";
 		else delete selectedTeam.password;
 		setCurrentTeam(selectedTeam);
@@ -199,7 +171,6 @@ const Teams = () => {
 				sx={{ height: "calc(100vh - 64px - 48px)", pt: 0, pb: 4, px: 2 }}>
 				<DataTable
 					rows={teams}
-					filterOptions={filterOptions}
 					onFilter={async (params) => await refetch(params)}
 					columns={columns}
 					onSelectionModelChange={(ids) => {
