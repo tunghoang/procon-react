@@ -18,6 +18,10 @@ import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import Context from "../../context";
 import LoadingPage from "../../components/loading-page";
 import { useParams, useSearch } from "@tanstack/react-router";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { IconButton, Tooltip } from "@mui/material";
+import { showMessage } from "../../api/commons";
+
 
 const UserQuestion = () => {
 	const { userMatch } = useContext(Context);
@@ -107,7 +111,7 @@ const UserQuestion = () => {
 			const uAnswers = answers.filter(
 				(item) => item.question_id === question.id
 			);
-			const questionData = JSON.parse(question.question_data || "{}");
+			// const questionData = JSON.parse(question.question_data || "{}");
 			return (
 				<Grid key={question.id} size={{ lg: 4, md: 6, xs: 12 }}>
 					<CardData
@@ -121,11 +125,31 @@ const UserQuestion = () => {
 									}}>
 									<div className="data-item">
 										<span>ID:</span> {question.id}
+										<Tooltip title="Copy ID">
+											<IconButton
+												size="small"
+												onClick={(e) => {
+													e.stopPropagation();
+													try {
+														navigator.clipboard.writeText(question.id);
+														showMessage("Copied ID to clipboard!", "success");
+													} catch (err) {
+														window.prompt("Copy this ID (Ctrl+C, Enter):", text);
+													}
+												}}
+												sx={{ ml: 0.5 }}
+											>
+												<ContentCopyIcon fontSize="inherit" />
+											</IconButton>
+										</Tooltip>
+									</div>
+									{/* <div className="data-item">
+										<span>ID:</span> {question.id}
 									</div>
 									<div className="data-item">
 										<span>Size:</span> {questionData.field?.size}
 									</div>
-									{/* <div className="data-item">
+									<div className="data-item">
                     <span>Width:</span> {questionData.board?.width}
                   </div>
                   <div className="data-item">
@@ -146,16 +170,18 @@ const UserQuestion = () => {
 							</Stack>
 						}
 						handleSelect={() => {
-							setDialogName("UserAnswerDialog");
-							setCurrentItem({
-								answers: uAnswers,
-								question,
-							});
-							setPayload({
-								question_id: question.id,
-							});
+							alert("TODO: jump to Game Server UI")
+							// setDialogName("UserAnswerDialog");
+							// setCurrentItem({
+							// 	answers: uAnswers,
+							// 	question,
+							// });
+							// setPayload({
+							// 	question_id: question.id,
+							// });
 						}}
-						showAction={!!uAnswers.length}
+						// showAction={!!uAnswers.length}
+						showAction={false}
 						action={
 							uAnswers.length && (
 								<Button

@@ -611,7 +611,7 @@ const Matches = () => {
 						setSelectedMatchIds(ids);
 					}}
 					loading={loading}
-					onRefresh={refetch}
+					onRefresh={() => refetch()}
 				/>
 			</mui.Paper>
 			{dialogName === "MatchDialog" && (

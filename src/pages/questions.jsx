@@ -168,48 +168,48 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			valueGetter: (params) => {
 				const data = JSON.parse(params.row.question_data || "{}");
-				return data.field?.size || data.parameters?.size || "-";
+				return `${data.width} x ${data.height}`;
 			},
 		},
-		{
-			field: "max_ops",
-			headerName: "Max Ops",
-			flex: 0.7,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => params.row.max_ops ?? "-",
-		},
-		{
-			field: "rotations",
-			headerName: "Rotations",
-			flex: 0.7,
-			headerClassName: "tableHeader",
-			valueGetter: (params) => params.row.rotations ?? "-",
-		},
-		{
-			field: "mode",
-			headerName: "Mode",
-			flex: 0.8,
-			headerClassName: "tableHeader",
-			renderCell: ({ row }) => {
-				const isManual =
-					row.mode === null || row.max_ops == null || row.rotations == null;
-				let modeLabel, modeColor;
-				if (isManual) {
-					modeLabel = "Manual";
-					modeColor = "error";
-				} else if (row.mode === 0) {
-					modeLabel = "Random";
-					modeColor = "info";
-				} else if (row.mode === 1) {
-					modeLabel = "Manual*";
-					modeColor = "warning";
-				} else {
-					modeLabel = "-";
-					modeColor = "default";
-				}
-				return <mui.Chip label={modeLabel} color={modeColor} size="small" />;
-			},
-		},
+		// {
+		// 	field: "max_ops",
+		// 	headerName: "Max Ops",
+		// 	flex: 0.7,
+		// 	headerClassName: "tableHeader",
+		// 	valueGetter: (params) => params.row.max_ops ?? "-",
+		// },
+		// {
+		// 	field: "rotations",
+		// 	headerName: "Rotations",
+		// 	flex: 0.7,
+		// 	headerClassName: "tableHeader",
+		// 	valueGetter: (params) => params.row.rotations ?? "-",
+		// },
+		// {
+		// 	field: "mode",
+		// 	headerName: "Mode",
+		// 	flex: 0.8,
+		// 	headerClassName: "tableHeader",
+		// 	renderCell: ({ row }) => {
+		// 		const isManual =
+		// 			row.mode === null || row.max_ops == null || row.rotations == null;
+		// 		let modeLabel, modeColor;
+		// 		if (isManual) {
+		// 			modeLabel = "Manual";
+		// 			modeColor = "error";
+		// 		} else if (row.mode === 0) {
+		// 			modeLabel = "Random";
+		// 			modeColor = "info";
+		// 		} else if (row.mode === 1) {
+		// 			modeLabel = "Manual*";
+		// 			modeColor = "warning";
+		// 		} else {
+		// 			modeLabel = "-";
+		// 			modeColor = "default";
+		// 		}
+		// 		return <mui.Chip label={modeLabel} color={modeColor} size="small" />;
+		// 	},
+		// },
 		{
 			field: "question_data",
 			headerName: tr({ id: "question-data" }),
@@ -229,25 +229,25 @@ const Questions = () => {
 				);
 			},
 		},
-		{
-			field: "answers",
-			headerName: tr({ id: "answer-data" }),
-			flex: 1,
-			headerClassName: "tableHeader",
-			filterable: false,
-			sortable: false,
-			renderCell: ({ row }) => {
-				return (
-					<mui.Tooltip title="View All Answers">
-						<mui.IconButton
-							color="primary"
-							onClick={() => handleViewAnswers(row)}>
-							<VisibilityIcon />
-						</mui.IconButton>
-					</mui.Tooltip>
-				);
-			},
-		},
+		// {
+		// 	field: "answers",
+		// 	headerName: tr({ id: "answer-data" }),
+		// 	flex: 1,
+		// 	headerClassName: "tableHeader",
+		// 	filterable: false,
+		// 	sortable: false,
+		// 	renderCell: ({ row }) => {
+		// 		return (
+		// 			<mui.Tooltip title="View All Answers">
+		// 				<mui.IconButton
+		// 					color="primary"
+		// 					onClick={() => handleViewAnswers(row)}>
+		// 					<VisibilityIcon />
+		// 				</mui.IconButton>
+		// 			</mui.Tooltip>
+		// 		);
+		// 	},
+		// },
 		{
 			field: "actions",
 			headerName: tr({ id: "actions" }),
@@ -482,7 +482,7 @@ const Questions = () => {
 			size: 12,
 			mode: 0,
 			type: "parameters",
-			raw_questions: [],
+			raw_questions: {},
 		});
 		setDialogName("QuestionDialog");
 	};
@@ -621,7 +621,7 @@ const Questions = () => {
 						setSelectedIds(ids);
 					}}
 					loading={loading}
-					onRefresh={refetch}
+					onRefresh={() => refetch()}
 				/>
 			</mui.Paper>
 			<QuestionDialog

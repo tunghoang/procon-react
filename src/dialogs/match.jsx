@@ -33,6 +33,13 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 	const startTime = instance?.start_time ? new Date(instance.start_time) : null;
 	const endTime = instance?.end_time ? new Date(instance.end_time) : null;
 
+	const withZeroSeconds = (date) => {
+		if (!date) return null;
+		const d = new Date(date);
+		d.setSeconds(0, 0);
+		return d;
+	};
+
 	return (
 		<Dialog
 			classes={{ paperScrollPaper: classes.root }}
@@ -70,7 +77,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 							label="Start Time"
 							value={startTime}
 							onChange={(newValue) => {
-								handleChange({ start_time: newValue });
+								handleChange({ start_time: withZeroSeconds(newValue) });
 							}}
 							slotProps={{
 								textField: {
@@ -83,7 +90,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 							label="End Time"
 							value={endTime}
 							onChange={(newValue) => {
-								handleChange({ end_time: newValue });
+								handleChange({ end_time: withZeroSeconds(newValue) });
 							}}
 							slotProps={{
 								textField: {
