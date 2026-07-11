@@ -116,18 +116,14 @@ export const DashboardNavbar = (props) => {
 						</Tooltip>
 						<Tooltip title="Token">
 							<IconButton
-								onClick={async () => {
+								onClick={() => {
 									const token = localStorage.getItem("token");
-									const isCopied = await copyText(token);
-									if (isCopied) {
-										showMessage("Copied token to clipboard!", "success", 2000);
-									} else {
-										showMessage(
-											"Copy unavailable — open DevTools to view the result.",
-											"warning",
-											2000
-										);
-									}
+										try {
+											navigator.clipboard.writeText(question.id);
+											showMessage("Copied token to clipboard", "success");
+										} catch (err) {
+											window.prompt("Copy this token (Ctrl+C, Enter):", question.id);
+										}
 								}}>
 								<VpnKeyIcon />
 							</IconButton>
