@@ -224,15 +224,15 @@ const Matches = () => {
 				return formatDateTime(value);
 			},
 		},
-		{
-			field: "end_time",
-			headerName: tr({ id: "end-time" }),
-			filterable: false,
-			flex: 1.5,
-			valueGetter: ({ value }) => {
-				return formatDateTime(value);
-			},
-		},
+		// {
+		// 	field: "end_time",
+		// 	headerName: tr({ id: "end-time" }),
+		// 	filterable: false,
+		// 	flex: 1.5,
+		// 	valueGetter: ({ value }) => {
+		// 		return formatDateTime(value);
+		// 	},
+		// },
 		{
 			field: "is_active",
 			headerName: tr({ id: "active" }),

@@ -86,7 +86,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 								},
 							}}
 						/>
-						<DateTimePicker
+						{/* <DateTimePicker
 							label="End Time"
 							value={endTime}
 							onChange={(newValue) => {
@@ -98,7 +98,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 									fullWidth: true,
 								},
 							}}
-						/>
+						/> */}
 						<FormControlLabel
 							sx={{ flexDirection: "row" }}
 							control={

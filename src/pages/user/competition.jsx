@@ -121,9 +121,9 @@ const Competition = () => {
 												{formatDateTime(match.start_time)}
 											</Typography>
 
-											<Typography variant="body2" color="text.secondary">
+											{/* <Typography variant="body2" color="text.secondary">
 												<strong>End:</strong> {formatDateTime(match.end_time)}
-											</Typography>
+											</Typography> */}
 										</Stack>
 									</>
 								}
