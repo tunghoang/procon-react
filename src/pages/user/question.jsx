@@ -134,7 +134,7 @@ const UserQuestion = () => {
 														navigator.clipboard.writeText(question.id);
 														showMessage("Copied ID to clipboard!", "success");
 													} catch (err) {
-														window.prompt("Copy this ID (Ctrl+C, Enter):", text);
+														window.prompt("Copy this ID (Ctrl+C, Enter):", question.id);
 													}
 												}}
 												sx={{ ml: 0.5 }}
