@@ -28,7 +28,6 @@ import LanguageTrans from "./language-trans";
 import Logo from "./logo";
 import Breadcrumb from "./breadcrumb";
 import TeamPasswordDialog from "../dialogs/password";
-import { copyText } from "../utils/commons";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 	backgroundColor: theme.palette.background.paper,
@@ -122,17 +121,14 @@ export const DashboardNavbar = (props) => {
 						<Tooltip title={tr({ id: "nav.copyToken" })}>
 							<IconButton
 								aria-label={tr({ id: "nav.copyToken" })}
-								onClick={async () => {
+								onClick={() => {
+									// navigator.clipboard.writeText requires a secure context
+									// (HTTPS/localhost) and silently fails to copy anything
+									// useful over plain HTTP -- go straight to a manual-copy
+									// prompt instead of a clipboard call that may or may not
+									// actually work.
 									const token = localStorage.getItem("token");
-									try {
-										navigator.clipboard.writeText(question.id);
-										showMessage("Copied token to clipboard", "success");
-									} catch (err) {
-										window.prompt(
-											"Copy this token (Ctrl+C, Enter):",
-											question.id,
-										);
-									}
+									window.prompt("Copy this token (Ctrl+C, Enter):", token || "");
 								}}>
 								<VpnKeyIcon />
 							</IconButton>
