@@ -8,7 +8,11 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+# Retried: npm's own "Exit handler never called!" bug intermittently kills
+# `npm install` under CPU/network contention (common on shared build hosts).
+RUN npm install --legacy-peer-deps \
+    || (sleep 5 && npm install --legacy-peer-deps) \
+    || (sleep 15 && npm install --legacy-peer-deps)
 
 # Copy source files
 COPY . .
