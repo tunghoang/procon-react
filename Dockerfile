@@ -17,9 +17,13 @@ RUN npm install --legacy-peer-deps \
 # Copy source files
 COPY . .
 
-# Build argument for API URL
+# Build arguments for API URLs -- Docker silently drops any docker-compose
+# build.args entry that isn't declared with ARG here, baking in Vite's ""
+# fallback instead (see api/gameService.js's getEnv default).
 ARG VITE_SERVICE_API=https://procon25.haiuet.me
 ENV VITE_SERVICE_API=$VITE_SERVICE_API
+ARG VITE_GAME_SERVICE_API=http://127.0.0.1:8001/api
+ENV VITE_GAME_SERVICE_API=$VITE_GAME_SERVICE_API
 
 # Build the application
 RUN npm run build
