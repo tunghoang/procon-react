@@ -161,6 +161,7 @@
   "questions.spots": "Spots",
   "questions.brands": "Brands",
   "questions.days": "Days",
+  "questions.dayLabel": "Day",
   "questions.stepsPerDay": "Steps/day",
   "questions.secondsPerDay": "Seconds/day",
   "questions.fuel": "Fuel limit",

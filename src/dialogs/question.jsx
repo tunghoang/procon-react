@@ -14,6 +14,7 @@ import {
 	Alert,
 	Chip,
 	IconButton,
+	Typography,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -68,8 +69,11 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 		busy_threshold: 2,
 		jam_threshold: 5,
 		day_count: 4,
-		steps: 40,
-		response_time: 90,
+		// One {steps, response_time} entry per day -- days still always run
+		// back-to-back (the docs' "no gap between days" rule isn't
+		// negotiable), but each day's own duration is independently settable
+		// instead of one value copied across every day.
+		dayConfigs: Array.from({ length: 4 }, () => ({ steps: 40, response_time: 90 })),
 		fuel: 80,
 		agent_selection_time_limit: 120,
 		starts_in_minutes: 2,
@@ -110,11 +114,32 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const changeGenParam = (key) => (evt) =>
 		setGenParams((prev) => ({ ...prev, [key]: parseInt(evt.target.value, 10) || 0 }));
 
+	// Resizes dayConfigs to match a new day_count, keeping existing per-day
+	// values and copying the last day's values into any newly added days.
+	const changeDayCount = (evt) => {
+		const n = Math.max(4, Math.min(10, parseInt(evt.target.value, 10) || 4));
+		setGenParams((prev) => {
+			const last = prev.dayConfigs[prev.dayConfigs.length - 1] || { steps: 40, response_time: 90 };
+			const dayConfigs = Array.from({ length: n }, (_, i) => prev.dayConfigs[i] || { ...last });
+			return { ...prev, day_count: n, dayConfigs };
+		});
+	};
+
+	const changeDayConfig = (index, key) => (evt) => {
+		const value = Math.max(0, parseInt(evt.target.value, 10) || 0);
+		setGenParams((prev) => ({
+			...prev,
+			dayConfigs: prev.dayConfigs.map((d, i) => (i === index ? { ...d, [key]: value } : d)),
+		}));
+	};
+
 	const stepBounds = {
 		min: genParams.width + genParams.height,
 		max: 4 * (genParams.width + genParams.height),
 	};
-	const fuelBounds = { min: genParams.steps, max: 3 * genParams.steps };
+	// fuelLimits must be within [1x, 3x] of Day 1's steps specifically (docs).
+	const day1Steps = genParams.dayConfigs[0]?.steps || stepBounds.min;
+	const fuelBounds = { min: day1Steps, max: 3 * day1Steps };
 
 	const handleGenerateBoard = () => {
 		if (!instance?.match_id) {
@@ -137,8 +162,8 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			const init = assembleInit({
 				board,
 				teams: matchTeams,
-				daySteps: Array.from({ length: genParams.day_count }, () => genParams.steps),
-				daySeconds: Array.from({ length: genParams.day_count }, () => genParams.response_time),
+				daySteps: genParams.dayConfigs.map((d) => d.steps),
+				daySeconds: genParams.dayConfigs.map((d) => d.response_time),
 				startsAt: Math.floor(Date.now() / 1000) + genParams.starts_in_minutes * 60,
 				agentSelectionTimeLimit: genParams.agent_selection_time_limit,
 				busyThreshold: genParams.busy_threshold,
@@ -287,19 +312,8 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 											</Grid>
 											<Grid size={{ xs: 2 }}>
 												<TextField label={tr({ id: "questions.days" })} type="number" fullWidth size="small"
-													value={genParams.day_count} onChange={changeGenParam("day_count")}
+													value={genParams.day_count} onChange={changeDayCount}
 													helperText="4-10" inputProps={{ min: 4, max: 10 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.stepsPerDay" })} type="number" fullWidth size="small"
-													value={genParams.steps} onChange={changeGenParam("steps")}
-													helperText={`${stepBounds.min}-${stepBounds.max}`}
-													inputProps={{ min: stepBounds.min, max: stepBounds.max }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.secondsPerDay" })} type="number" fullWidth size="small"
-													value={genParams.response_time} onChange={changeGenParam("response_time")}
-													inputProps={{ min: 1 }} />
 											</Grid>
 											<Grid size={{ xs: 2 }}>
 												<TextField label={tr({ id: "questions.fuel" })} type="number" fullWidth size="small"
@@ -352,6 +366,38 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												</Button>
 											</Grid>
 										</Grid>
+
+										{/* Per-day duration -- days still always run back-to-back (no
+										gaps: the docs rule isn't negotiable), but each day's own steps
+										and response time are independently settable instead of one
+										value copied across every day. */}
+										<Box sx={{ overflowX: "auto" }}>
+											<Stack direction="row" spacing={1}>
+												{genParams.dayConfigs.map((day, index) => (
+													<Stack key={index} spacing={0.5} sx={{ minWidth: 110 }}>
+														<Typography variant="caption" color="textSecondary" align="center">
+															{tr({ id: "questions.dayLabel" })} {index + 1}
+														</Typography>
+														<TextField
+															label={tr({ id: "questions.stepsPerDay" })}
+															type="number" size="small"
+															value={day.steps}
+															onChange={changeDayConfig(index, "steps")}
+															helperText={`${stepBounds.min}-${stepBounds.max}`}
+															inputProps={{ min: stepBounds.min, max: stepBounds.max }}
+														/>
+														<TextField
+															label={tr({ id: "questions.secondsPerDay" })}
+															type="number" size="small"
+															value={day.response_time}
+															onChange={changeDayConfig(index, "response_time")}
+															inputProps={{ min: 1 }}
+														/>
+													</Stack>
+												))}
+											</Stack>
+										</Box>
+
 										{instance?.match_id && matchTeams !== null && (
 											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<Chip

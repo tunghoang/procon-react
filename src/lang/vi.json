@@ -161,6 +161,7 @@
   "questions.spots": "Số quán",
   "questions.brands": "Số thương hiệu",
   "questions.days": "Số ngày",
+  "questions.dayLabel": "Ngày",
   "questions.stepsPerDay": "Bước/ngày",
   "questions.secondsPerDay": "Giây/ngày",
   "questions.fuel": "Giới hạn nhiên liệu",
