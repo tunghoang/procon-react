@@ -2,9 +2,11 @@ import React from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useNavigate } from "@tanstack/react-router";
+import { useIntl } from "react-intl";
 
 export default function NotFound() {
 	const navigate = useNavigate();
+	const { formatMessage: tr } = useIntl();
 	return (
 		<Box
 			component="main"
@@ -42,22 +44,21 @@ export default function NotFound() {
 						color="textPrimary"
 						variant="h4"
 						sx={{ mb: 3 }}>
-						Page Not Found
+						{tr({ id: "notfound.title" })}
 					</Typography>
 					<Typography
 						align="center"
 						color="textSecondary"
 						variant="subtitle1"
 						sx={{ mb: 4 }}>
-						The page you are looking for might have been removed, had its name
-						changed, or is temporarily unavailable.
+						{tr({ id: "notfound.message" })}
 					</Typography>
 					<Button
 						onClick={() => navigate({ to: "/" })}
 						variant="contained"
 						size="large"
 						sx={{ minWidth: 200 }}>
-						Go to Home
+						{tr({ id: "notfound.home" })}
 					</Button>
 				</Box>
 			</Container>

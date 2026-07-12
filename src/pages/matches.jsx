@@ -245,9 +245,9 @@ const Matches = () => {
 						: row.is_active;
 				if (isReadOnly) {
 					return isActive ? (
-						<mui.Chip label="Active" color="success" />
+						<mui.Chip label={tr({ id: "competition.active" })} color="success" />
 					) : (
-						<mui.Chip label="Inactive" />
+						<mui.Chip label={tr({ id: "competition.inactive" })} />
 					);
 				}
 				return (
@@ -270,7 +270,7 @@ const Matches = () => {
 				if (isReadOnly) return null;
 				return (
 					<mui.Stack direction="row" spacing={0.5}>
-						<mui.Tooltip title="Edit">
+						<mui.Tooltip title={tr({ id: "Edit" })}>
 							<mui.IconButton
 								size="small"
 								color="primary"
@@ -284,7 +284,7 @@ const Matches = () => {
 								<EditIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
-						<mui.Tooltip title="Manage Teams">
+						<mui.Tooltip title={tr({ id: "Manage Teams" })}>
 							<mui.IconButton
 								size="small"
 								color="primary"
@@ -298,7 +298,7 @@ const Matches = () => {
 								<GroupsIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
-						<mui.Tooltip title="Delete">
+						<mui.Tooltip title={tr({ id: "Delete" })}>
 							<mui.IconButton
 								size="small"
 								color="error"

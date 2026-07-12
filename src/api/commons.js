@@ -29,10 +29,9 @@ const createAPI = () => {
       return response.data;
     },
     (error) => {
-      if (
-        error.response?.status === 401 &&
-        error.response?.statusText === "Unauthorized"
-      ) {
+      // statusText is unreliable (often empty over HTTP/2) — the status
+      // code alone decides the auto-logout.
+      if (error.response?.status === 401) {
         localStorage.removeItem("token");
 
         // Redirect to login with callback URL (only once)

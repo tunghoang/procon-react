@@ -1,9 +1,20 @@
 import { useIntl } from "react-intl";
 import { useFormik } from "formik";
-import { useContext } from "react";
-import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import { useContext, useState } from "react";
+import {
+	Box,
+	Button,
+	Container,
+	IconButton,
+	InputAdornment,
+	TextField,
+	Typography,
+} from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import * as Yup from "yup";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { jwtDecode } from "jwt-decode";
 import Context from "../context";
 import { apiSignIn } from "../api";
 
@@ -12,6 +23,7 @@ const Login = () => {
 	const { updateLocalStorage } = useContext(Context);
 	const navigate = useNavigate();
 	const search = useSearch({ from: "/login" });
+	const [showPassword, setShowPassword] = useState(false);
 
 	const formik = useFormik({
 		initialValues: {
@@ -19,24 +31,36 @@ const Login = () => {
 			password: "",
 		},
 		validationSchema: Yup.object({
-			account: Yup.string().max(255).required("Account is required"),
-			password: Yup.string().max(255).required("Password is required"),
+			account: Yup.string()
+				.max(255)
+				.required(formatMessage({ id: "login.accountRequired" })),
+			password: Yup.string()
+				.max(255)
+				.required(formatMessage({ id: "login.passwordRequired" })),
 		}),
 		onSubmit: async (data) => {
 			const result = await apiSignIn(data);
 			if (result instanceof Error) {
 				return;
 			}
-			updateLocalStorage({
-				token: result.token,
-				locale: "vi-VN",
-			});
+			// Keep the user's stored locale; only the token changes on login.
+			updateLocalStorage({ token: result.token });
+
+			// The signin body is {id, token} for the admin backdoor and
+			// {id, is_admin, token} for teams — the JWT payload always carries
+			// is_admin, so decode it for the redirect decision.
+			let isAdmin = !!result.is_admin;
+			try {
+				isAdmin = !!jwtDecode(result.token)?.is_admin;
+			} catch {
+				// fall back to the response field
+			}
 
 			// Check if there's a redirect URL
 			if (search?.redirect) {
 				const redirectPath = decodeURIComponent(search.redirect);
 				navigate({ to: redirectPath });
-			} else if (result.team && result.team.is_admin) {
+			} else if (isAdmin) {
 				navigate({ to: "/tournament" });
 			} else {
 				navigate({ to: "/competition" });
@@ -67,7 +91,8 @@ const Login = () => {
 						label={formatMessage({ id: "Account" })}
 						margin="normal"
 						name="account"
-						type="account"
+						type="text"
+						autoComplete="username"
 						onBlur={formik.handleBlur}
 						onChange={formik.handleChange}
 						value={formik.values.account}
@@ -82,10 +107,22 @@ const Login = () => {
 						name="password"
 						onBlur={formik.handleBlur}
 						onChange={formik.handleChange}
-						type="password"
+						type={showPassword ? "text" : "password"}
 						value={formik.values.password}
 						variant="outlined"
-						autoComplete="on"
+						autoComplete="current-password"
+						InputProps={{
+							endAdornment: (
+								<InputAdornment position="end">
+									<IconButton
+										aria-label={formatMessage({ id: "login.togglePassword" })}
+										onClick={() => setShowPassword((show) => !show)}
+										edge="end">
+										{showPassword ? <VisibilityOff /> : <Visibility />}
+									</IconButton>
+								</InputAdornment>
+							),
+						}}
 					/>
 					<Box sx={{ py: 2 }}>
 						<Button

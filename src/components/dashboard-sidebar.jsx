@@ -27,16 +27,17 @@ const items = [
 		icon: <QuizIcon fontSize="small" />,
 		title: "Questions",
 	},
-	{
-		href: "/admin/answers",
-		icon: <QuestionAnswerIcon fontSize="small" />,
-		title: "Answers",
-	},
-	{
-		href: "/admin/score-summary",
-		icon: <SummarizeIcon fontSize="small" />,
-		title: "score-summary",
-	},
+	// procon25 legacy — hidden for HEXUDON (routes still exist):
+	// {
+	// 	href: "/admin/answers",
+	// 	icon: <QuestionAnswerIcon fontSize="small" />,
+	// 	title: "Answers",
+	// },
+	// {
+	// 	href: "/admin/score-summary",
+	// 	icon: <SummarizeIcon fontSize="small" />,
+	// 	title: "score-summary",
+	// },
 ];
 
 export const DashboardSidebar = (props) => {
@@ -79,6 +80,8 @@ export const DashboardSidebar = (props) => {
 					))}
 					<Divider light={true} />
 				</Box>
+				{/* procon25 legacy — the reset page calls endpoints that do not
+				    exist in the backend; hidden for HEXUDON (route still exists).
 				<Box sx={{ pb: 2, px: 2 }}>
 					<Link
 						to="/admin/reset"
@@ -101,7 +104,7 @@ export const DashboardSidebar = (props) => {
 							Admin Actions
 						</Button>
 					</Link>
-				</Box>
+				</Box> */}
 			</Box>
 		</Box>
 	);

@@ -1,0 +1,15 @@
+node_modules
+build
+.git
+
+# Local/dev env files must never leak into a build -- Dockerfile's ARG/ENV
+# (or docker-compose build.args) is the only intended way to set
+# VITE_SERVICE_API/VITE_GAME_SERVICE_API for an image. A stray local .env with
+# VITE_MOCK_API=1 would otherwise get COPYed in and silently ship a mocked
+# "production" build (plain `vite build` loads the base .env; see mock/index.js).
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging

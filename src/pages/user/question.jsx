@@ -17,7 +17,7 @@ import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import Context from "../../context";
 import LoadingPage from "../../components/loading-page";
-import { useParams, useSearch } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { IconButton, Tooltip } from "@mui/material";
 import { showMessage } from "../../api/commons";
@@ -25,6 +25,7 @@ import { showMessage } from "../../api/commons";
 
 const UserQuestion = () => {
 	const { userMatch } = useContext(Context);
+	const navigate = useNavigate();
 	const routeParams = useParams({ strict: false });
 	const searchParams = useSearch({ strict: false });
 
@@ -170,15 +171,12 @@ const UserQuestion = () => {
 							</Stack>
 						}
 						handleSelect={() => {
-							alert("TODO: jump to Game Server UI")
-							// setDialogName("UserAnswerDialog");
-							// setCurrentItem({
-							// 	answers: uAnswers,
-							// 	question,
-							// });
-							// setPayload({
-							// 	question_id: question.id,
-							// });
+							// HEXUDON (procon26): each question is a game on the
+							// game service; open the play screen for it.
+							navigate({
+								to: "/competition/game/$gameId",
+								params: { gameId: question.id },
+							});
 						}}
 						// showAction={!!uAnswers.length}
 						showAction={false}

@@ -18,6 +18,7 @@ import NotFound from "./pages/not-found";
 import Forbidden from "./pages/forbidden";
 import Competition from "./pages/user/competition";
 import UserQuestion from "./pages/user/question";
+import UserGame from "./pages/user/game";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { DashboardLayout } from "./components/dashboard-layout";
 import { RequireAdmin } from "./components/require-admin";
@@ -27,7 +28,7 @@ const rootRoute = createRootRoute({
 	component: () => (
 		<>
 			<Outlet />
-			<TanStackRouterDevtools />
+			{import.meta.env.DEV && <TanStackRouterDevtools />}
 		</>
 	),
 	notFoundComponent: NotFound,
@@ -109,6 +110,13 @@ const competitionDetailRoute = createRoute({
 	component: Competition,
 });
 
+// HEXUDON (procon26) play screen; gameId = question id on the game service.
+const competitionGameRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	path: "/competition/game/$gameId",
+	component: UserGame,
+});
+
 // Admin routes
 const adminTeamsRoute = createRoute({
 	getParentRoute: () => adminLayoutRoute,
@@ -185,6 +193,7 @@ const routeTree = rootRoute.addChildren([
 	tournamentRoundMatchQuestionsRoute,
 	competitionIndexRoute,
 	competitionDetailRoute,
+	competitionGameRoute,
 	adminLayoutRoute.addChildren([
 		adminTeamsRoute,
 		adminMatchesRoute,

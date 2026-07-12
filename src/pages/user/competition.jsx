@@ -18,6 +18,7 @@ import CardData from "../../components/card-data";
 import LoadingPage from "../../components/loading-page";
 import { formatDateTime } from "../../utils/commons";
 import TournamentIcon from "@mui/icons-material/EmojiEvents";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 const Competition = () => {
 	const { tournamentId, roundId } = useParams({ strict: false });
@@ -35,7 +36,7 @@ const Competition = () => {
 							...(tournamentId && { eq_tournament_id: tournamentId }),
 							...(roundId && { eq_round_id: roundId }),
 						},
-				  }
+					}
 				: undefined,
 	});
 
@@ -55,7 +56,7 @@ const Competition = () => {
 						verticalAlign: "middle",
 						lineHeight: "300px",
 					}}>
-					No matches available
+					{tr({ id: "competition.noMatches" })}
 				</Typography>
 			);
 
@@ -96,54 +97,70 @@ const Competition = () => {
 					<Chip label={group.round} color="warning" />
 				</Typography>
 				<Grid container spacing={3}>
-					{group.matches.map((match) => (
-						<Grid key={match.id} size={{ lg: 4, md: 6, xs: 12 }}>
-							<CardData
-								style={{ border: "1px solid", borderColor: "#b6bdc5ff" }}
-								header={
-									match.is_active ? (
-										<Chip label="Active" color="success" />
-									) : (
-										<Chip label="Inactive" />
-									)
-								}
-								disabled={!match.is_active}
-								name={match.name}
-								description={
-									<>
-										<Stack spacing={0.5}>
-											<Typography variant="body1" color="text.primary">
-												{match.description}
-											</Typography>
+					{group.matches.map((match) => {
+						const openMatch = () => {
+							const matchTournamentId = match.round.tournament.id;
+							const matchRoundId = match.round.id;
+							navigate({
+								to: `/tournament/$tournamentId/round/$roundId/match/$matchId/questions`,
+								params: {
+									tournamentId: matchTournamentId,
+									roundId: matchRoundId,
+									matchId: match.id,
+								},
+							});
+							updateContext({ userMatch: match });
+						};
+						return (
+							<Grid key={match.id} size={{ lg: 4, md: 6, xs: 12 }}>
+								<CardData
+									style={{ border: "1px solid", borderColor: "#b6bdc5ff" }}
+									header={
+										match.is_active ? (
+											<Chip
+												label={tr({ id: "competition.active" })}
+												color="success"
+											/>
+										) : (
+											<Chip label={tr({ id: "competition.inactive" })} />
+										)
+									}
+									disabled={!match.is_active}
+									name={match.name}
+									description={
+										<>
+											<Stack spacing={0.5}>
+												<Typography variant="body1" color="text.primary">
+													{match.description}
+												</Typography>
 
-											<Typography variant="body2" color="text.secondary">
-												<strong>Start:</strong>{" "}
-												{formatDateTime(match.start_time)}
-											</Typography>
+												<Typography variant="body2" color="text.secondary">
+													<strong>{tr({ id: "competition.start" })}:</strong>{" "}
+													{formatDateTime(match.start_time)}
+												</Typography>
 
-											{/* <Typography variant="body2" color="text.secondary">
-												<strong>End:</strong> {formatDateTime(match.end_time)}
-											</Typography> */}
-										</Stack>
-									</>
-								}
-								showAction={false}
-								handleSelect={() => {
-									const matchTournamentId = match.round.tournament.id;
-									const matchRoundId = match.round.id;
-									navigate({
-										to: `/tournament/$tournamentId/round/$roundId/match/$matchId/questions`,
-										params: {
-											tournamentId: matchTournamentId,
-											roundId: matchRoundId,
-											matchId: match.id,
-										},
-									});
-									updateContext({ userMatch: match });
-								}}
-							/>
-						</Grid>
-					))}
+												<Typography variant="body2" color="text.secondary">
+													<strong>{tr({ id: "competition.end" })}:</strong>{" "}
+													{formatDateTime(match.end_time)}
+												</Typography>
+											</Stack>
+										</>
+									}
+									action={
+										<Button
+											fullWidth
+											variant="contained"
+											disabled={!match.is_active}
+											startIcon={<PlayArrowIcon />}
+											onClick={openMatch}>
+											{tr({ id: "competition.enter" })}
+										</Button>
+									}
+									handleSelect={openMatch}
+								/>
+							</Grid>
+						);
+					})}
 				</Grid>
 			</Box>
 		));
@@ -153,10 +170,7 @@ const Competition = () => {
 
 	return (
 		<>
-			<DashboardNavbar
-				position="fixed"
-				sx={{ left: 0, width: "100%" }}
-			/>
+			<DashboardNavbar position="fixed" sx={{ left: 0, width: "100%" }} />
 			<Box sx={{ pt: 10, minHeight: "100vh" }}>
 				<Container maxWidth="lg">
 					<Toolbar

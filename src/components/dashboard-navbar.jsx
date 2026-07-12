@@ -49,7 +49,7 @@ export const DashboardNavbar = (props) => {
 			showMessage(
 				`Ping: ${Math.abs(Date.now() - new Date(res.time))} ms`,
 				"success",
-				2000
+				2000,
 			);
 		} catch (e) {
 			showMessage(getError(e), "error");
@@ -101,7 +101,9 @@ export const DashboardNavbar = (props) => {
 						left: 0,
 						px: 2,
 					}}>
-					<IconButton onClick={toggleSidebar}>
+					<IconButton
+						aria-label={tr({ id: "nav.menu" })}
+						onClick={toggleSidebar}>
 						<MenuIcon fontSize="small" />
 					</IconButton>
 					<Stack direction={"row"} flexGrow={1} alignItems="center" spacing={2}>
@@ -109,38 +111,50 @@ export const DashboardNavbar = (props) => {
 						<Breadcrumb />
 					</Stack>
 					<Stack direction={"row"} spacing={3} alignItems="center">
-						<Tooltip title="Ping">
-							<IconButton sx={{ ml: 3 }} onClick={handleCheckTime}>
+						<Tooltip title={tr({ id: "nav.ping" })}>
+							<IconButton
+								sx={{ ml: 3 }}
+								aria-label={tr({ id: "nav.ping" })}
+								onClick={handleCheckTime}>
 								<AccessTimeIcon />
 							</IconButton>
 						</Tooltip>
-						<Tooltip title="Token">
+						<Tooltip title={tr({ id: "nav.copyToken" })}>
 							<IconButton
-								onClick={() => {
+								aria-label={tr({ id: "nav.copyToken" })}
+								onClick={async () => {
 									const token = localStorage.getItem("token");
-										try {
-											navigator.clipboard.writeText(question.id);
-											showMessage("Copied token to clipboard", "success");
-										} catch (err) {
-											window.prompt("Copy this token (Ctrl+C, Enter):", question.id);
-										}
+									try {
+										navigator.clipboard.writeText(question.id);
+										showMessage("Copied token to clipboard", "success");
+									} catch (err) {
+										window.prompt(
+											"Copy this token (Ctrl+C, Enter):",
+											question.id,
+										);
+									}
 								}}>
 								<VpnKeyIcon />
 							</IconButton>
 						</Tooltip>
-						<Tooltip title="Competition">
-							<IconButton onClick={() => navigate({ to: "/competition" })}>
+						<Tooltip title={tr({ id: "nav.competition" })}>
+							<IconButton
+								aria-label={tr({ id: "nav.competition" })}
+								onClick={() => navigate({ to: "/competition" })}>
 								<SportsMmaIcon />
 							</IconButton>
 						</Tooltip>
-						<Tooltip title="Password">
-							<IconButton onClick={() => setDialogName("TeamPasswordDialog")}>
+						<Tooltip title={tr({ id: "nav.changePassword" })}>
+							<IconButton
+								aria-label={tr({ id: "nav.changePassword" })}
+								onClick={() => setDialogName("TeamPasswordDialog")}>
 								<HttpsIcon />
 							</IconButton>
 						</Tooltip>
 						{team?.is_admin && (
-							<Tooltip title="Admin Only">
+							<Tooltip title={tr({ id: "nav.adminArea" })}>
 								<IconButton
+									aria-label={tr({ id: "nav.adminArea" })}
 									onClick={() => navigate({ to: "/tournament" })}
 									color="error">
 									<AdminPanelSettingsIcon />
@@ -166,6 +180,7 @@ export const DashboardNavbar = (props) => {
 						<Tooltip title={tr({ id: "Sign Out" })}>
 							<IconButton
 								sx={{ ml: 1 }}
+								aria-label={tr({ id: "Sign Out" })}
 								onClick={() => {
 									updateLocalStorage({ token: null });
 									navigate({ to: "/login" });

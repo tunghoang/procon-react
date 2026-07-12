@@ -15,13 +15,15 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useParams, useSearch } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { debugLog } from "../utils/debug";
 import { SERVICE_API } from "../config/env";
 
 const Questions = () => {
 	const routeParams = useParams({ strict: false });
 	const searchParams = useSearch({ strict: false });
+	const navigate = useNavigate();
 	const roundId =
 		routeParams.roundId || searchParams.roundId || searchParams.round_id;
 	const { formatMessage: tr } = useIntl();
@@ -168,7 +170,9 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			valueGetter: (params) => {
 				const data = JSON.parse(params.row.question_data || "{}");
-				return `${data.width} x ${data.height}`;
+				// question_data holds the /game/init body: size lives under map.
+				const map = data.map || data;
+				return map.width ? `${map.width} x ${map.height}` : "-";
 			},
 		},
 		// {
@@ -217,7 +221,7 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
 				return (
-					<mui.Tooltip title="View Question Data">
+					<mui.Tooltip title={tr({ id: "questions.viewData" })}>
 						<mui.IconButton
 							onClick={() => {
 								setQuestion(row);
@@ -255,27 +259,20 @@ const Questions = () => {
 			sortable: false,
 			flex: 1,
 			renderCell: ({ row }) => {
-				const isManual =
-					row.mode === null || row.max_ops == null || row.rotations == null;
-				const isSpecial =
-					row.mode === 1 && row.max_ops != null && row.rotations != null;
+				// procon25 legacy — regenerate/optimal-answers hidden for HEXUDON.
 				return (
 					<mui.Stack direction="row" spacing={0.5}>
-						<mui.Tooltip
-							title={
-								isManual ? "Cannot regenerate manual question" : "Regenerate"
-							}>
-							<span>
-								<mui.IconButton
-									size="small"
-									color="warning"
-									disabled={isManual}
-									onClick={() => handleRegenerateQuestion(row.id)}>
-									<AutorenewIcon fontSize="small" />
-								</mui.IconButton>
-							</span>
+						<mui.Tooltip title={tr({ id: "questions.openGame" })}>
+							<mui.IconButton
+								size="small"
+								color="success"
+								onClick={() =>
+									navigate({ to: `/competition/game/${row.id}` })
+								}>
+								<SportsEsportsIcon fontSize="small" />
+							</mui.IconButton>
 						</mui.Tooltip>
-						<mui.Tooltip title="Edit">
+						<mui.Tooltip title={tr({ id: "Edit" })}>
 							<mui.IconButton
 								size="small"
 								color="primary"
@@ -283,7 +280,7 @@ const Questions = () => {
 								<EditIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
-						<mui.Tooltip title="Delete">
+						<mui.Tooltip title={tr({ id: "Delete" })}>
 							<mui.IconButton
 								size="small"
 								color="error"
@@ -291,16 +288,6 @@ const Questions = () => {
 								<DeleteIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
-						{isSpecial && (
-							<mui.Tooltip title="View Optimal Answers">
-								<mui.IconButton
-									size="small"
-									color="success"
-									onClick={() => handleViewOptimalAnswers(row)}>
-									<VisibilityIcon fontSize="small" />
-								</mui.IconButton>
-							</mui.Tooltip>
-						)}
 					</mui.Stack>
 				);
 			},
@@ -448,12 +435,12 @@ const Questions = () => {
 					{ order: currentOrder }
 				),
 			]);
-			showMessage("Question order changed successfully", "success");
+			showMessage(tr({ id: "questions.orderChanged" }), "success");
 
 			await refetch();
 		} catch (error) {
 			debugLog("Failed to move question:", error);
-			showMessage("Failed to change order", "error");
+			showMessage(tr({ id: "questions.orderChangeFailed" }), "error");
 		}
 	};
 
@@ -469,7 +456,7 @@ const Questions = () => {
 			});
 		} catch (error) {
 			debugLog("Failed to fetch optimal answers:", error);
-			showMessage("Failed to fetch optimal answers", "error");
+			showMessage(tr({ id: "questions.optimalFetchFailed" }), "error");
 		}
 	};
 
@@ -477,12 +464,7 @@ const Questions = () => {
 		setCurrentItem({
 			name: "New Question",
 			match_id: "",
-			start_time: null,
-			end_time: null,
-			size: 12,
-			mode: 0,
-			type: "parameters",
-			raw_questions: {},
+			raw_questions: null,
 		});
 		setDialogName("QuestionDialog");
 	};
@@ -517,7 +499,7 @@ const Questions = () => {
 					try {
 						// apiEdit calls updateQuestion in backend, which we updated to delete answers if type=manual & raw_questions present
 						await apiEdit(currentItem.id, currentItem);
-						showMessage("Question updated manually", "success");
+						showMessage(tr({ id: "questions.updatedManually" }), "success");
 						await refetch();
 						closeConfirmDialog();
 						setDialogName("");
@@ -705,7 +687,7 @@ const Questions = () => {
 								navigator.clipboard.writeText(
 									JSON.stringify(optimalAnswersDialog.moves)
 								);
-								showMessage("Copied to clipboard!", "success");
+								showMessage(tr({ id: "common.copied" }), "success");
 							}}>
 							Copy
 						</mui.Button>
