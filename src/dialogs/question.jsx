@@ -22,6 +22,7 @@ import {
 	CircularProgress,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import { DateTimePicker } from "@mui/x-date-pickers";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CasinoIcon from "@mui/icons-material/Casino";
 import { useIntl } from "react-intl";
@@ -68,8 +69,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 
 	const [genParams, setGenParams] = useState({
 		difficulty: "medium",
-		starts_in_minutes: 2,
-		seed: 1,
+		// Absolute Day-1 start time (a Date). Defaults to 2 min out, and to the
+		// match's own start_time once the match loads (below). The days run
+		// continuously from here; the match end is simply start + total day time.
+		starts_at: new Date(Date.now() + 2 * 60 * 1000),
+		// Default the map seed to the current timestamp (ms) so every new
+		// question gets a fresh, unique board without the admin clicking the
+		// dice. Re-seeded each time the dialog opens (below); the dice still
+		// re-rolls, and after Generate the field shows the seed actually used.
+		seed: Date.now(),
 	});
 	const [generating, setGenerating] = useState(false);
 	const [matchTeams, setMatchTeams] = useState(null);
@@ -81,6 +89,9 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			setTabValue(0);
 			setManualText("");
 			setManualErrors([]);
+			// Fresh unique seed per dialog open, so consecutive new questions
+			// don't all regenerate the same board.
+			setGenParams((prev) => ({ ...prev, seed: Date.now() }));
 		}
 	}, [open]);
 
@@ -94,7 +105,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			try {
 				// Single-object endpoint — api.get returns the match body.
 				const match = await api.get(`${SERVICE_API}/match/${instance.match_id}`);
-				if (!cancelled) setMatchTeams(match?.teams || []);
+				if (!cancelled) {
+					setMatchTeams(match?.teams || []);
+					// Default the Day-1 start to the match's own start_time so
+					// setting it on the match flows straight into the game.
+					if (match?.start_time) {
+						setGenParams((prev) => ({ ...prev, starts_at: new Date(match.start_time) }));
+					}
+				}
 			} catch {
 				if (!cancelled) setMatchTeams([]);
 			}
@@ -148,19 +166,20 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				throw new Error("map generation returned no teams");
 			}
 			const sharedAgents = response.teams[0].agents;
+			const startsAtSec = Math.floor(new Date(genParams.starts_at).getTime() / 1000);
+			if (!Number.isFinite(startsAtSec)) {
+				throw new Error("invalid start time");
+			}
 			const init = {
 				...response,
-				// startsAt here is only for the preview label. The real anchor is
-				// computed by the team manager at POST /game/init time from
-				// starts_in_minutes below -- so a slow admin (generate, then edit
-				// name/days, then save) can't ship a startsAt already in the past.
-				startsAt: Math.floor(Date.now() / 1000) + genParams.starts_in_minutes * 60,
-				starts_in_minutes: genParams.starts_in_minutes,
-				// Day 1 begins exactly AT startsAt (= "starts in N minutes"); the
-				// lead-in IS the agent-type selection window (teams pick during
-				// the countdown). agent_selection_time_limit=0 means no extra
-				// window is tacked on AFTER startsAt -- so "start in 1 min" isn't
-				// silently inflated by the selection window.
+				// Absolute Day-1 start chosen by the admin (defaults to the match's
+				// start_time). Days run continuously from here; the match "end" is
+				// simply startsAt + the sum of the day durations.
+				startsAt: startsAtSec,
+				// Day 1 begins exactly AT startsAt; the lead-in (now .. startsAt) IS
+				// the agent-type selection window (teams pick during the countdown).
+				// agent_selection_time_limit=0 means no extra window is tacked on
+				// after startsAt.
 				agent_selection_time_limit: 0,
 				teams: matchTeams.map((t) => ({ team_id: String(t.id), agents: sharedAgents })),
 			};
@@ -298,9 +317,12 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												</FormControl>
 											</Grid>
 											<Grid size={{ xs: 3 }}>
-												<TextField label={tr({ id: "questions.startsInMinutes" })} type="number" fullWidth size="small"
-													value={genParams.starts_in_minutes} onChange={changeGenNumber("starts_in_minutes")}
-													inputProps={{ min: 0 }} />
+												<DateTimePicker
+													label={tr({ id: "questions.startTime" })}
+													value={genParams.starts_at}
+													onChange={(v) => setGenParams((prev) => ({ ...prev, starts_at: v }))}
+													slotProps={{ textField: { size: "small", fullWidth: true } }}
+												/>
 											</Grid>
 											<Grid size={{ xs: 3 }}>
 												<Stack direction="row" spacing={0.5} alignItems="center">

@@ -201,6 +201,19 @@ const Matches = () => {
 			field: "name",
 			headerName: tr({ id: "name" }),
 			flex: 1.5,
+			renderCell: ({ row }) => (
+				<mui.Stack direction="row" spacing={0.5} alignItems="center">
+					<span>{row.name}</span>
+					{row.is_practice && (
+						<mui.Chip
+							size="small"
+							color="info"
+							variant="outlined"
+							label={tr({ id: "match.practice" })}
+						/>
+					)}
+				</mui.Stack>
+			),
 		},
 		{
 			field: "teams",
@@ -464,6 +477,7 @@ const Matches = () => {
 			name: "New Match",
 			description: "",
 			is_active: false,
+			is_practice: false,
 			team_id: "",
 		});
 		setDialogName("MatchDialog");
@@ -477,12 +491,26 @@ const Matches = () => {
 	};
 
 	const saveInstance = async () => {
+		// Only send the editable columns -- not the whole row (which carries
+		// nested `teams`/`round`/timestamps). The backend would ignore the
+		// extras, but sending a stale `round_id` etc. is a needless risk.
+		const fields = {
+			name: currentMatch.name,
+			description: currentMatch.description,
+			start_time: currentMatch.start_time,
+			is_active: currentMatch.is_active,
+		};
 		let result;
 		if (currentMatch.id) {
-			result = await apiEdit(currentMatch.id, currentMatch);
+			// is_practice is create-time only (existing games were already built
+			// shared-vs-per-team), so it's not sent on edit.
+			result = await apiEdit(currentMatch.id, fields);
 		} else {
-			currentMatch.round_id = roundId;
-			result = await apiCreate(currentMatch);
+			result = await apiCreate({
+				...fields,
+				is_practice: !!currentMatch.is_practice,
+				round_id: roundId,
+			});
 		}
 		if (result) await refetch();
 		setDialogName("");

@@ -67,8 +67,8 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 							type="text"
 							fullWidth
 							variant="standard"
-							name="account"
-							value={instance?.description}
+							name="description"
+							value={instance?.description || ""}
 							onChange={(evt) => {
 								handleChange({ description: evt.target.value });
 							}}
@@ -110,6 +110,20 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 								/>
 							}
 							label="Active"
+							labelPlacement="start"
+						/>
+						<FormControlLabel
+							sx={{ flexDirection: "row" }}
+							control={
+								<Switch
+									checked={!!instance?.is_practice}
+									disabled={!!instance?.id}
+									onChange={(evt) => {
+										handleChange({ is_practice: evt.target.checked });
+									}}
+								/>
+							}
+							label={tr({ id: "match.practice" })}
 							labelPlacement="start"
 						/>
 					</Stack>

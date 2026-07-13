@@ -30,7 +30,14 @@ import { getGameReplay, getGameError } from "../../api/gameService";
 import HexBoard from "./hex-board";
 import LoadingPage from "../loading-page";
 
-const TEAM_COLORS = ["#1976d2", "#8e24aa", "#ef6c00", "#00838f", "#c2185b", "#5d4037"];
+const TEAM_COLORS = [
+	"#1976d2",
+	"#8e24aa",
+	"#ef6c00",
+	"#00838f",
+	"#c2185b",
+	"#5d4037",
+];
 const PLAY_INTERVAL_MS = 700;
 
 /**
@@ -81,14 +88,17 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	// days or when the filter hides/shows other teams.
 	const colorByTeamId = useMemo(() => {
 		const map = new Map();
-		allTeamIds.forEach((tid, i) => map.set(tid, TEAM_COLORS[i % TEAM_COLORS.length]));
+		allTeamIds.forEach((tid, i) =>
+			map.set(tid, TEAM_COLORS[i % TEAM_COLORS.length]),
+		);
 		return map;
 	}, [allTeamIds]);
 
 	// Default to every team selected once the replay data (and so
 	// allTeamIds) is known.
 	useEffect(() => {
-		if (data && selectedTeamIds === null) setSelectedTeamIds(new Set(allTeamIds));
+		if (data && selectedTeamIds === null)
+			setSelectedTeamIds(new Set(allTeamIds));
 	}, [data, allTeamIds, selectedTeamIds]);
 
 	const toggleTeam = (tid) =>
@@ -126,7 +136,8 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	// current positions; also the cells collected on this exact step (ringed).
 	// Only teams in selectedTeamIds are included.
 	const { replayTeams, collected, perTeam } = useMemo(() => {
-		if (!day || !selectedTeamIds) return { replayTeams: [], collected: [], perTeam: [] };
+		if (!day || !selectedTeamIds)
+			return { replayTeams: [], collected: [], perTeam: [] };
 		const teamsArr = [];
 		const hl = [];
 		const summary = [];
@@ -134,7 +145,10 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 			.filter((team) => selectedTeamIds.has(String(team.team_id)))
 			.forEach((team) => {
 				const color = colorByTeamId.get(String(team.team_id)) || "#999";
-				const upto = team.frames.slice(0, Math.min(step, team.frames.length - 1) + 1);
+				const upto = team.frames.slice(
+					0,
+					Math.min(step, team.frames.length - 1) + 1,
+				);
 				const cur = upto[upto.length - 1];
 				const agents = cur.agents.map((a, ai) => {
 					// Trail = this agent's cell across the steps so far, with
@@ -146,7 +160,12 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 					}
 					return { cell: a.cell, kind: a.type === "refuel" ? 1 : 0, trail };
 				});
-				teamsArr.push({ teamId: team.team_id, label: `#${team.team_id}`, color, agents });
+				teamsArr.push({
+					teamId: team.team_id,
+					label: `#${team.team_id}`,
+					color,
+					agents,
+				});
 				(cur.collected || []).forEach((c) => hl.push(c));
 				summary.push({
 					teamId: team.team_id,
@@ -173,7 +192,10 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 		const map = new Map();
 		if (!day) return map;
 		day.teams.forEach((team) => {
-			const upto = team.frames.slice(0, Math.min(step, team.frames.length - 1) + 1);
+			const upto = team.frames.slice(
+				0,
+				Math.min(step, team.frames.length - 1) + 1,
+			);
 			const cur = upto[upto.length - 1];
 			map.set(String(team.team_id), {
 				submitted: team.submitted,
@@ -186,7 +208,12 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-			<DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+			<DialogTitle
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+				}}>
 				{tr({ id: "hexudon.replay.title" })}
 				<IconButton onClick={onClose} size="small">
 					<CloseIcon />
@@ -196,7 +223,9 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 				{error && <Alert severity="error">{error}</Alert>}
 				{!error && !data && <LoadingPage />}
 				{!error && data && days.length === 0 && (
-					<Typography color="textSecondary">{tr({ id: "hexudon.replay.empty" })}</Typography>
+					<Typography color="textSecondary">
+						{tr({ id: "hexudon.replay.empty" })}
+					</Typography>
 				)}
 				{day && (
 					<Stack spacing={2}>
@@ -206,18 +235,27 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 							variant="scrollable"
 							scrollButtons="auto">
 							{days.map((d, i) => (
-								<Tab key={d.day} label={`${tr({ id: "hexudon.day" })} ${d.day}`} value={i} />
+								<Tab
+									key={d.day}
+									label={`${tr({ id: "hexudon.day" })} ${d.day}`}
+									value={i}
+								/>
 							))}
 						</Tabs>
 
 						<Stack direction="row" spacing={1} alignItems="center">
 							<IconButton
 								aria-label={tr({ id: "hexudon.replay.first" })}
-								onClick={() => { setPlaying(false); setStep(0); }}>
+								onClick={() => {
+									setPlaying(false);
+									setStep(0);
+								}}>
 								<SkipPreviousIcon />
 							</IconButton>
 							<IconButton
-								aria-label={tr({ id: playing ? "hexudon.replay.pause" : "hexudon.replay.play" })}
+								aria-label={tr({
+									id: playing ? "hexudon.replay.pause" : "hexudon.replay.play",
+								})}
 								color="primary"
 								onClick={() => {
 									if (step >= maxStep) setStep(0);
@@ -227,7 +265,10 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 							</IconButton>
 							<IconButton
 								aria-label={tr({ id: "hexudon.replay.last" })}
-								onClick={() => { setPlaying(false); setStep(maxStep); }}>
+								onClick={() => {
+									setPlaying(false);
+									setStep(maxStep);
+								}}>
 								<SkipNextIcon />
 							</IconButton>
 							<Slider
@@ -237,12 +278,19 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 								step={1}
 								marks
 								valueLabelDisplay="auto"
-								onChange={(e, v) => { setPlaying(false); setStep(v); }}
+								onChange={(e, v) => {
+									setPlaying(false);
+									setStep(v);
+								}}
 								sx={{ mx: 2, flex: 1 }}
 							/>
 							<Typography
 								variant="body2"
-								sx={{ minWidth: 90, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+								sx={{
+									minWidth: 90,
+									textAlign: "right",
+									fontVariantNumeric: "tabular-nums",
+								}}>
 								{tr({ id: "hexudon.replay.step" })} {step}/{maxStep}
 							</Typography>
 						</Stack>
@@ -251,7 +299,12 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 						a team's label shows that team alone. Colour is keyed by
 						team_id, stable across days even when a team joined late or is
 						currently filtered out. */}
-						<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
+						<Stack
+							direction="row"
+							spacing={1}
+							flexWrap="wrap"
+							alignItems="center"
+							useFlexGap>
 							{allTeamIds.map((tid) => {
 								const color = colorByTeamId.get(tid);
 								const checked = selectedTeamIds?.has(tid) ?? true;
@@ -268,8 +321,7 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 											borderRadius: 4,
 											pr: 1,
 											opacity: checked ? 1 : 0.45,
-										}}
-									>
+										}}>
 										<Checkbox
 											size="small"
 											checked={checked}
@@ -288,14 +340,17 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 												p: 0,
 												font: "inherit",
 												textAlign: "left",
-											}}
-										>
+											}}>
 											<Typography variant="caption" component="span">
 												{tr({ id: "hexudon.answers.team" })} {tid}
-												{String(tid) === String(ownTeamId) ? ` (${tr({ id: "hexudon.standings.you" })})` : ""}
+												{String(tid) === String(ownTeamId)
+													? ` (${tr({ id: "hexudon.standings.you" })})`
+													: ""}
 												{t
 													? ` · ${tr({ id: "hexudon.standings.servings" })}: ${t.servings}/${t.total}${
-															t.submitted ? "" : ` · ${tr({ id: "hexudon.replay.noSubmit" })}`
+															t.submitted
+																? ""
+																: ` · ${tr({ id: "hexudon.replay.noSubmit" })}`
 														}`
 													: ""}
 											</Typography>
@@ -303,24 +358,18 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 									</Stack>
 								);
 							})}
-							{allTeamIds.length > 1 && (selectedTeamIds?.size ?? 0) < allTeamIds.length && (
-								<Button size="small" onClick={selectAllTeams}>
-									{tr({ id: "hexudon.replay.selectAll" })}
-								</Button>
-							)}
+							{allTeamIds.length > 1 &&
+								(selectedTeamIds?.size ?? 0) < allTeamIds.length && (
+									<Button size="small" onClick={selectAllTeams}>
+										{tr({ id: "hexudon.replay.selectAll" })}
+									</Button>
+								)}
 							<Box sx={{ flex: 1 }} />
 							<Typography variant="caption" color="textSecondary">
-								● {tr({ id: "hexudon.patrol" })} · ○ {tr({ id: "hexudon.refuel" })}
+								● {tr({ id: "hexudon.patrol" })} · ○{" "}
+								{tr({ id: "hexudon.refuel" })}
 							</Typography>
 						</Stack>
-
-						<HexBoard
-							mapConfig={mapConfig}
-							replayTeams={replayTeams}
-							roadByCell={day.road_condition}
-							highlightCells={collected}
-							radius={22}
-						/>
 
 						{/* Per-step stats table: updates as the step slider moves,
 						    showing each (selected) team's state AT THIS STEP. */}
@@ -329,20 +378,36 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 								<Table size="small">
 									<TableHead>
 										<TableRow>
-											<TableCell>{tr({ id: "hexudon.answers.team" })}</TableCell>
-											<TableCell align="right">{tr({ id: "hexudon.standings.servings" })}</TableCell>
-											<TableCell align="right">{tr({ id: "hexudon.replay.collectedNow" })}</TableCell>
-											<TableCell>{tr({ id: "hexudon.replay.agentsFuel" })}</TableCell>
+											<TableCell>
+												{tr({ id: "hexudon.answers.team" })}
+											</TableCell>
+											<TableCell align="right">
+												{tr({ id: "hexudon.standings.servings" })}
+											</TableCell>
+											<TableCell align="right">
+												{tr({ id: "hexudon.replay.collectedNow" })}
+											</TableCell>
+											<TableCell>
+												{tr({ id: "hexudon.replay.agentsFuel" })}
+											</TableCell>
 										</TableRow>
 									</TableHead>
 									<TableBody>
 										{perTeam.map((t) => (
 											<TableRow key={t.teamId}>
 												<TableCell>
-													<Stack direction="row" spacing={0.5} alignItems="center">
+													<Stack
+														direction="row"
+														spacing={0.5}
+														alignItems="center">
 														<Box
 															component="span"
-															sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: t.color }}
+															sx={{
+																width: 10,
+																height: 10,
+																borderRadius: "50%",
+																bgcolor: t.color,
+															}}
 														/>
 														<span>
 															{t.teamId}
@@ -352,14 +417,22 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 														</span>
 													</Stack>
 												</TableCell>
-												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												<TableCell
+													align="right"
+													sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{t.servings}/{t.total}
 												</TableCell>
-												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+												<TableCell
+													align="right"
+													sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{t.collectedNow > 0 ? `+${t.collectedNow}` : "—"}
 												</TableCell>
 												<TableCell>
-													<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+													<Stack
+														direction="row"
+														spacing={0.5}
+														flexWrap="wrap"
+														useFlexGap>
 														{t.agents.map((a, ai) => (
 															<Chip
 																key={ai}
@@ -380,6 +453,14 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 								</Table>
 							</Box>
 						)}
+
+						<HexBoard
+							mapConfig={mapConfig}
+							replayTeams={replayTeams}
+							roadByCell={day.road_condition}
+							highlightCells={collected}
+							radius={22}
+						/>
 					</Stack>
 				)}
 			</DialogContent>

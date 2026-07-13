@@ -78,6 +78,30 @@ export const getGameActions = (gameId) =>
 export const getGameReplay = (gameId) =>
 	gameClient.get("/game/replay", { params: { game_id: gameId } });
 
+// --- Practice mode (self-paced, per-team solo games) ----------------------
+// A practice question's per-team game id is `${questionId}:${teamId}`.
+
+// Team only. Submit `day`'s plan in a practice game and advance it. Storing an
+// earlier day resets the later days server-side. actions: number[][].
+export const submitPracticeActions = (gameId, day, actions) =>
+	gameClient.post("/game/practice/actions", { game_id: gameId, day, actions });
+
+// Any authenticated team. Read a practice game's replay -- including another
+// team's -- for the compare view (own game's replay works via getGameReplay too,
+// but this one isn't blocked by the team-in-game check).
+export const getPracticePeerReplay = (gameId) =>
+	gameClient.get("/game/practice/peer", { params: { game_id: gameId } });
+
+// Team only. Fork another team's practice game into your own through
+// `uptoDay` (adopts their agent types + days 0..uptoDay; your later days reset).
+export const copyPractice = (gameId, fromGameId, fromTeamId, uptoDay) =>
+	gameClient.post("/game/practice/copy", {
+		game_id: gameId,
+		from_game_id: fromGameId,
+		from_team_id: fromTeamId,
+		upto_day: uptoDay,
+	});
+
 // Admin only. Wraps map_gen.py's MapGenerator server-side so the admin UI
 // doesn't duplicate that connectivity/Dijkstra-verified algorithm in JS.
 // Pure generation -- doesn't create a game. Returns the full /game/init body
