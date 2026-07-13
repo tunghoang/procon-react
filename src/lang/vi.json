@@ -73,6 +73,7 @@
   "hexudon.kinds.submit": "Gửi lựa chọn loại xe",
   "hexudon.kinds.saved": "Đã lưu loại xe",
   "hexudon.plan.builder": "Soạn lệnh",
+  "hexudon.plan.inputHelp": "Mỗi agent một mảng (theo thứ tự agent): 0–5 = đi theo hướng đó, số âm = chờ bấy nhiêu bước. Mỗi agent phải dùng đúng {steps} bước.",
   "hexudon.plan.empty": "(chưa có lệnh)",
   "hexudon.plan.submit": "Nộp kế hoạch ngày",
   "hexudon.plan.submitted": "Đã nộp",
@@ -131,6 +132,11 @@
   "practice.copyNote": "Sao chép sẽ fork tiến trình đội kia vào đội bạn; các ngày sau của bạn bị reset.",
   "practice.copied": "Đã sao chép — hãy tự nộp lại các ngày sau.",
   "practice.adminNote": "Match luyện tập chơi theo từng đội; hãy đăng nhập bằng tài khoản đội để chơi.",
+  "practice.viewTeam": "Xem đội",
+  "practice.adminNoTeams": "Match luyện tập này chưa có đội nào.",
+  "practice.resetButton": "Reset / chơi lại",
+  "practice.resetConfirm": "Reset ván luyện tập này? Toàn bộ các ngày đã nộp và lựa chọn agent sẽ bị xóa để chơi lại từ đầu.",
+  "practice.resetDone": "Đã reset ván luyện tập — hãy chọn agent và chơi lại.",
   "competition.enter": "Vào thi đấu",
   "competition.noMatches": "Chưa có trận đấu nào đang mở",
   "competition.active": "Đang mở",
@@ -202,5 +208,10 @@
   "questions.manualLabel": "Init JSON thô",
   "questions.manualApply": "Kiểm tra & áp dụng",
   "questions.copyData": "Sao chép dữ liệu",
-  "questions.openGame": "Mở màn hình trận"
+  "questions.openGame": "Mở màn hình trận",
+  "questions.reset": "Reset (chơi lại từ đầu)",
+  "questions.resetTitle": "⚠️ Reset câu hỏi",
+  "questions.resetConfirm": "Reset câu hỏi này? Toàn bộ kế hoạch đã nộp (mọi ngày) VÀ lựa chọn agent của tất cả các đội sẽ bị xóa, để chơi lại cả trận từ đầu. Không thể hoàn tác.",
+  "questions.resetDone": "Đã reset câu hỏi — các đội có thể chọn agent và chơi lại.",
+  "questions.resetPartial": "Đã reset {ok}/{total} ván của các đội; một số không reset được."
 }

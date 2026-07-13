@@ -74,6 +74,7 @@
   "hexudon.kinds.saved": "Agent types saved",
   "hexudon.plan.builder": "Builder",
   "hexudon.plan.empty": "(no commands yet)",
+  "hexudon.plan.inputHelp": "One array per agent (agent order): 0–5 = move in that direction, a negative number = wait that many steps. Each agent must use exactly {steps} steps.",
   "hexudon.plan.submit": "Submit day plan",
   "hexudon.plan.submitted": "Submitted",
   "hexudon.plan.accepted": "Plan accepted",
@@ -131,6 +132,11 @@
   "practice.copyNote": "Copying forks the other team's progress into yours; your later days reset.",
   "practice.copied": "Copied — replay the following days yourself.",
   "practice.adminNote": "Practice matches are played per team; sign in as a team to play.",
+  "practice.viewTeam": "View team",
+  "practice.adminNoTeams": "This practice match has no teams yet.",
+  "practice.resetButton": "Reset / play again",
+  "practice.resetConfirm": "Reset this practice game? All your submitted days and agent selection will be cleared so you can play from the start.",
+  "practice.resetDone": "Practice game reset — pick your agents and play again.",
   "competition.enter": "Enter match",
   "competition.noMatches": "No matches available",
   "competition.active": "Active",
@@ -202,5 +208,10 @@
   "questions.manualLabel": "Raw init JSON",
   "questions.manualApply": "Validate & apply",
   "questions.copyData": "Copy data",
-  "questions.openGame": "Open game view"
+  "questions.openGame": "Open game view",
+  "questions.reset": "Reset (replay from scratch)",
+  "questions.resetTitle": "⚠️ Reset question",
+  "questions.resetConfirm": "Reset this question? Every team's submitted plans (all days) AND their agent selection will be cleared, so the whole match is played again from the start. This cannot be undone.",
+  "questions.resetDone": "Question reset — teams can select agents and play again.",
+  "questions.resetPartial": "Reset {ok}/{total} team games; some could not be reset."
 }

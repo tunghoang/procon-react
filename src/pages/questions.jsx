@@ -11,6 +11,7 @@ import DataTable from "../components/DataTable/data-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -19,6 +20,7 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { debugLog } from "../utils/debug";
 import { SERVICE_API } from "../config/env";
+import { resetGame, getGameError } from "../api/gameService";
 
 const Questions = () => {
 	const routeParams = useParams({ strict: false });
@@ -272,6 +274,14 @@ const Questions = () => {
 								<SportsEsportsIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
+						<mui.Tooltip title={tr({ id: "questions.reset" })}>
+							<mui.IconButton
+								size="small"
+								color="warning"
+								onClick={() => handleResetQuestion(row)}>
+								<RestartAltIcon fontSize="small" />
+							</mui.IconButton>
+						</mui.Tooltip>
 						<mui.Tooltip title={tr({ id: "Edit" })}>
 							<mui.IconButton
 								size="small"
@@ -354,6 +364,54 @@ const Questions = () => {
 				closeConfirmDialog();
 			},
 			"error"
+		);
+	};
+
+	// Reset a question so every team replays it from scratch (clears all their
+	// submitted days + agent selection). A normal match is one shared game
+	// (id = question id); a practice match is one solo game per team
+	// (id = `${questionId}:${teamId}`), so reset each of those.
+	const handleResetQuestion = (row) => {
+		const qdata = JSON.parse(row.question_data || "{}");
+		const isPractice = !!qdata.is_practice;
+		openConfirmDialog(
+			tr({ id: "questions.resetTitle" }),
+			tr({ id: "questions.resetConfirm" }),
+			async () => {
+				try {
+					if (isPractice) {
+						const matchId = row.match_id ?? row.match?.id;
+						const m = await api.get(`${SERVICE_API}/match/${matchId}`);
+						const teams = m?.teams || [];
+						if (!teams.length) throw new Error("match has no teams");
+						const results = await Promise.allSettled(
+							teams.map((t) => resetGame(`${row.id}:${t.id}`))
+						);
+						const failed = results.filter((r) => r.status === "rejected").length;
+						if (failed) {
+							showMessage(
+								tr(
+									{ id: "questions.resetPartial" },
+									{ ok: teams.length - failed, total: teams.length }
+								),
+								"warning",
+								6000
+							);
+						} else {
+							showMessage(tr({ id: "questions.resetDone" }), "success");
+						}
+					} else {
+						await resetGame(String(row.id));
+						showMessage(tr({ id: "questions.resetDone" }), "success");
+					}
+					await refetch();
+					closeConfirmDialog();
+				} catch (error) {
+					showMessage(getGameError(error), "error", 6000);
+					closeConfirmDialog();
+				}
+			},
+			"warning"
 		);
 	};
 

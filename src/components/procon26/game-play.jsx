@@ -67,7 +67,7 @@ const useCountdown = (endsAtEpoch) => {
  *    everyone, so the admin/spectator switch comes from the JWT, never from
  *    the response shape.
  */
-const GamePlay = ({ gameId }) => {
+const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	const { formatMessage: tr } = useIntl();
 	const { team: contextTeam } = useContext(Context);
 
@@ -110,6 +110,13 @@ const GamePlay = ({ gameId }) => {
 	// --- static config ------------------------------------------------------
 	useEffect(() => {
 		let cancelled = false;
+		// When a board config is supplied (e.g. an admin viewing one team's
+		// practice sub-game, whose id isn't a question id), use it directly and
+		// skip the /question lookup.
+		if (mapConfigOverride) {
+			setQuestionConfig(mapConfigOverride);
+			return undefined;
+		}
 		(async () => {
 			try {
 				// Single-object endpoint: api.get returns the body directly
@@ -125,7 +132,7 @@ const GamePlay = ({ gameId }) => {
 		return () => {
 			cancelled = true;
 		};
-	}, [gameId]);
+	}, [gameId, mapConfigOverride]);
 
 	// Team-only /game/config (own agents). Retried while it hasn't loaded (the
 	// effect re-runs on each state poll) so a transient failure never strands
@@ -233,7 +240,11 @@ const GamePlay = ({ gameId }) => {
 	// client/server clock skew, unlike the absolute /game/day endsAt.
 	const countdownTarget =
 		state?.status === "selecting_agents" ? selectionEndsAt : dayEndsAt;
-	const countdown = useCountdown(state?.status === "finished" ? null : countdownTarget);
+	// Practice games are self-paced (no wall-clock deadline) -- no countdown.
+	const isPractice = !!questionConfig?.is_practice;
+	const countdown = useCountdown(
+		state?.status === "finished" || isPractice ? null : countdownTarget,
+	);
 
 	const handleKinds = async (types) => {
 		setSubmitting(true);

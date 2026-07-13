@@ -102,6 +102,17 @@ export const copyPractice = (gameId, fromGameId, fromTeamId, uptoDay) =>
 		upto_day: uptoDay,
 	});
 
+// Admin only. Reset a game to the agent-selection stage and delete EVERY
+// team's submissions across all days, so the whole match is replayed from
+// scratch. For a practice match (one game per team) call this per team game.
+export const resetGame = (gameId) =>
+	gameClient.post("/game/reset", { game_id: gameId });
+
+// Team only. Reset your OWN practice game back to agent selection so you can
+// play it again (clears your submissions across all days).
+export const resetPractice = (gameId) =>
+	gameClient.post("/game/practice/reset", { game_id: gameId });
+
 // Admin only. Wraps map_gen.py's MapGenerator server-side so the admin UI
 // doesn't duplicate that connectivity/Dijkstra-verified algorithm in JS.
 // Pure generation -- doesn't create a game. Returns the full /game/init body

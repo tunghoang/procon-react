@@ -9,6 +9,7 @@ import {
 	Typography,
 } from "@mui/material";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useIntl } from "react-intl";
 import {
 	getGameConfig,
@@ -16,6 +17,7 @@ import {
 	getGameError,
 	getGameReplay,
 	getGameState,
+	resetPractice,
 	selectAgentTypes,
 	submitPracticeActions,
 } from "../../api/gameService";
@@ -156,6 +158,20 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 		}
 	};
 
+	const handleReset = async () => {
+		if (!window.confirm(tr({ id: "practice.resetConfirm" }))) return;
+		setSubmitting(true);
+		try {
+			await resetPractice(practiceGameId);
+			showMessage(tr({ id: "practice.resetDone" }), "success");
+			await refresh();
+		} catch (e) {
+			showMessage(getGameError(e), "error", 5000);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
 	if (error && !state) return <Alert severity="error">{error}</Alert>;
 	if (!mapConfig || !state) return <LoadingPage />;
 
@@ -192,6 +208,18 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 					onClick={() => setCompareOpen(true)}
 				>
 					{tr({ id: "practice.compareButton" })}
+				</Button>
+			)}
+			{state.status !== "selecting_agents" && (
+				<Button
+					size="small"
+					color="warning"
+					variant="outlined"
+					startIcon={<RestartAltIcon />}
+					disabled={submitting}
+					onClick={handleReset}
+				>
+					{tr({ id: "practice.resetButton" })}
 				</Button>
 			)}
 		</Stack>

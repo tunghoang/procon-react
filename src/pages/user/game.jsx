@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Box, Container, Stack, Tooltip, Typography, IconButton } from "@mui/material";
+import { Alert, Box, Chip, Container, Stack, Tooltip, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useParams } from "@tanstack/react-router";
@@ -14,10 +14,50 @@ import { SERVICE_API } from "../../config/env";
 import { copyText } from "../../utils/commons";
 
 /**
+ * Admin view of a PRACTICE match: pick a team and spectate that team's solo
+ * game (`${questionId}:${teamId}`) read-only via GamePlay's spectator mode.
+ */
+const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
+	const { formatMessage: tr } = useIntl();
+	const [teamId, setTeamId] = useState(teams?.[0]?.id ?? null);
+
+	if (!teams?.length) {
+		return <Alert severity="info">{tr({ id: "practice.adminNoTeams" })}</Alert>;
+	}
+	return (
+		<Stack spacing={2}>
+			<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
+				<Typography variant="body2" color="textSecondary">
+					{tr({ id: "practice.viewTeam" })}:
+				</Typography>
+				{teams.map((t) => (
+					<Chip
+						key={t.id}
+						size="small"
+						label={t.name}
+						color={String(t.id) === String(teamId) ? "primary" : "default"}
+						variant={String(t.id) === String(teamId) ? "filled" : "outlined"}
+						onClick={() => setTeamId(t.id)}
+					/>
+				))}
+			</Stack>
+			{teamId != null && (
+				<GamePlay
+					key={teamId}
+					gameId={`${questionId}:${teamId}`}
+					mapConfigOverride={mapConfig}
+				/>
+			)}
+		</Stack>
+	);
+};
+
+/**
  * HEXUDON play screen. `gameId` here is the team-manager question id.
  *  - Normal match: one shared game at that id -> GamePlay.
  *  - Practice match: each team plays its own game at `${questionId}:${teamId}`
  *    -> PracticePlay (self-paced, compare/copy). Detected from question_data.
+ *    An admin instead spectates any team's game via PracticeAdminView.
  */
 const UserGame = () => {
 	const { gameId } = useParams({ strict: false });
@@ -107,7 +147,11 @@ const UserGame = () => {
 					{gameId && meta && !meta.isPractice && <GamePlay gameId={gameId} />}
 					{gameId && meta && meta.isPractice &&
 						(isAdmin ? (
-							<Alert severity="info">{tr({ id: "practice.adminNote" })}</Alert>
+							<PracticeAdminView
+								questionId={gameId}
+								teams={meta.teams}
+								mapConfig={meta.mapConfig}
+							/>
 						) : (
 							<PracticePlay
 								questionId={gameId}
