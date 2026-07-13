@@ -17,6 +17,7 @@ import {
 	TERRAIN_NAMES,
 	flattenCells,
 	neighborCell,
+	projectFuelNoRefuel,
 	simulateCommands,
 	trafficByPos,
 	validatePlan,
@@ -55,6 +56,23 @@ const PlanEditor = ({
 		[mapConfig, dayInformation, plan, requiredSteps],
 	);
 
+	// Soft, non-blocking fuel hint. The client can't know cross-agent refuel
+	// timing (the server's lockstep engine decides that), so this only warns
+	// which patrol cars would run dry WITHOUT a refuel -- it never disables
+	// submit, since a refuel-car rendezvous may well cover the shortfall.
+	const fuelWarnings = useMemo(
+		() =>
+			agents
+				.map((agent, i) =>
+					agent.kind === 0 &&
+					projectFuelNoRefuel(mapConfig, agent.pos, agent.fuel, plan[i] || []).ranOut
+						? i
+						: null,
+				)
+				.filter((i) => i !== null),
+		[agents, mapConfig, plan],
+	);
+
 	const agentResult = validation.agents[selectedAgent];
 	const commands = plan[selectedAgent] || [];
 	const endPos = agentResult?.path?.length
@@ -74,7 +92,9 @@ const PlanEditor = ({
 	};
 
 	const commandLabel = (command) =>
-		command <= -1 ? `${tr({ id: "hexudon.wait" })} ${Math.abs(command)}` : DIRECTIONS[command].arrow;
+		command <= -1
+			? `${tr({ id: "hexudon.wait" })} ${Math.abs(command)}`
+			: (DIRECTIONS[command]?.arrow ?? "?");
 
 	const applyJsonDraft = (text) => {
 		setJsonDraft(text);
@@ -203,6 +223,15 @@ const PlanEditor = ({
 			)}
 
 			{validation.error && <Alert severity="error">{validation.error}</Alert>}
+
+			{fuelWarnings.length > 0 && (
+				<Alert severity="warning">
+					{tr(
+						{ id: "hexudon.plan.fuelWarning" },
+						{ agents: fuelWarnings.join(", ") },
+					)}
+				</Alert>
+			)}
 
 			<Stack direction="row" spacing={2} alignItems="center">
 				<Button

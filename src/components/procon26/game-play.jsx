@@ -86,9 +86,15 @@ const GamePlay = ({ gameId }) => {
 	const [teamConfig, setTeamConfig] = useState(null); // GET /game/config (team only)
 	const [state, setState] = useState(null);
 	const [dayInfo, setDayInfo] = useState(null); // GET /game/day (team only)
-	const [adminDayEndsAt, setAdminDayEndsAt] = useState(null); // derived from day_deadline_in
+	// Absolute day deadline, re-anchored from state.day_deadline_in each poll so
+	// it is immune to client/server clock skew — used for BOTH roles.
+	const [dayEndsAt, setDayEndsAt] = useState(null);
 	const [result, setResult] = useState(null);
 	const [loadError, setLoadError] = useState(null);
+	// Team /game/config load failure — kept separate from loadError (which a
+	// successful state poll clears) and retried, so a transient failure can't
+	// strand the selection panel on a silent spinner.
+	const [configError, setConfigError] = useState(null);
 	const [plan, setPlan] = useState([]);
 	const [planDay, setPlanDay] = useState(null);
 	const [selectedAgent, setSelectedAgent] = useState(0);
@@ -115,19 +121,32 @@ const GamePlay = ({ gameId }) => {
 			} catch (e) {
 				if (!cancelled) setLoadError(e.response?.data?.message || e.message);
 			}
-			if (!isAdmin) {
-				try {
-					const config = await getGameConfig(gameId);
-					if (!cancelled) setTeamConfig(config);
-				} catch (e) {
-					if (!cancelled) setLoadError(getGameError(e));
-				}
-			}
 		})();
 		return () => {
 			cancelled = true;
 		};
-	}, [gameId, isAdmin]);
+	}, [gameId]);
+
+	// Team-only /game/config (own agents). Retried while it hasn't loaded (the
+	// effect re-runs on each state poll) so a transient failure never strands
+	// the selection panel; admins never call it (it 403s for them).
+	useEffect(() => {
+		if (isAdmin || teamConfig || !gameId) return undefined;
+		let cancelled = false;
+		getGameConfig(gameId)
+			.then((cfg) => {
+				if (!cancelled) {
+					setTeamConfig(cfg);
+					setConfigError(null);
+				}
+			})
+			.catch((e) => {
+				if (!cancelled) setConfigError(getGameError(e));
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [gameId, isAdmin, teamConfig, state]);
 
 	// --- polling --------------------------------------------------------------
 	const refreshState = useCallback(async () => {
@@ -135,7 +154,7 @@ const GamePlay = ({ gameId }) => {
 			const next = await getGameState(gameId);
 			setState(next);
 			setLoadError(null);
-			setAdminDayEndsAt(
+			setDayEndsAt(
 				next.day_deadline_in !== null && next.day_deadline_in !== undefined
 					? Date.now() / 1000 + next.day_deadline_in
 					: null,
@@ -209,12 +228,11 @@ const GamePlay = ({ gameId }) => {
 	const selectionEndsAt = questionConfig
 		? questionConfig.startsAt + (questionConfig.agent_selection_time_limit ?? 60)
 		: null;
+	// day_deadline_in (re-anchored to the client clock each poll) is returned to
+	// both roles, so the day countdown uses it regardless of role — immune to
+	// client/server clock skew, unlike the absolute /game/day endsAt.
 	const countdownTarget =
-		state?.status === "selecting_agents"
-			? selectionEndsAt
-			: isAdmin
-				? adminDayEndsAt
-				: dayInfo?.endsAt;
+		state?.status === "selecting_agents" ? selectionEndsAt : dayEndsAt;
 	const countdown = useCountdown(state?.status === "finished" ? null : countdownTarget);
 	const beforeStart =
 		state?.status === "selecting_agents" &&
@@ -305,6 +323,7 @@ const GamePlay = ({ gameId }) => {
 		<Stack spacing={2}>
 			{statusChip}
 			{loadError && <Alert severity="warning">{loadError}</Alert>}
+			{configError && <Alert severity="warning">{configError}</Alert>}
 
 			{/* Phase panel on top, the (zoomable) board below it, full width. */}
 			<Paper variant="outlined" sx={{ p: 2 }}>

@@ -15,6 +15,11 @@ import {
 	Chip,
 	IconButton,
 	Typography,
+	Select,
+	MenuItem,
+	InputLabel,
+	FormControl,
+	CircularProgress,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -26,12 +31,11 @@ import { SERVICE_API } from "../config/env";
 import { useContext, useState, useMemo, useEffect } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
-import {
-	generateBoard,
-	assembleInit,
-	validateInitShape,
-} from "../components/procon26/board-generator";
+import { generateMap, getGameError } from "../api/gameService";
+import { validateInitShape } from "../components/procon26/board-generator";
 import HexBoard from "../components/procon26/hex-board";
+
+const DIFFICULTIES = ["easy", "medium", "hard", "very_hard"];
 
 const useStyles = makeStyles({
 	root: {
@@ -41,10 +45,12 @@ const useStyles = makeStyles({
 
 /**
  * Question create/edit dialog. Creation generates a rule-valid HEXUDON board
- * CLIENT-SIDE (the game service has no /board endpoint) and stores the full
- * /game/init body as raw_questions — the team manager persists it and
- * registers the game. Boards are immutable once created (the game service
- * fixes them at /game/init time): edit mode only changes name/description.
+ * SERVER-SIDE (POST /game/generate, wrapping procon26-hexudon's map_gen.py --
+ * BFS-verified connectivity, Dijkstra-derived fuel/step bounds) and stores
+ * the full /game/init body as raw_questions — the team manager persists it
+ * and registers the game. Boards are immutable once created (the game
+ * service fixes them at /game/init time): edit mode only changes
+ * name/description.
  */
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const classes = useStyles();
@@ -61,24 +67,11 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	});
 
 	const [genParams, setGenParams] = useState({
-		width: 10,
-		height: 10,
-		agents_per_team: 4,
-		spot_count: 8,
-		brand_count: 4,
-		busy_threshold: 2,
-		jam_threshold: 5,
-		day_count: 4,
-		// One {steps, response_time} entry per day -- days still always run
-		// back-to-back (the docs' "no gap between days" rule isn't
-		// negotiable), but each day's own duration is independently settable
-		// instead of one value copied across every day.
-		dayConfigs: Array.from({ length: 4 }, () => ({ steps: 40, response_time: 90 })),
-		fuel: 80,
-		agent_selection_time_limit: 120,
+		difficulty: "medium",
 		starts_in_minutes: 2,
 		seed: 1,
 	});
+	const [generating, setGenerating] = useState(false);
 	const [matchTeams, setMatchTeams] = useState(null);
 	const [manualText, setManualText] = useState("");
 	const [manualErrors, setManualErrors] = useState([]);
@@ -112,36 +105,29 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	}, [instance?.match_id]);
 
 	const changeGenParam = (key) => (evt) =>
+		setGenParams((prev) => ({ ...prev, [key]: evt.target.value }));
+
+	const changeGenNumber = (key) => (evt) =>
 		setGenParams((prev) => ({ ...prev, [key]: parseInt(evt.target.value, 10) || 0 }));
 
-	// Resizes dayConfigs to match a new day_count, keeping existing per-day
-	// values and copying the last day's values into any newly added days.
-	const changeDayCount = (evt) => {
-		const n = Math.max(4, Math.min(10, parseInt(evt.target.value, 10) || 4));
-		setGenParams((prev) => {
-			const last = prev.dayConfigs[prev.dayConfigs.length - 1] || { steps: 40, response_time: 90 };
-			const dayConfigs = Array.from({ length: n }, (_, i) => prev.dayConfigs[i] || { ...last });
-			return { ...prev, day_count: n, dayConfigs };
-		});
-	};
+	// Once a board has been generated, daySteps/daySeconds are edited directly
+	// on the stored raw_questions (days still always run back-to-back -- the
+	// docs' "no gap between days" rule isn't negotiable -- but each day's own
+	// duration stays independently adjustable instead of locked to whatever
+	// map_gen.py randomized).
+	const generatedMap = instance?.raw_questions?.map;
+	const dayStepBounds = generatedMap
+		? { min: generatedMap.width + generatedMap.height, max: 4 * (generatedMap.width + generatedMap.height) }
+		: null;
 
-	const changeDayConfig = (index, key) => (evt) => {
+	const changeGeneratedDay = (index, key) => (evt) => {
 		const value = Math.max(0, parseInt(evt.target.value, 10) || 0);
-		setGenParams((prev) => ({
-			...prev,
-			dayConfigs: prev.dayConfigs.map((d, i) => (i === index ? { ...d, [key]: value } : d)),
-		}));
+		const arrKey = key === "steps" ? "daySteps" : "daySeconds";
+		const nextArr = instance.raw_questions[arrKey].map((v, i) => (i === index ? value : v));
+		handleChange({ raw_questions: { ...instance.raw_questions, [arrKey]: nextArr } });
 	};
 
-	const stepBounds = {
-		min: genParams.width + genParams.height,
-		max: 4 * (genParams.width + genParams.height),
-	};
-	// fuelLimits must be within [1x, 3x] of Day 1's steps specifically (docs).
-	const day1Steps = genParams.dayConfigs[0]?.steps || stepBounds.min;
-	const fuelBounds = { min: day1Steps, max: 3 * day1Steps };
-
-	const handleGenerateBoard = () => {
+	const handleGenerateBoard = async () => {
 		if (!instance?.match_id) {
 			showMessage(tr({ id: "questions.selectMatchFirst" }), "error", 4000);
 			return;
@@ -150,30 +136,36 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			showMessage(tr({ id: "questions.matchHasNoTeams" }), "error", 4000);
 			return;
 		}
+		setGenerating(true);
 		try {
-			const board = generateBoard({
-				width: genParams.width,
-				height: genParams.height,
-				agentsPerTeam: genParams.agents_per_team,
-				spotCount: genParams.spot_count,
-				brandCount: genParams.brand_count,
-				seed: genParams.seed,
-			});
-			const init = assembleInit({
-				board,
-				teams: matchTeams,
-				daySteps: genParams.dayConfigs.map((d) => d.steps),
-				daySeconds: genParams.dayConfigs.map((d) => d.response_time),
+			// Server-side generation (map_gen.py): BFS-verified connectivity,
+			// Dijkstra-derived fuel/step bounds, difficulty-tuned randomization
+			// -- not duplicated in JS. Every team gets the same start cluster
+			// (docs: identical starting layout for every team), so remapping to
+			// the match's real teams just copies the first team's agents.
+			const response = await generateMap(genParams.difficulty, matchTeams.length, genParams.seed);
+			if (!response?.teams?.[0]?.agents?.length) {
+				throw new Error("map generation returned no teams");
+			}
+			const sharedAgents = response.teams[0].agents;
+			const init = {
+				...response,
+				// startsAt here is only for the preview label. The real anchor is
+				// computed by the team manager at POST /game/init time from
+				// starts_in_minutes below -- so a slow admin (generate, then edit
+				// name/days, then save) can't ship a startsAt already in the past.
 				startsAt: Math.floor(Date.now() / 1000) + genParams.starts_in_minutes * 60,
-				agentSelectionTimeLimit: genParams.agent_selection_time_limit,
-				busyThreshold: genParams.busy_threshold,
-				jammedThreshold: genParams.jam_threshold,
-				fuelLimits: genParams.fuel,
-			});
+				starts_in_minutes: genParams.starts_in_minutes,
+				teams: matchTeams.map((t) => ({ team_id: String(t.id), agents: sharedAgents })),
+			};
+			delete init.game_id; // meaningless until the question is actually created
+			setGenParams((prev) => ({ ...prev, seed: response.seed }));
 			handleChange({ type: "hexudon", raw_questions: init });
 			showMessage(tr({ id: "questions.boardGenerated" }), "success");
 		} catch (e) {
-			showMessage(e.message, "error", 6000);
+			showMessage(getGameError(e), "error", 6000);
+		} finally {
+			setGenerating(false);
 		}
 	};
 
@@ -283,69 +275,31 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 								{tabValue === 0 && (
 									<Stack spacing={2}>
 										<Grid container spacing={2}>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.width" })} type="number" fullWidth size="small"
-													value={genParams.width} onChange={changeGenParam("width")}
-													helperText="8-32" inputProps={{ min: 8, max: 32 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.height" })} type="number" fullWidth size="small"
-													value={genParams.height} onChange={changeGenParam("height")}
-													helperText="8-32" inputProps={{ min: 8, max: 32 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.agents" })} type="number" fullWidth size="small"
-													value={genParams.agents_per_team} onChange={changeGenParam("agents_per_team")}
-													helperText="3-8" inputProps={{ min: 3, max: 8 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.spots" })} type="number" fullWidth size="small"
-													value={genParams.spot_count} onChange={changeGenParam("spot_count")}
-													helperText={`${genParams.agents_per_team}-${Math.max(genParams.width, genParams.height)}`}
-													inputProps={{ min: genParams.agents_per_team, max: Math.max(genParams.width, genParams.height) }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.brands" })} type="number" fullWidth size="small"
-													value={genParams.brand_count} onChange={changeGenParam("brand_count")}
-													helperText={`1-${genParams.spot_count}`}
-													inputProps={{ min: 1, max: genParams.spot_count }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.days" })} type="number" fullWidth size="small"
-													value={genParams.day_count} onChange={changeDayCount}
-													helperText="4-10" inputProps={{ min: 4, max: 10 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.fuel" })} type="number" fullWidth size="small"
-													value={genParams.fuel} onChange={changeGenParam("fuel")}
-													helperText={`${fuelBounds.min}-${fuelBounds.max}`}
-													inputProps={{ min: fuelBounds.min, max: fuelBounds.max }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.busy" })} type="number" fullWidth size="small"
-													value={genParams.busy_threshold} onChange={changeGenParam("busy_threshold")}
-													helperText="1-5" inputProps={{ min: 1, max: 5 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.jam" })} type="number" fullWidth size="small"
-													value={genParams.jam_threshold} onChange={changeGenParam("jam_threshold")}
-													helperText="2-10" inputProps={{ min: 2, max: 10 }} />
-											</Grid>
-											<Grid size={{ xs: 2 }}>
-												<TextField label={tr({ id: "questions.selectionSeconds" })} type="number" fullWidth size="small"
-													value={genParams.agent_selection_time_limit}
-													onChange={changeGenParam("agent_selection_time_limit")}
-													inputProps={{ min: 1 }} />
+											<Grid size={{ xs: 3 }}>
+												<FormControl fullWidth size="small">
+													<InputLabel>{tr({ id: "questions.difficulty" })}</InputLabel>
+													<Select
+														label={tr({ id: "questions.difficulty" })}
+														value={genParams.difficulty}
+														onChange={changeGenParam("difficulty")}
+													>
+														{DIFFICULTIES.map((d) => (
+															<MenuItem key={d} value={d}>
+																{tr({ id: `questions.difficulty.${d}` })}
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
 											</Grid>
 											<Grid size={{ xs: 3 }}>
 												<TextField label={tr({ id: "questions.startsInMinutes" })} type="number" fullWidth size="small"
-													value={genParams.starts_in_minutes} onChange={changeGenParam("starts_in_minutes")}
+													value={genParams.starts_in_minutes} onChange={changeGenNumber("starts_in_minutes")}
 													inputProps={{ min: 0 }} />
 											</Grid>
 											<Grid size={{ xs: 3 }}>
 												<Stack direction="row" spacing={0.5} alignItems="center">
 													<TextField label="Seed" type="number" fullWidth size="small"
-														value={genParams.seed} onChange={changeGenParam("seed")} />
+														value={genParams.seed} onChange={changeGenNumber("seed")} />
 													<IconButton
 														size="small"
 														title={tr({ id: "questions.randomSeed" })}
@@ -360,43 +314,51 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 													</IconButton>
 												</Stack>
 											</Grid>
-											<Grid size={{ xs: 6 }} sx={{ display: "flex", alignItems: "center" }}>
-												<Button variant="contained" fullWidth onClick={handleGenerateBoard}>
+											<Grid size={{ xs: 3 }} sx={{ display: "flex", alignItems: "center" }}>
+												<Button
+													variant="contained"
+													fullWidth
+													onClick={handleGenerateBoard}
+													disabled={generating}
+													startIcon={generating ? <CircularProgress size={16} color="inherit" /> : null}
+												>
 													{tr({ id: "questions.generateBoard" })}
 												</Button>
 											</Grid>
 										</Grid>
 
-										{/* Per-day duration -- days still always run back-to-back (no
-										gaps: the docs rule isn't negotiable), but each day's own steps
-										and response time are independently settable instead of one
-										value copied across every day. */}
-										<Box sx={{ overflowX: "auto" }}>
-											<Stack direction="row" spacing={1}>
-												{genParams.dayConfigs.map((day, index) => (
-													<Stack key={index} spacing={0.5} sx={{ minWidth: 110 }}>
-														<Typography variant="caption" color="textSecondary" align="center">
-															{tr({ id: "questions.dayLabel" })} {index + 1}
-														</Typography>
-														<TextField
-															label={tr({ id: "questions.stepsPerDay" })}
-															type="number" size="small"
-															value={day.steps}
-															onChange={changeDayConfig(index, "steps")}
-															helperText={`${stepBounds.min}-${stepBounds.max}`}
-															inputProps={{ min: stepBounds.min, max: stepBounds.max }}
-														/>
-														<TextField
-															label={tr({ id: "questions.secondsPerDay" })}
-															type="number" size="small"
-															value={day.response_time}
-															onChange={changeDayConfig(index, "response_time")}
-															inputProps={{ min: 1 }}
-														/>
-													</Stack>
-												))}
-											</Stack>
-										</Box>
+										{/* Per-day duration, populated from what map_gen.py generated --
+										days still always run back-to-back (no gaps: the docs rule
+										isn't negotiable), but each day's own steps/response time stay
+										independently adjustable afterward. */}
+										{dayStepBounds && (
+											<Box sx={{ overflowX: "auto" }}>
+												<Stack direction="row" spacing={1}>
+													{instance.raw_questions.daySteps.map((steps, index) => (
+														<Stack key={index} spacing={0.5} sx={{ minWidth: 110 }}>
+															<Typography variant="caption" color="textSecondary" align="center">
+																{tr({ id: "questions.dayLabel" })} {index + 1}
+															</Typography>
+															<TextField
+																label={tr({ id: "questions.stepsPerDay" })}
+																type="number" size="small"
+																value={steps}
+																onChange={changeGeneratedDay(index, "steps")}
+																helperText={`${dayStepBounds.min}-${dayStepBounds.max}`}
+																inputProps={{ min: dayStepBounds.min, max: dayStepBounds.max }}
+															/>
+															<TextField
+																label={tr({ id: "questions.secondsPerDay" })}
+																type="number" size="small"
+																value={instance.raw_questions.daySeconds[index]}
+																onChange={changeGeneratedDay(index, "response_time")}
+																inputProps={{ min: 1 }}
+															/>
+														</Stack>
+													))}
+												</Stack>
+											</Box>
+										)}
 
 										{instance?.match_id && matchTeams !== null && (
 											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

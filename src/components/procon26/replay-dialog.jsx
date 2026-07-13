@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Alert,
 	Box,
-	Chip,
+	Button,
+	Checkbox,
 	Dialog,
 	DialogContent,
 	DialogTitle,
@@ -29,8 +30,11 @@ const PLAY_INTERVAL_MS = 700;
 /**
  * Step-by-step replay viewer. Fetches the server's authoritative per-day
  * frames and animates them: a day selector, a step slider, and play/pause.
- * All teams render on one board (each a distinct colour); the cells where a
- * serving was collected this step are ringed.
+ * Teams can be filtered (checkbox multi-select, or click a team's label to
+ * view it alone) -- a team's colour is stable across days/filters (keyed by
+ * team_id, not by array position, since a team can join a game mid-match and
+ * so isn't necessarily in every day's team list). The cells where a serving
+ * was collected this step are ringed.
  */
 const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	const { formatMessage: tr } = useIntl();
@@ -39,6 +43,7 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	const [dayIndex, setDayIndex] = useState(0);
 	const [step, setStep] = useState(0);
 	const [playing, setPlaying] = useState(false);
+	const [selectedTeamIds, setSelectedTeamIds] = useState(null); // null until data loads
 	const timer = useRef(null);
 
 	useEffect(() => {
@@ -48,6 +53,7 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 		setDayIndex(0);
 		setStep(0);
 		setPlaying(false);
+		setSelectedTeamIds(null);
 		getGameReplay(gameId)
 			.then(setData)
 			.catch((e) => setError(getGameError(e)));
@@ -56,6 +62,44 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	const days = data?.days || [];
 	const day = days[dayIndex] || null;
 	const maxStep = day ? day.steps : 0;
+
+	// Every team_id that appears in ANY day (a team can join mid-match and so
+	// isn't necessarily in every day's list), sorted for a stable order.
+	const allTeamIds = useMemo(() => {
+		const ids = new Set();
+		days.forEach((d) => d.teams.forEach((t) => ids.add(String(t.team_id))));
+		return [...ids].sort();
+	}, [days]);
+
+	// Colour keyed by team_id (not array position) so it never shifts across
+	// days or when the filter hides/shows other teams.
+	const colorByTeamId = useMemo(() => {
+		const map = new Map();
+		allTeamIds.forEach((tid, i) => map.set(tid, TEAM_COLORS[i % TEAM_COLORS.length]));
+		return map;
+	}, [allTeamIds]);
+
+	// Default to every team selected once the replay data (and so
+	// allTeamIds) is known.
+	useEffect(() => {
+		if (data && selectedTeamIds === null) setSelectedTeamIds(new Set(allTeamIds));
+	}, [data, allTeamIds, selectedTeamIds]);
+
+	const toggleTeam = (tid) =>
+		setSelectedTeamIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(tid)) next.delete(tid);
+			else next.add(tid);
+			return next;
+		});
+	const soloTeam = (tid) => setSelectedTeamIds(new Set([tid]));
+	const selectAllTeams = () => setSelectedTeamIds(new Set(allTeamIds));
+
+	const selectDay = (index) => {
+		setDayIndex(index);
+		setStep(0);
+		setPlaying(false);
+	};
 
 	// Auto-advance while playing; stop at the end of the day.
 	useEffect(() => {
@@ -72,44 +116,60 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 		return () => clearInterval(timer.current);
 	}, [playing, day, maxStep]);
 
-	const selectDay = (index) => {
-		setDayIndex(index);
-		setStep(0);
-		setPlaying(false);
-	};
-
 	// Build per-team agent trails (cells visited up to the current step) +
 	// current positions; also the cells collected on this exact step (ringed).
+	// Only teams in selectedTeamIds are included.
 	const { replayTeams, collected, perTeam } = useMemo(() => {
-		if (!day) return { replayTeams: [], collected: [], perTeam: [] };
+		if (!day || !selectedTeamIds) return { replayTeams: [], collected: [], perTeam: [] };
 		const teamsArr = [];
 		const hl = [];
 		const summary = [];
-		day.teams.forEach((team, ti) => {
-			const color = TEAM_COLORS[ti % TEAM_COLORS.length];
+		day.teams
+			.filter((team) => selectedTeamIds.has(String(team.team_id)))
+			.forEach((team) => {
+				const color = colorByTeamId.get(String(team.team_id)) || "#999";
+				const upto = team.frames.slice(0, Math.min(step, team.frames.length - 1) + 1);
+				const cur = upto[upto.length - 1];
+				const agents = cur.agents.map((a, ai) => {
+					// Trail = this agent's cell across the steps so far, with
+					// consecutive duplicates (waits) collapsed.
+					const trail = [];
+					for (const f of upto) {
+						const c = f.agents[ai].cell;
+						if (trail[trail.length - 1] !== c) trail.push(c);
+					}
+					return { cell: a.cell, kind: a.type === "refuel" ? 1 : 0, trail };
+				});
+				teamsArr.push({ teamId: team.team_id, label: `#${team.team_id}`, color, agents });
+				(cur.collected || []).forEach((c) => hl.push(c));
+				summary.push({
+					teamId: team.team_id,
+					color,
+					submitted: team.submitted,
+					servings: cur.servings,
+					total: team.servings,
+				});
+			});
+		return { replayTeams: teamsArr, collected: hl, perTeam: summary };
+	}, [day, step, selectedTeamIds, colorByTeamId]);
+
+	// Per-team stats for THIS day, for the filter row's labels -- computed
+	// from the UNFILTERED day.teams (not perTeam) so a team's own label keeps
+	// showing its stats even after it's unchecked; a team not yet in the
+	// game on this day just shows no stats.
+	const dayStatsByTeamId = useMemo(() => {
+		const map = new Map();
+		if (!day) return map;
+		day.teams.forEach((team) => {
 			const upto = team.frames.slice(0, Math.min(step, team.frames.length - 1) + 1);
 			const cur = upto[upto.length - 1];
-			const agents = cur.agents.map((a, ai) => {
-				// Trail = this agent's cell across the steps so far, with
-				// consecutive duplicates (waits) collapsed.
-				const trail = [];
-				for (const f of upto) {
-					const c = f.agents[ai].cell;
-					if (trail[trail.length - 1] !== c) trail.push(c);
-				}
-				return { cell: a.cell, kind: a.type === "refuel" ? 1 : 0, trail };
-			});
-			teamsArr.push({ teamId: team.team_id, label: `#${team.team_id}`, color, agents });
-			(cur.collected || []).forEach((c) => hl.push(c));
-			summary.push({
-				teamId: team.team_id,
-				color,
+			map.set(String(team.team_id), {
 				submitted: team.submitted,
 				servings: cur.servings,
 				total: team.servings,
 			});
 		});
-		return { replayTeams: teamsArr, collected: hl, perTeam: summary };
+		return map;
 	}, [day, step]);
 
 	return (
@@ -175,26 +235,67 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 							</Typography>
 						</Stack>
 
+						{/* Team filter: checkbox toggles multi-select inclusion; clicking
+						a team's label shows that team alone. Colour is keyed by
+						team_id, stable across days even when a team joined late or is
+						currently filtered out. */}
 						<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
-							{perTeam.map((t) => (
-								<Chip
-									key={t.teamId}
-									size="small"
-									variant="outlined"
-									icon={
-										<Box
-											component="span"
-											sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: t.color, ml: 1 }}
+							{allTeamIds.map((tid) => {
+								const color = colorByTeamId.get(tid);
+								const checked = selectedTeamIds?.has(tid) ?? true;
+								const t = dayStatsByTeamId.get(tid);
+								return (
+									<Stack
+										key={tid}
+										direction="row"
+										spacing={0}
+										alignItems="center"
+										sx={{
+											border: 2,
+											borderColor: color,
+											borderRadius: 4,
+											pr: 1,
+											opacity: checked ? 1 : 0.45,
+										}}
+									>
+										<Checkbox
+											size="small"
+											checked={checked}
+											onChange={() => toggleTeam(tid)}
+											sx={{ p: 0.5, color, "&.Mui-checked": { color } }}
 										/>
-									}
-									sx={{ borderColor: t.color, borderWidth: 2 }}
-									label={`${tr({ id: "hexudon.answers.team" })} ${t.teamId}${
-										String(t.teamId) === String(ownTeamId) ? ` (${tr({ id: "hexudon.standings.you" })})` : ""
-									} · ${tr({ id: "hexudon.standings.servings" })}: ${t.servings}/${t.total}${
-										t.submitted ? "" : ` · ${tr({ id: "hexudon.replay.noSubmit" })}`
-									}`}
-								/>
-							))}
+										<Box
+											component="button"
+											type="button"
+											onClick={() => soloTeam(tid)}
+											title={tr({ id: "hexudon.replay.soloHint" })}
+											sx={{
+												border: 0,
+												background: "none",
+												cursor: "pointer",
+												p: 0,
+												font: "inherit",
+												textAlign: "left",
+											}}
+										>
+											<Typography variant="caption" component="span">
+												{tr({ id: "hexudon.answers.team" })} {tid}
+												{String(tid) === String(ownTeamId) ? ` (${tr({ id: "hexudon.standings.you" })})` : ""}
+												{t
+													? ` · ${tr({ id: "hexudon.standings.servings" })}: ${t.servings}/${t.total}${
+															t.submitted ? "" : ` · ${tr({ id: "hexudon.replay.noSubmit" })}`
+														}`
+													: ""}
+											</Typography>
+										</Box>
+									</Stack>
+								);
+							})}
+							{allTeamIds.length > 1 && (selectedTeamIds?.size ?? 0) < allTeamIds.length && (
+								<Button size="small" onClick={selectAllTeams}>
+									{tr({ id: "hexudon.replay.selectAll" })}
+								</Button>
+							)}
 							<Box sx={{ flex: 1 }} />
 							<Typography variant="caption" color="textSecondary">
 								● {tr({ id: "hexudon.patrol" })} · ○ {tr({ id: "hexudon.refuel" })}

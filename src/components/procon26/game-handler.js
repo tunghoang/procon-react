@@ -117,6 +117,33 @@ export const simulateCommands = (mapConfig, traffic, startPos, commands) => {
 };
 
 /**
+ * Conservative fuel projection for ONE patrol agent, assuming NO refuel.
+ * The client can't know cross-agent refuel co-location timing (the server's
+ * lockstep engine decides that), so this deliberately ignores refuels: it's a
+ * soft "you'll run out unless a refuel car meets you" hint, never a hard
+ * block. Returns {ranOut, atCommand, endFuel}. `startFuel` is the agent's
+ * current fuel; fuel is charged from the departure cell (matching the engine).
+ */
+export const projectFuelNoRefuel = (mapConfig, startPos, startFuel, commands) => {
+	const cells = flattenCells(mapConfig);
+	const width = mapConfig.map.width;
+	const height = mapConfig.map.height;
+	let pos = startPos;
+	let fuel = startFuel;
+	for (let i = 0; i < commands.length; i += 1) {
+		const command = commands[i];
+		if (!Number.isInteger(command) || command <= -1 || command > 5) continue; // wait/invalid: no fuel
+		const target = neighborCell(width, height, pos, command);
+		if (target === null || TERRAIN_NAMES[cells[target]] === "pond") break;
+		const cost = FUEL_COST[TERRAIN_NAMES[cells[pos]]];
+		if (fuel < cost) return { ranOut: true, atCommand: i + 1, endFuel: fuel };
+		fuel -= cost;
+		pos = target;
+	}
+	return { ranOut: false, atCommand: null, endFuel: fuel };
+};
+
+/**
  * Validate a whole official day plan (number[][]) client-side: one command
  * array per agent, each consuming exactly `requiredSteps`. Returns a list of
  * per-agent results plus an overall `valid` flag.

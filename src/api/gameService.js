@@ -68,12 +68,25 @@ export const selectAgentTypes = (gameId, types) =>
 export const submitActions = (gameId, day, actions) =>
 	gameClient.post("/game/actions", { game_id: gameId, day, actions });
 
-// --- Optional endpoints (NOT part of the checked-in FastAPI) --------------
-// Served by the in-app mock for demos; the UI must feature-detect via
-// isEndpointMissing() and hide the corresponding views when absent.
+// --- History endpoints (training/audit feature, not part of the official
+// ruleset -- but implemented for real on the checked-in FastAPI now).
+// isEndpointMissing() is kept for older deployments that predate these.
 
 export const getGameActions = (gameId) =>
 	gameClient.get("/game/actions", { params: { game_id: gameId } });
 
 export const getGameReplay = (gameId) =>
 	gameClient.get("/game/replay", { params: { game_id: gameId } });
+
+// Admin only. Wraps map_gen.py's MapGenerator server-side so the admin UI
+// doesn't duplicate that connectivity/Dijkstra-verified algorithm in JS.
+// Pure generation -- doesn't create a game. Returns the full /game/init body
+// (game_id/startsAt/teams are placeholders the caller must replace with the
+// real question id, the admin's chosen start time, and the match's actual
+// team roster before saving).
+export const generateMap = (difficulty, teams, seed) =>
+	gameClient.post("/game/generate", {
+		difficulty,
+		teams,
+		...(seed !== undefined && seed !== null ? { seed } : {}),
+	});
