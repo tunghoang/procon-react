@@ -234,16 +234,15 @@ const GamePlay = ({ gameId }) => {
 	const countdownTarget =
 		state?.status === "selecting_agents" ? selectionEndsAt : dayEndsAt;
 	const countdown = useCountdown(state?.status === "finished" ? null : countdownTarget);
-	const beforeStart =
-		state?.status === "selecting_agents" &&
-		questionConfig &&
-		Date.now() / 1000 < questionConfig.startsAt;
 
 	const handleKinds = async (types) => {
 		setSubmitting(true);
 		try {
 			await selectAgentTypes(gameId, types);
 			showMessage(tr({ id: "hexudon.kinds.saved" }), "success");
+			// Refresh immediately so the board + agent info reflect the just-made
+			// selection instead of waiting up to POLL_MS for the next poll.
+			await refreshState();
 		} catch (e) {
 			showMessage(getGameError(e), "error", 4000);
 		} finally {
@@ -257,6 +256,9 @@ const GamePlay = ({ gameId }) => {
 			await submitActions(gameId, state.day, payload);
 			setSubmittedDay(state.day);
 			showMessage(tr({ id: "hexudon.plan.accepted" }), "success");
+			// Pull fresh state right away (agent fuel/positions, day, standings)
+			// rather than leaving the UI stale until the next poll tick.
+			await refreshState();
 		} catch (e) {
 			showMessage(getGameError(e), "error", 5000);
 		} finally {
@@ -329,9 +331,8 @@ const GamePlay = ({ gameId }) => {
 			<Paper variant="outlined" sx={{ p: 2 }}>
 				{state.status === "selecting_agents" && !isAdmin && (
 					<Stack spacing={2}>
-						{beforeStart && (
-							<Alert severity="info">{tr({ id: "hexudon.waitingStart" })}</Alert>
-						)}
+						{/* Selection is open for the whole lead-in; the countdown
+						    above ticks down to Day 1. */}
 						{teamConfig ? (
 							<AgentKindsPanel
 								mapConfig={teamConfig}

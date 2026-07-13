@@ -116,6 +116,8 @@
   "hexudon.replay.noSubmit": "không nộp",
   "hexudon.replay.selectAll": "Hiện tất cả đội",
   "hexudon.replay.soloHint": "Bấm để chỉ xem đội này",
+  "hexudon.replay.collectedNow": "Thu (bước này)",
+  "hexudon.replay.agentsFuel": "Xe (nhiên liệu)",
   "competition.enter": "Vào thi đấu",
   "competition.noMatches": "Chưa có trận đấu nào đang mở",
   "competition.active": "Đang mở",

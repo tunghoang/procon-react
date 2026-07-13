@@ -22,6 +22,7 @@ import { jwtDecode } from "jwt-decode";
 import LoadingPage from "./components/loading-page";
 import { router } from "./router";
 import { setRouter } from "./api/commons";
+import { Agentation } from "agentation";
 
 function loadMessages(locale) {
 	switch (locale) {
@@ -109,6 +110,11 @@ export function App() {
 							) : (
 								<RouterProvider router={router} />
 							)}
+							{/* Dev-only overlay. Vite exposes import.meta.env.DEV
+							    (true under `vite dev`, false in production builds);
+							    process.env.NODE_ENV is undefined in Vite client code,
+							    so it must NOT be used to gate this. */}
+							{import.meta.env.DEV && <Agentation />}
 						</ConfirmProvider>
 					</ThemeProvider>
 				</LocalizationProvider>

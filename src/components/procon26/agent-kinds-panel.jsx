@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
 	Alert,
 	Button,
+	Chip,
 	Stack,
 	ToggleButton,
 	ToggleButtonGroup,
@@ -52,13 +53,23 @@ const AgentKindsPanel = ({ mapConfig, onSubmit, submitting }) => {
 					</Stack>
 				))}
 			</Stack>
-			<Stack direction="row" spacing={2} alignItems="center">
+			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button variant="contained" disabled={submitting} onClick={() => onSubmit(kinds)}>
 					{tr({ id: "hexudon.kinds.submit" })}
 				</Button>
-				<Typography variant="body2" color="textSecondary">
-					{JSON.stringify(kinds)}
-				</Typography>
+				{/* Live counts, updated as toggles change. */}
+				<Chip
+					size="small"
+					color="primary"
+					variant="outlined"
+					label={`${tr({ id: "hexudon.patrol" })}: ${kinds.filter((k) => k === 0).length}`}
+				/>
+				<Chip
+					size="small"
+					color="success"
+					variant="outlined"
+					label={`${tr({ id: "hexudon.refuel" })}: ${kinds.filter((k) => k === 1).length}`}
+				/>
 			</Stack>
 		</Stack>
 	);

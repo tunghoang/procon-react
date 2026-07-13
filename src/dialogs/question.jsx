@@ -156,6 +156,12 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				// name/days, then save) can't ship a startsAt already in the past.
 				startsAt: Math.floor(Date.now() / 1000) + genParams.starts_in_minutes * 60,
 				starts_in_minutes: genParams.starts_in_minutes,
+				// Day 1 begins exactly AT startsAt (= "starts in N minutes"); the
+				// lead-in IS the agent-type selection window (teams pick during
+				// the countdown). agent_selection_time_limit=0 means no extra
+				// window is tacked on AFTER startsAt -- so "start in 1 min" isn't
+				// silently inflated by the selection window.
+				agent_selection_time_limit: 0,
 				teams: matchTeams.map((t) => ({ team_id: String(t.id), agents: sharedAgents })),
 			};
 			delete init.game_id; // meaningless until the question is actually created

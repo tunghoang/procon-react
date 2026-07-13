@@ -116,6 +116,8 @@
   "hexudon.replay.noSubmit": "no submission",
   "hexudon.replay.selectAll": "Show all teams",
   "hexudon.replay.soloHint": "Click to view only this team",
+  "hexudon.replay.collectedNow": "Collected (this step)",
+  "hexudon.replay.agentsFuel": "Agents (fuel)",
   "competition.enter": "Enter match",
   "competition.noMatches": "No matches available",
   "competition.active": "Active",

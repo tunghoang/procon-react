@@ -4,6 +4,7 @@ import {
 	Box,
 	Button,
 	Checkbox,
+	Chip,
 	Dialog,
 	DialogContent,
 	DialogTitle,
@@ -11,6 +12,11 @@ import {
 	Slider,
 	Stack,
 	Tab,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableRow,
 	Tabs,
 	Typography,
 } from "@mui/material";
@@ -148,6 +154,12 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 					submitted: team.submitted,
 					servings: cur.servings,
 					total: team.servings,
+					collectedNow: (cur.collected || []).length,
+					agents: cur.agents.map((a) => ({
+						cell: a.cell,
+						fuel: a.fuel,
+						kind: a.type === "refuel" ? 1 : 0,
+					})),
 				});
 			});
 		return { replayTeams: teamsArr, collected: hl, perTeam: summary };
@@ -309,6 +321,65 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 							highlightCells={collected}
 							radius={22}
 						/>
+
+						{/* Per-step stats table: updates as the step slider moves,
+						    showing each (selected) team's state AT THIS STEP. */}
+						{perTeam.length > 0 && (
+							<Box sx={{ overflowX: "auto" }}>
+								<Table size="small">
+									<TableHead>
+										<TableRow>
+											<TableCell>{tr({ id: "hexudon.answers.team" })}</TableCell>
+											<TableCell align="right">{tr({ id: "hexudon.standings.servings" })}</TableCell>
+											<TableCell align="right">{tr({ id: "hexudon.replay.collectedNow" })}</TableCell>
+											<TableCell>{tr({ id: "hexudon.replay.agentsFuel" })}</TableCell>
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{perTeam.map((t) => (
+											<TableRow key={t.teamId}>
+												<TableCell>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														<Box
+															component="span"
+															sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: t.color }}
+														/>
+														<span>
+															{t.teamId}
+															{String(t.teamId) === String(ownTeamId)
+																? ` (${tr({ id: "hexudon.standings.you" })})`
+																: ""}
+														</span>
+													</Stack>
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{t.servings}/{t.total}
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{t.collectedNow > 0 ? `+${t.collectedNow}` : "—"}
+												</TableCell>
+												<TableCell>
+													<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+														{t.agents.map((a, ai) => (
+															<Chip
+																key={ai}
+																size="small"
+																variant="outlined"
+																label={`#${ai} ${
+																	a.kind === 0
+																		? `${tr({ id: "hexudon.patrol" })} ⛽${a.fuel}`
+																		: tr({ id: "hexudon.refuel" })
+																}`}
+															/>
+														))}
+													</Stack>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</Box>
+						)}
 					</Stack>
 				)}
 			</DialogContent>
