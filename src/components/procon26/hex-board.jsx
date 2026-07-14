@@ -49,6 +49,7 @@ const HexBoard = ({
 	roadByCell = null,
 	highlightCells = null,
 	replayTeams = null,
+	finalTeams = null,
 }) => {
 	const { formatMessage: tr } = useIntl();
 	const [zoom, setZoom] = useState(1);
@@ -248,6 +249,49 @@ const HexBoard = ({
 		});
 	};
 
+	// Opponents' END-OF-DAY final positions (replay only). Drawn as hollow,
+	// dashed diamonds so they read as "final marker" and never get confused with
+	// the filled round tokens of the team whose step-by-step route is playing.
+	// Per the official rule a competitor may see only their own route plus each
+	// opponent's final position -- so opponents get a static marker, no trail.
+	const renderFinalTeams = () =>
+		(finalTeams || []).flatMap((team, ti) =>
+			(team.agents || []).map((agent, ai) => {
+				const { x, y } = centerOf(agent.cell);
+				const r = radius * 0.36;
+				const dx = ((ti % 3) - 1) * radius * 0.22;
+				const cx = x + dx;
+				const cy = y;
+				return (
+					<g key={`final-${team.teamId}-${ai}`}>
+						<rect
+							x={cx - r}
+							y={cy - r}
+							width={r * 2}
+							height={r * 2}
+							transform={`rotate(45 ${cx} ${cy})`}
+							fill="#ffffff"
+							fillOpacity={0.75}
+							stroke={team.color}
+							strokeWidth={2}
+							strokeDasharray="3 2"
+						/>
+						<text
+							x={cx}
+							y={cy + r * 0.5}
+							textAnchor="middle"
+							fontSize={r * 1.05}
+							fontWeight="bold"
+							fill={team.color}
+						>
+							{ai}
+						</text>
+						<title>{`${team.label || team.teamId} · ${tr({ id: "hexudon.replay.finalPos" })} #${ai}`}</title>
+					</g>
+				);
+			}),
+		);
+
 	const renderHighlights = () =>
 		[...highlight].map((cell) => {
 			const { x, y } = centerOf(cell);
@@ -330,7 +374,10 @@ const HexBoard = ({
 					{renderHighlights()}
 					{replayTeams ? renderReplayTrails() : renderPaths()}
 					{replayTeams ? (
-						renderReplayTokens()
+						<>
+							{renderReplayTokens()}
+							{finalTeams ? renderFinalTeams() : null}
+						</>
 					) : (
 						<>
 							{adminTeams ? renderAdminTeams() : null}
@@ -363,6 +410,22 @@ const HexBoard = ({
 							<Typography variant="caption">{tr({ id: "hexudon.refuel" })}</Typography>
 						</Stack>
 					</>
+				)}
+				{finalTeams && finalTeams.length > 0 && (
+					<Stack direction="row" spacing={0.5} alignItems="center">
+						<Box
+							sx={{
+								width: 12,
+								height: 12,
+								bgcolor: "transparent",
+								border: "2px dashed #8e24aa",
+								transform: "rotate(45deg)",
+							}}
+						/>
+						<Typography variant="caption">
+							{tr({ id: "hexudon.replay.opponentFinal" })}
+						</Typography>
+					</Stack>
 				)}
 			</Stack>
 		</Box>

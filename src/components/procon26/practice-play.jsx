@@ -8,7 +8,6 @@ import {
 	Stack,
 	Typography,
 } from "@mui/material";
-import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ReplayIcon from "@mui/icons-material/Replay";
 import TuneIcon from "@mui/icons-material/Tune";
@@ -27,7 +26,6 @@ import { showMessage } from "../../api/commons";
 import HexBoard from "./hex-board";
 import PlanEditor from "./plan-editor";
 import AgentKindsPanel from "./agent-kinds-panel";
-import PracticeCompareDialog from "./practice-compare-dialog";
 import ReplayDialog from "./replay-dialog";
 import GameConfigDialog from "./game-config-dialog";
 import LoadingPage from "../loading-page";
@@ -52,7 +50,6 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 	const [selectedAgent, setSelectedAgent] = useState(0);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState(null);
-	const [compareOpen, setCompareOpen] = useState(false);
 	const [replayOpen, setReplayOpen] = useState(false);
 	const [configOpen, setConfigOpen] = useState(false);
 
@@ -214,16 +211,6 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 			>
 				{tr({ id: "hexudon.config.button" })}
 			</Button>
-			{otherTeams.length > 0 && state.status !== "selecting_agents" && (
-				<Button
-					size="small"
-					variant="outlined"
-					startIcon={<CompareArrowsIcon />}
-					onClick={() => setCompareOpen(true)}
-				>
-					{tr({ id: "practice.compareButton" })}
-				</Button>
-			)}
 			{(state.status === "finished" || state.day >= 1) && (
 				<Button
 					size="small"
@@ -334,24 +321,12 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 				/>
 			</Paper>
 
-			<PracticeCompareDialog
-				open={compareOpen}
-				onClose={() => setCompareOpen(false)}
-				questionId={questionId}
-				ownTeamId={ownTeamId}
-				ownGameId={practiceGameId}
-				otherTeams={otherTeams}
-				totalDays={totalDays}
-				mapConfig={mapConfig}
-				onCopied={async () => {
-					setCompareOpen(false);
-					await refresh();
-				}}
-			/>
 			<ReplayDialog
 				gameId={practiceGameId}
 				mapConfig={mapConfig}
 				ownTeamId={ownTeamId}
+				opponents={otherTeams.map((t) => ({ id: t.id, name: t.name }))}
+				questionId={questionId}
 				open={replayOpen}
 				onClose={() => setReplayOpen(false)}
 			/>

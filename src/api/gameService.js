@@ -95,20 +95,12 @@ export const submitPracticeActions = (gameId, day, actions) =>
 	gameClient.post("/game/practice/actions", { game_id: gameId, day, actions });
 
 // Any authenticated team. Read a practice game's replay -- including another
-// team's -- for the compare view (own game's replay works via getGameReplay too,
-// but this one isn't blocked by the team-in-game check).
+// team's. The service collapses each day to its final frame only, so this
+// exposes an opponent's END-OF-DAY position but never their step-by-step route
+// (used to overlay opponents' final positions on the replay). Own game's replay
+// works via getGameReplay too, but this one isn't blocked by the team-in-game check.
 export const getPracticePeerReplay = (gameId) =>
 	gameClient.get("/game/practice/peer", { params: { game_id: gameId } });
-
-// Team only. Fork another team's practice game into your own through
-// `uptoDay` (adopts their agent types + days 0..uptoDay; your later days reset).
-export const copyPractice = (gameId, fromGameId, fromTeamId, uptoDay) =>
-	gameClient.post("/game/practice/copy", {
-		game_id: gameId,
-		from_game_id: fromGameId,
-		from_team_id: fromTeamId,
-		upto_day: uptoDay,
-	});
 
 // Admin only. Reset a game to the agent-selection stage and delete EVERY
 // team's submissions across all days, so the whole match is replayed from

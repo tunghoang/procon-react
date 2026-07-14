@@ -26,7 +26,11 @@ import PauseIcon from "@mui/icons-material/Pause";
 import SkipPreviousIcon from "@mui/icons-material/SkipPrevious";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import { useIntl } from "react-intl";
-import { getGameReplay, getGameError } from "../../api/gameService";
+import {
+	getGameReplay,
+	getGameError,
+	getPracticePeerReplay,
+} from "../../api/gameService";
 import HexBoard from "./hex-board";
 import LoadingPage from "../loading-page";
 
@@ -38,6 +42,9 @@ const TEAM_COLORS = [
 	"#c2185b",
 	"#5d4037",
 ];
+// Distinct palette for opponents' final-position markers (kept away from the
+// own-team blue at TEAM_COLORS[0]).
+const OPPONENT_COLORS = ["#8e24aa", "#ef6c00", "#00838f", "#c2185b", "#5d4037"];
 const PLAY_INTERVAL_MS = 700;
 
 /**
@@ -49,7 +56,15 @@ const PLAY_INTERVAL_MS = 700;
  * so isn't necessarily in every day's team list). The cells where a serving
  * was collected this step are ringed.
  */
-const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
+const ReplayDialog = ({
+	gameId,
+	mapConfig,
+	open,
+	onClose,
+	ownTeamId,
+	opponents = null,
+	questionId = null,
+}) => {
 	const { formatMessage: tr } = useIntl();
 	const [data, setData] = useState(null);
 	const [error, setError] = useState(null);
@@ -57,6 +72,8 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 	const [step, setStep] = useState(0);
 	const [playing, setPlaying] = useState(false);
 	const [selectedTeamIds, setSelectedTeamIds] = useState(null); // null until data loads
+	const [peerReplays, setPeerReplays] = useState({}); // {oppId: replay} — practice opponents
+	const [showOpponents, setShowOpponents] = useState(true);
 	const timer = useRef(null);
 
 	useEffect(() => {
@@ -67,10 +84,32 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 		setStep(0);
 		setPlaying(false);
 		setSelectedTeamIds(null);
+		setPeerReplays({});
 		getGameReplay(gameId)
 			.then(setData)
 			.catch((e) => setError(getGameError(e)));
 	}, [open, gameId]);
+
+	// Practice overlay: fetch each opponent's END-OF-DAY replay (the service
+	// collapses peer replays to final frames only). Failures are skipped quietly
+	// so one unreachable opponent never blocks the viewer.
+	useEffect(() => {
+		if (!open || !questionId || !opponents?.length) return;
+		let cancelled = false;
+		Promise.all(
+			opponents.map((op) =>
+				getPracticePeerReplay(`${questionId}:${op.id}`)
+					.then((r) => [String(op.id), r])
+					.catch(() => null),
+			),
+		).then((pairs) => {
+			if (cancelled) return;
+			setPeerReplays(Object.fromEntries(pairs.filter(Boolean)));
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [open, questionId, opponents]);
 
 	const days = data?.days || [];
 	const day = days[dayIndex] || null;
@@ -205,6 +244,40 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 		});
 		return map;
 	}, [day, step]);
+
+	// Stable colour per opponent (practice overlay), keyed by id.
+	const opponentColorById = useMemo(() => {
+		const map = new Map();
+		(opponents || [])
+			.map((o) => String(o.id))
+			.sort()
+			.forEach((id, i) => map.set(id, OPPONENT_COLORS[i % OPPONENT_COLORS.length]));
+		return map;
+	}, [opponents]);
+
+	// Opponents' final position for the SELECTED day (matched by day number, not
+	// array index) -- a static end-of-day marker, never a step-by-step route.
+	const finalTeams = useMemo(() => {
+		if (!day || !showOpponents) return null;
+		const out = [];
+		(opponents || []).forEach((op) => {
+			const rep = peerReplays[String(op.id)];
+			const d = rep?.days?.find((x) => x.day === day.day);
+			const teamDay = d?.teams?.[0];
+			const frame = teamDay?.frames?.[teamDay.frames.length - 1];
+			if (!frame) return;
+			out.push({
+				teamId: op.id,
+				label: op.name || `#${op.id}`,
+				color: opponentColorById.get(String(op.id)) || "#8e24aa",
+				agents: frame.agents.map((a) => ({
+					cell: a.cell,
+					kind: a.type === "refuel" ? 1 : 0,
+				})),
+			});
+		});
+		return out.length ? out : null;
+	}, [day, showOpponents, opponents, peerReplays, opponentColorById]);
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -371,6 +444,58 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 							</Typography>
 						</Stack>
 
+						{/* Practice overlay control: opponents are shown as their
+						    END-OF-DAY final position only (official rule). */}
+						{opponents?.length > 0 && (
+							<Stack
+								direction="row"
+								spacing={1}
+								flexWrap="wrap"
+								alignItems="center"
+								useFlexGap>
+								<Box
+									component="label"
+									sx={{
+										display: "inline-flex",
+										alignItems: "center",
+										cursor: "pointer",
+									}}>
+									<Checkbox
+										size="small"
+										checked={showOpponents}
+										onChange={(e) => setShowOpponents(e.target.checked)}
+										sx={{ p: 0.5 }}
+									/>
+									<Typography variant="caption">
+										{tr({ id: "hexudon.replay.showOpponents" })}
+									</Typography>
+								</Box>
+								{showOpponents &&
+									opponents.map((op) => (
+										<Stack
+											key={op.id}
+											direction="row"
+											spacing={0.5}
+											alignItems="center">
+											<Box
+												sx={{
+													width: 11,
+													height: 11,
+													border: `2px dashed ${opponentColorById.get(String(op.id)) || "#8e24aa"}`,
+													transform: "rotate(45deg)",
+												}}
+											/>
+											<Typography variant="caption">
+												{op.name || `#${op.id}`}
+												{peerReplays[String(op.id)]
+													? ""
+													: ` (${tr({ id: "hexudon.replay.noData" })})`}
+											</Typography>
+										</Stack>
+									))}
+							</Stack>
+						)}
+
 						{/* Per-step stats table: updates as the step slider moves,
 						    showing each (selected) team's state AT THIS STEP. */}
 						{perTeam.length > 0 && (
@@ -457,6 +582,7 @@ const ReplayDialog = ({ gameId, mapConfig, open, onClose, ownTeamId }) => {
 						<HexBoard
 							mapConfig={mapConfig}
 							replayTeams={replayTeams}
+							finalTeams={finalTeams}
 							roadByCell={day.road_condition}
 							highlightCells={collected}
 							radius={22}

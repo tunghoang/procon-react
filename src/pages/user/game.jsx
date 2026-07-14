@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import GamePlay from "../../components/procon26/game-play";
 import PracticePlay from "../../components/procon26/practice-play";
+import PracticeSpectate from "../../components/procon26/practice-spectate";
 import LoadingPage from "../../components/loading-page";
 import { api, showMessage } from "../../api/commons";
 import { SERVICE_API } from "../../config/env";
@@ -15,7 +16,8 @@ import { copyText } from "../../utils/commons";
 
 /**
  * Admin view of a PRACTICE match: pick a team and spectate that team's solo
- * game (`${questionId}:${teamId}`) read-only via GamePlay's spectator mode.
+ * game (`${questionId}:${teamId}`) read-only. Driven by the team's submit state
+ * (self-paced), not a wall-clock timer -- see PracticeSpectate.
  */
 const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
 	const { formatMessage: tr } = useIntl();
@@ -24,6 +26,9 @@ const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
 	if (!teams?.length) {
 		return <Alert severity="info">{tr({ id: "practice.adminNoTeams" })}</Alert>;
 	}
+	const opponents = teams
+		.filter((t) => String(t.id) !== String(teamId))
+		.map((t) => ({ id: t.id, name: t.name }));
 	return (
 		<Stack spacing={2}>
 			<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
@@ -42,10 +47,13 @@ const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
 				))}
 			</Stack>
 			{teamId != null && (
-				<GamePlay
+				<PracticeSpectate
 					key={teamId}
-					gameId={`${questionId}:${teamId}`}
-					mapConfigOverride={mapConfig}
+					questionId={questionId}
+					teamId={teamId}
+					teamName={teams.find((t) => String(t.id) === String(teamId))?.name}
+					mapConfig={mapConfig}
+					opponents={opponents}
 				/>
 			)}
 		</Stack>
@@ -56,8 +64,8 @@ const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
  * HEXUDON play screen. `gameId` here is the team-manager question id.
  *  - Normal match: one shared game at that id -> GamePlay.
  *  - Practice match: each team plays its own game at `${questionId}:${teamId}`
- *    -> PracticePlay (self-paced, compare/copy). Detected from question_data.
- *    An admin instead spectates any team's game via PracticeAdminView.
+ *    -> PracticePlay (self-paced). Detected from question_data. An admin instead
+ *    spectates any team's game via PracticeAdminView.
  */
 const UserGame = () => {
 	const { gameId } = useParams({ strict: false });
@@ -90,7 +98,7 @@ const UserGame = () => {
 						const m = await api.get(`${SERVICE_API}/match/${question.match_id}`);
 						teams = m?.teams || [];
 					} catch {
-						/* teams list is only needed for the compare feature */
+						/* teams list powers the replay's opponent-final overlay */
 					}
 				}
 				if (!cancelled) setMeta({ isPractice, mapConfig: cfg, teams });
