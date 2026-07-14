@@ -21,6 +21,11 @@ const PlanEditor = ({
 	onSubmit,
 	submitting,
 	submitted,
+	// The per-agent chips only pick which agent's path the board previews (and
+	// show each agent's live step count). Hide them where the board has no path
+	// preview (practice) -- submit always sends ALL agents' plans at once, so
+	// the chips can mislead users into thinking they submit per agent.
+	showAgentSelector = true,
 }) => {
 	const { formatMessage: tr } = useIntl();
 	const [jsonDraft, setJsonDraft] = useState(null);
@@ -83,21 +88,23 @@ const PlanEditor = ({
 			{/* Per-agent step check. Clicking a chip selects the agent whose path
 			    the board previews; green = that agent's plan uses exactly the day's
 			    steps. */}
-			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-				{agents.map((agent, index) => {
-					const result = validation.agents[index];
-					const ok = result && !result.error && result.steps === requiredSteps;
-					return (
-						<Chip
-							key={index}
-							label={`#${index} ${agent.kind === 0 ? tr({ id: "hexudon.patrol" }) : tr({ id: "hexudon.refuel" })} · ${result ? result.steps : 0}/${requiredSteps}`}
-							color={index === selectedAgent ? "primary" : ok ? "success" : "default"}
-							variant={index === selectedAgent ? "filled" : "outlined"}
-							onClick={() => onSelectAgent(index)}
-						/>
-					);
-				})}
-			</Stack>
+			{showAgentSelector && (
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+					{agents.map((agent, index) => {
+						const result = validation.agents[index];
+						const ok = result && !result.error && result.steps === requiredSteps;
+						return (
+							<Chip
+								key={index}
+								label={`#${index} ${agent.kind === 0 ? tr({ id: "hexudon.patrol" }) : tr({ id: "hexudon.refuel" })} · ${result ? result.steps : 0}/${requiredSteps}`}
+								color={index === selectedAgent ? "primary" : ok ? "success" : "default"}
+								variant={index === selectedAgent ? "filled" : "outlined"}
+								onClick={() => onSelectAgent(index)}
+							/>
+						);
+					})}
+				</Stack>
+			)}
 
 			<Typography variant="body2" color="textSecondary">
 				{tr({ id: "hexudon.plan.inputHelp" }, { steps: requiredSteps })}

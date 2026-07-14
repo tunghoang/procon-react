@@ -159,6 +159,8 @@
   "nav.menu": "Menu",
   "nav.ping": "Kiểm tra ping máy chủ",
   "nav.copyToken": "Sao chép token",
+  "nav.copyUserId": "Sao chép id người dùng (nối vào game id khi luyện tập, vd: gameId:idCủaBạn)",
+  "nav.copiedUserId": "Đã sao chép id người dùng",
   "nav.competition": "Thi đấu",
   "nav.changePassword": "Đổi mật khẩu",
   "nav.adminArea": "Khu vực quản trị",

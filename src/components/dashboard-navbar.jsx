@@ -7,6 +7,7 @@ import {
 	Stack,
 	Toolbar,
 	Tooltip,
+	Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/MeetingRoom";
@@ -22,6 +23,7 @@ import { useIntl } from "react-intl";
 import { useNavigate } from "@tanstack/react-router";
 import { Box } from "@mui/system";
 import { api, getError, showMessage } from "../api/commons";
+import { copyText } from "../utils/commons";
 import { SERVICE_API } from "../config/env";
 import Context from "../context";
 import LanguageTrans from "./language-trans";
@@ -158,21 +160,38 @@ export const DashboardNavbar = (props) => {
 							</Tooltip>
 						)}
 						<LanguageTrans />
-						<Tooltip title={team?.name || ""}>
-							<Avatar
-								style={{ cursor: "pointer" }}
-								sx={{
-									height: 40,
-									width: 40,
-								}}
-								src={
-									team?.is_admin
-										? "/static/images/avatars/gigachad.png"
-										: "/static/images/avatars/avatar_1.png"
-								}>
-								<UserCircleIcon fontSize="small" />
-							</Avatar>
-						</Tooltip>
+						<Stack alignItems="center" spacing={0.25}>
+							<Tooltip title={team?.name || ""}>
+								<Avatar
+									style={{ cursor: "pointer" }}
+									sx={{
+										height: 40,
+										width: 40,
+									}}
+									src={
+										team?.is_admin
+											? "/static/images/avatars/gigachad.png"
+											: "/static/images/avatars/avatar_1.png"
+									}>
+									<UserCircleIcon fontSize="small" />
+								</Avatar>
+							</Tooltip>
+							{team?.id != null && (
+								<Tooltip title={tr({ id: "nav.copyUserId" })}>
+									<Typography
+										variant="caption"
+										color="textSecondary"
+										onClick={async () => {
+											if (await copyText(String(team.id))) {
+												showMessage(tr({ id: "nav.copiedUserId" }), "success", 2000);
+											}
+										}}
+										sx={{ lineHeight: 1, cursor: "pointer", userSelect: "all" }}>
+										ID: {team.id}
+									</Typography>
+								</Tooltip>
+							)}
+						</Stack>
 						<Tooltip title={tr({ id: "Sign Out" })}>
 							<IconButton
 								sx={{ ml: 1 }}

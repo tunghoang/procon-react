@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ReplayIcon from "@mui/icons-material/Replay";
 import TuneIcon from "@mui/icons-material/Tune";
 import { useIntl } from "react-intl";
 import {
@@ -27,6 +28,7 @@ import HexBoard from "./hex-board";
 import PlanEditor from "./plan-editor";
 import AgentKindsPanel from "./agent-kinds-panel";
 import PracticeCompareDialog from "./practice-compare-dialog";
+import ReplayDialog from "./replay-dialog";
 import GameConfigDialog from "./game-config-dialog";
 import LoadingPage from "../loading-page";
 
@@ -51,6 +53,7 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState(null);
 	const [compareOpen, setCompareOpen] = useState(false);
+	const [replayOpen, setReplayOpen] = useState(false);
 	const [configOpen, setConfigOpen] = useState(false);
 
 	const totalDays = mapConfig?.daySteps?.length ?? 0;
@@ -221,6 +224,16 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 					{tr({ id: "practice.compareButton" })}
 				</Button>
 			)}
+			{(state.status === "finished" || state.day >= 1) && (
+				<Button
+					size="small"
+					variant="outlined"
+					startIcon={<ReplayIcon />}
+					onClick={() => setReplayOpen(true)}
+				>
+					{tr({ id: "hexudon.replay.button" })}
+				</Button>
+			)}
 			{state.status !== "selecting_agents" && (
 				<Button
 					size="small"
@@ -304,6 +317,7 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 								onSubmit={handleSubmit}
 								submitting={submitting}
 								submitted={false}
+								showAgentSelector={false}
 							/>
 						) : (
 							<LoadingPage />
@@ -333,6 +347,13 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 					setCompareOpen(false);
 					await refresh();
 				}}
+			/>
+			<ReplayDialog
+				gameId={practiceGameId}
+				mapConfig={mapConfig}
+				ownTeamId={ownTeamId}
+				open={replayOpen}
+				onClose={() => setReplayOpen(false)}
 			/>
 			<GameConfigDialog
 				gameId={practiceGameId}

@@ -159,6 +159,8 @@
   "nav.menu": "Menu",
   "nav.ping": "Check server ping",
   "nav.copyToken": "Copy access token",
+  "nav.copyUserId": "Copy your user id (append to the game id for practice, e.g. gameId:yourId)",
+  "nav.copiedUserId": "User id copied",
   "nav.competition": "Competition",
   "nav.changePassword": "Change password",
   "nav.adminArea": "Admin area",

@@ -26,9 +26,9 @@ const commandLabel = (command, tr) =>
 		: `${DIRECTIONS[command]?.arrow ?? "?"}${DIRECTIONS[command]?.key ?? command}`;
 
 /**
- * Read-only viewer for the teams' adopted daily answers. The game service
- * filters visibility server-side: admins see everything, teams see their own
- * submissions plus other teams' answers for resolved days / finished games.
+ * Read-only viewer for the adopted daily answers. The game service filters
+ * visibility server-side: admins see every team's plans, but a team sees ONLY
+ * its own -- another team's move steps are never disclosed, on any day.
  */
 const AnswersDialog = ({ gameId, open, onClose, ownTeamId }) => {
 	const { formatMessage: tr } = useIntl();
