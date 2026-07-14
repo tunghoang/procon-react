@@ -47,6 +47,14 @@ export const getGameConfig = (gameId) =>
 export const getGameDay = (gameId) =>
 	gameClient.get("/game/day", { params: { game_id: gameId } });
 
+// Team or admin: team-independent board/match configuration
+// {game_id, is_practice, startsAt, daySeconds, daySteps, map:{height,width,cells},
+//  spots, fuelLimits, players, busyThreshold, jammedThreshold,
+//  agent_selection_time_limit}. Unlike getGameConfig this omits per-team agents,
+//  so an admin/spectator can read it too.
+export const getGameBoardConfig = (gameId) =>
+	gameClient.get("/game/board", { params: { game_id: gameId } });
+
 // Team or admin: full state
 // {status, day, steps_today, day_deadline_in, road_condition:{cell:status},
 //  teams:{id:{types_selected, agents:[{agent_id,type,cell,fuel}], stock,

@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import ReplayIcon from "@mui/icons-material/Replay";
+import TuneIcon from "@mui/icons-material/Tune";
 import { useIntl } from "react-intl";
 import { jwtDecode } from "jwt-decode";
 import Context from "../../context";
@@ -33,6 +34,7 @@ import PlanEditor from "./plan-editor";
 import Standings from "./standings";
 import AnswersDialog from "./answers-dialog";
 import ReplayDialog from "./replay-dialog";
+import GameConfigDialog from "./game-config-dialog";
 import LoadingPage from "../loading-page";
 
 const POLL_MS = 3000;
@@ -102,6 +104,7 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	const [submittedDay, setSubmittedDay] = useState(null);
 	const [answersOpen, setAnswersOpen] = useState(false);
 	const [replayOpen, setReplayOpen] = useState(false);
+	const [configOpen, setConfigOpen] = useState(false);
 	// The actions/replay endpoints are optional (not part of the checked-in
 	// FastAPI): probe once and hide the buttons when they don't exist.
 	const [historySupported, setHistorySupported] = useState(null);
@@ -309,6 +312,14 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				/>
 			)}
 			<Box sx={{ flex: 1 }} />
+			<Button
+				size="small"
+				variant="outlined"
+				startIcon={<TuneIcon />}
+				onClick={() => setConfigOpen(true)}
+			>
+				{tr({ id: "hexudon.config.button" })}
+			</Button>
 			{showHistoryButtons && (
 				<Button
 					size="small"
@@ -434,6 +445,7 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				onClose={() => setReplayOpen(false)}
 				ownTeamId={ownTeamId}
 			/>
+			<GameConfigDialog gameId={gameId} open={configOpen} onClose={() => setConfigOpen(false)} />
 		</Stack>
 	);
 };

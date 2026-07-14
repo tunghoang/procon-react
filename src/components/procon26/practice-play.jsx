@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import TuneIcon from "@mui/icons-material/Tune";
 import { useIntl } from "react-intl";
 import {
 	getGameConfig,
@@ -26,6 +27,7 @@ import HexBoard from "./hex-board";
 import PlanEditor from "./plan-editor";
 import AgentKindsPanel from "./agent-kinds-panel";
 import PracticeCompareDialog from "./practice-compare-dialog";
+import GameConfigDialog from "./game-config-dialog";
 import LoadingPage from "../loading-page";
 
 /**
@@ -49,6 +51,7 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState(null);
 	const [compareOpen, setCompareOpen] = useState(false);
+	const [configOpen, setConfigOpen] = useState(false);
 
 	const totalDays = mapConfig?.daySteps?.length ?? 0;
 
@@ -200,6 +203,14 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 				label={`${tr({ id: "hexudon.standings.servings" })}: ${team.total_servings ?? 0}`}
 			/>
 			<Box sx={{ flex: 1 }} />
+			<Button
+				size="small"
+				variant="outlined"
+				startIcon={<TuneIcon />}
+				onClick={() => setConfigOpen(true)}
+			>
+				{tr({ id: "hexudon.config.button" })}
+			</Button>
 			{otherTeams.length > 0 && state.status !== "selecting_agents" && (
 				<Button
 					size="small"
@@ -322,6 +333,11 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 					setCompareOpen(false);
 					await refresh();
 				}}
+			/>
+			<GameConfigDialog
+				gameId={practiceGameId}
+				open={configOpen}
+				onClose={() => setConfigOpen(false)}
 			/>
 		</Stack>
 	);
