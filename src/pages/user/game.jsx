@@ -9,6 +9,7 @@ import { DashboardNavbar } from "../../components/dashboard-navbar";
 import GamePlay from "../../components/procon26/game-play";
 import PracticePlay from "../../components/procon26/practice-play";
 import PracticeSpectate from "../../components/procon26/practice-spectate";
+import PracticeLeaderboard from "../../components/procon26/practice-leaderboard";
 import LoadingPage from "../../components/loading-page";
 import { api, showMessage } from "../../api/commons";
 import { SERVICE_API } from "../../config/env";
@@ -19,7 +20,7 @@ import { copyText } from "../../utils/commons";
  * game (`${questionId}:${teamId}`) read-only. Driven by the team's submit state
  * (self-paced), not a wall-clock timer -- see PracticeSpectate.
  */
-const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
+const PracticeAdminView = ({ questionId, teams, mapConfig, noReset = false }) => {
 	const { formatMessage: tr } = useIntl();
 	const [teamId, setTeamId] = useState(teams?.[0]?.id ?? null);
 
@@ -31,6 +32,10 @@ const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
 		.map((t) => ({ id: t.id, name: t.name }));
 	return (
 		<Stack spacing={2}>
+			{/* Competitive practice: shared leaderboard across all teams up top. */}
+			{noReset && (
+				<PracticeLeaderboard questionId={questionId} teams={teams} ownTeamId={null} />
+			)}
 			<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
 				<Typography variant="body2" color="textSecondary">
 					{tr({ id: "practice.viewTeam" })}:
@@ -92,6 +97,7 @@ const UserGame = () => {
 				const question = await api.get(`${SERVICE_API}/question/${gameId}`);
 				const cfg = question?.question_data ? JSON.parse(question.question_data) : null;
 				const isPractice = !!cfg?.is_practice;
+				const noReset = !!cfg?.no_reset;
 				let teams = [];
 				if (isPractice && question?.match_id) {
 					try {
@@ -101,7 +107,7 @@ const UserGame = () => {
 						/* teams list powers the replay's opponent-final overlay */
 					}
 				}
-				if (!cancelled) setMeta({ isPractice, mapConfig: cfg, teams });
+				if (!cancelled) setMeta({ isPractice, noReset, mapConfig: cfg, teams });
 			} catch (e) {
 				if (!cancelled) setLoadError(e.response?.data?.message || e.message);
 			}
@@ -159,6 +165,7 @@ const UserGame = () => {
 								questionId={gameId}
 								teams={meta.teams}
 								mapConfig={meta.mapConfig}
+								noReset={meta.noReset}
 							/>
 						) : (
 							<PracticePlay
@@ -166,6 +173,7 @@ const UserGame = () => {
 								ownTeamId={ownTeamId}
 								mapConfig={meta.mapConfig}
 								matchTeams={meta.teams}
+								noReset={meta.noReset}
 							/>
 						))}
 				</Container>

@@ -13,6 +13,7 @@ import {
 	Box,
 	Typography,
 	Divider,
+	MenuItem,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
@@ -112,20 +113,42 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 							label="Active"
 							labelPlacement="start"
 						/>
-						<FormControlLabel
-							sx={{ flexDirection: "row" }}
-							control={
-								<Switch
-									checked={!!instance?.is_practice}
-									disabled={!!instance?.id}
-									onChange={(evt) => {
-										handleChange({ is_practice: evt.target.checked });
-									}}
-								/>
+						{/* Match mode is fixed at creation (the game service builds
+						    the per-mode games at /game/init), so it's disabled when
+						    editing an existing match. */}
+						<TextField
+							select
+							margin="dense"
+							label={tr({ id: "match.mode" })}
+							fullWidth
+							variant="standard"
+							disabled={!!instance?.id}
+							value={
+								!instance?.is_practice
+									? "competitive"
+									: instance?.no_reset
+										? "competitive_practice"
+										: "practice"
 							}
-							label={tr({ id: "match.practice" })}
-							labelPlacement="start"
-						/>
+							onChange={(evt) => {
+								const mode = evt.target.value;
+								handleChange({
+									is_practice: mode !== "competitive",
+									no_reset: mode === "competitive_practice",
+								});
+							}}
+							helperText={tr({ id: "match.mode.help" })}
+						>
+							<MenuItem value="competitive">
+								{tr({ id: "match.mode.competitive" })}
+							</MenuItem>
+							<MenuItem value="practice">
+								{tr({ id: "match.mode.practice" })}
+							</MenuItem>
+							<MenuItem value="competitive_practice">
+								{tr({ id: "match.mode.competitivePractice" })}
+							</MenuItem>
+						</TextField>
 					</Stack>
 				</DialogContent>
 				<DialogActions>

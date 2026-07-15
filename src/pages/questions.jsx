@@ -154,11 +154,39 @@ const Questions = () => {
 			flex: 1,
 			headerClassName: "tableHeader",
 			renderCell: ({ row }) => {
+				// Match mode is flagged inside question_data (the /game/init body):
+				// is_practice = self-paced solo practice; is_practice + no_reset =
+				// competitive practice (final submissions + leaderboard). Surface it
+				// as a chip next to the match name.
+				let isPractice = false;
+				let noReset = false;
+				try {
+					const qd = JSON.parse(row.question_data || "{}");
+					isPractice = !!qd.is_practice;
+					noReset = !!qd.no_reset;
+				} catch {
+					isPractice = false;
+					noReset = false;
+				}
 				return (
-					<mui.Chip
-						label={row.match.name}
-						color={row.match.is_active ? "success" : "default"}
-					/>
+					<mui.Stack direction="column" spacing={0.5}>
+						<mui.Chip
+							label={row.match.name}
+							color={row.match.is_active ? "success" : "default"}
+						/>
+						{isPractice && (
+							<mui.Chip
+								size="small"
+								color={noReset ? "warning" : "info"}
+								variant="outlined"
+								label={tr({
+									id: noReset
+										? "match.mode.competitivePractice"
+										: "match.practice",
+								})}
+							/>
+						)}
+					</mui.Stack>
 				);
 			},
 			valueGetter: (params) => {
@@ -268,9 +296,7 @@ const Questions = () => {
 							<mui.IconButton
 								size="small"
 								color="success"
-								onClick={() =>
-									navigate({ to: `/competition/game/${row.id}` })
-								}>
+								onClick={() => navigate({ to: `/competition/game/${row.id}` })}>
 								<SportsEsportsIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
@@ -308,14 +334,11 @@ const Questions = () => {
 		try {
 			// Fetch list of answers for this question
 			// Initially without full answer_data (will be loaded when user selects team)
-			const response = await api.get(
-				`${SERVICE_API}/answer`,
-				{
-					params: {
-						eq_question_id: questionRow.id,
-					},
-				}
-			);
+			const response = await api.get(`${SERVICE_API}/answer`, {
+				params: {
+					eq_question_id: questionRow.id,
+				},
+			});
 
 			// Backend returns { count, data } format
 			const answersArray = response.data || [];
@@ -363,7 +386,7 @@ const Questions = () => {
 				if (result) await refetch();
 				closeConfirmDialog();
 			},
-			"error"
+			"error",
 		);
 	};
 
@@ -385,17 +408,19 @@ const Questions = () => {
 						const teams = m?.teams || [];
 						if (!teams.length) throw new Error("match has no teams");
 						const results = await Promise.allSettled(
-							teams.map((t) => resetGame(`${row.id}:${t.id}`))
+							teams.map((t) => resetGame(`${row.id}:${t.id}`)),
 						);
-						const failed = results.filter((r) => r.status === "rejected").length;
+						const failed = results.filter(
+							(r) => r.status === "rejected",
+						).length;
 						if (failed) {
 							showMessage(
 								tr(
 									{ id: "questions.resetPartial" },
-									{ ok: teams.length - failed, total: teams.length }
+									{ ok: teams.length - failed, total: teams.length },
 								),
 								"warning",
-								6000
+								6000,
 							);
 						} else {
 							showMessage(tr({ id: "questions.resetDone" }), "success");
@@ -411,7 +436,7 @@ const Questions = () => {
 					closeConfirmDialog();
 				}
 			},
-			"warning"
+			"warning",
 		);
 	};
 
@@ -420,7 +445,7 @@ const Questions = () => {
 		message,
 		onConfirm,
 		confirmColor = "primary",
-		showCancel = true
+		showCancel = true,
 	) => {
 		setConfirmDialog({
 			open: true,
@@ -443,7 +468,7 @@ const Questions = () => {
 			async () => {
 				try {
 					const response = await api.put(
-						`${SERVICE_API}/question/${questionId}/regenerate`
+						`${SERVICE_API}/question/${questionId}/regenerate`,
 					);
 					await refetch();
 					closeConfirmDialog();
@@ -452,7 +477,7 @@ const Questions = () => {
 					const deletedCount = response?.deletedAnswers || 0;
 					showMessage(
 						`Question regenerated successfully. ${deletedCount} answer(s) were deleted.`,
-						"success"
+						"success",
 					);
 				} catch (error) {
 					debugLog("Failed to regenerate question:", error);
@@ -462,7 +487,7 @@ const Questions = () => {
 					showMessage(errorMessage, "error");
 				}
 			},
-			"warning"
+			"warning",
 		);
 	};
 
@@ -484,14 +509,12 @@ const Questions = () => {
 
 			// Update both questions silently (without showing success messages)
 			await Promise.all([
-				api.put(
-					`${SERVICE_API}/question/${currentQuestion.id}`,
-					{ order: targetOrder }
-				),
-				api.put(
-					`${SERVICE_API}/question/${targetQuestion.id}`,
-					{ order: currentOrder }
-				),
+				api.put(`${SERVICE_API}/question/${currentQuestion.id}`, {
+					order: targetOrder,
+				}),
+				api.put(`${SERVICE_API}/question/${targetQuestion.id}`, {
+					order: currentOrder,
+				}),
 			]);
 			showMessage(tr({ id: "questions.orderChanged" }), "success");
 
@@ -505,7 +528,7 @@ const Questions = () => {
 	const handleViewOptimalAnswers = async (questionRow) => {
 		try {
 			const response = await api.get(
-				`${SERVICE_API}/question/${questionRow.id}/optimal-answers`
+				`${SERVICE_API}/question/${questionRow.id}/optimal-answers`,
 			);
 			setOptimalAnswersDialog({
 				open: true,
@@ -541,7 +564,7 @@ const Questions = () => {
 				}
 				closeConfirmDialog();
 			},
-			"error"
+			"error",
 		);
 	};
 	const saveInstance = async () => {
@@ -570,7 +593,7 @@ const Questions = () => {
 						closeConfirmDialog();
 					}
 				},
-				"warning"
+				"warning",
 			);
 			return;
 		}
@@ -599,11 +622,11 @@ const Questions = () => {
 									rotations: currentItem.rotations,
 									name: currentItem.name,
 									description: currentItem.description,
-								}
+								},
 							);
 							showMessage(
 								"Question updated and regenerated successfully",
-								"success"
+								"success",
 							);
 							await refetch();
 							closeConfirmDialog();
@@ -618,7 +641,7 @@ const Questions = () => {
 							closeConfirmDialog();
 						}
 					},
-					"warning"
+					"warning",
 				);
 				return;
 			}
@@ -743,7 +766,7 @@ const Questions = () => {
 							startIcon={<ContentCopyIcon />}
 							onClick={() => {
 								navigator.clipboard.writeText(
-									JSON.stringify(optimalAnswersDialog.moves)
+									JSON.stringify(optimalAnswersDialog.moves),
 								);
 								showMessage(tr({ id: "common.copied" }), "success");
 							}}>

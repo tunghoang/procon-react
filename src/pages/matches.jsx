@@ -207,9 +207,13 @@ const Matches = () => {
 					{row.is_practice && (
 						<mui.Chip
 							size="small"
-							color="info"
+							color={row.no_reset ? "warning" : "info"}
 							variant="outlined"
-							label={tr({ id: "match.practice" })}
+							label={tr({
+								id: row.no_reset
+									? "match.mode.competitivePractice"
+									: "match.practice",
+							})}
 						/>
 					)}
 				</mui.Stack>
@@ -478,6 +482,7 @@ const Matches = () => {
 			description: "",
 			is_active: false,
 			is_practice: false,
+			no_reset: false,
 			team_id: "",
 		});
 		setDialogName("MatchDialog");
@@ -506,9 +511,12 @@ const Matches = () => {
 			// shared-vs-per-team), so it's not sent on edit.
 			result = await apiEdit(currentMatch.id, fields);
 		} else {
+			// Mode (is_practice / no_reset) is create-time only: the game service
+			// builds the per-mode games at /game/init and can't switch afterwards.
 			result = await apiCreate({
 				...fields,
 				is_practice: !!currentMatch.is_practice,
+				no_reset: !!currentMatch.is_practice && !!currentMatch.no_reset,
 				round_id: roundId,
 			});
 		}

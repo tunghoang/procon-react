@@ -194,7 +194,7 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 		return () => clearInterval(timer);
 	}, [refreshState]);
 
-	// --- optional history endpoints (mock-only) --------------------------------
+	// --- optional history endpoints (feature-detected) -------------------------
 	useEffect(() => {
 		if (historyProbed.current || !state) return;
 		if (!(state.status === "finished" || state.day >= 1)) return;

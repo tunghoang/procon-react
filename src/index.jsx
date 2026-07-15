@@ -5,10 +5,6 @@ import "./index.css";
 import { App } from "./App";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Agentation } from "agentation";
-import { isMockEnabled, installMocks } from "./mock";
-
-// Swap both backend transports for the in-app mock before anything renders.
-if (isMockEnabled()) installMocks();
 
 // Create a client
 const queryClient = new QueryClient({

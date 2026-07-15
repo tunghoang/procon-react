@@ -28,16 +28,22 @@ import PlanEditor from "./plan-editor";
 import AgentKindsPanel from "./agent-kinds-panel";
 import ReplayDialog from "./replay-dialog";
 import GameConfigDialog from "./game-config-dialog";
+import PracticeLeaderboard from "./practice-leaderboard";
 import LoadingPage from "../loading-page";
 
 /**
  * Self-paced practice play for ONE team. Each team plays its own isolated
  * solo game at id `${questionId}:${ownTeamId}` (created by the team manager
- * for a practice match). No countdown: the team submits a day to advance it,
- * can re-submit an earlier day (which resets the later ones), and can compare
- * with / copy another team's progress.
+ * for a practice match). No countdown: the team submits a day to advance it.
+ *
+ * Two flavours (see the match mode):
+ *  - Plain practice: the team may re-submit an earlier day (which resets the
+ *    later ones), reset the whole game, and compare with / copy another team.
+ *  - Competitive practice (`noReset`): a submitted day is FINAL -- no re-submit,
+ *    no reset, no opponent compare/copy; instead a shared leaderboard is shown.
+ *    The team is warned before each (irreversible) submission.
  */
-const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
+const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams, noReset = false }) => {
 	const { formatMessage: tr } = useIntl();
 	const practiceGameId = `${questionId}:${ownTeamId}`;
 
@@ -53,8 +59,9 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 	const [replayOpen, setReplayOpen] = useState(false);
 	const [configOpen, setConfigOpen] = useState(false);
 
-	const totalDays = mapConfig?.daySteps?.length ?? 0;
-
+	// Practice games are open-ended (no day limit): the days that exist are
+	// 0..state.day -- state.day is the current, submittable day and 0..state.day-1
+	// are resolved. There is no fixed total, so day counts derive from state.day.
 	const refresh = useCallback(async () => {
 		try {
 			const [st, cfg] = await Promise.all([
@@ -88,13 +95,13 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 		refresh();
 	}, [refresh]);
 
-	// Default the edited day to the next unplayed day (or the last day once the
-	// game is finished) whenever the game advances.
+	// Default the edited day to the current (next unplayed) day whenever the game
+	// advances. Practice is open-ended so this is simply state.day.
 	useEffect(() => {
 		if (state?.status === "in_progress" || state?.status === "finished") {
-			setSubmitDay(Math.min(state.day, totalDays - 1));
+			setSubmitDay(state.day);
 		}
-	}, [state?.status, state?.day, totalDays]);
+	}, [state?.status, state?.day]);
 
 	// The day-info the editor validates against: the live /game/day for the
 	// current day, or the start-of-day frame from replay for a past day.
@@ -149,6 +156,11 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 	};
 
 	const handleSubmit = async (payload) => {
+		// Competitive practice: a submission is FINAL (no reset / no re-submit),
+		// so warn before it goes through.
+		if (noReset && !window.confirm(tr({ id: "practice.submitFinalConfirm" }))) {
+			return;
+		}
 		setSubmitting(true);
 		try {
 			await submitPracticeActions(practiceGameId, submitDay, payload);
@@ -183,7 +195,11 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 
 	const statusChips = (
 		<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-			<Chip color="info" variant="outlined" label={tr({ id: "match.practice" })} />
+			<Chip
+				color={noReset ? "warning" : "info"}
+				variant="outlined"
+				label={tr({ id: noReset ? "match.mode.competitivePractice" : "match.practice" })}
+			/>
 			<Chip
 				label={tr({ id: `hexudon.status.${state.status}` })}
 				color={state.status === "finished" ? "success" : "primary"}
@@ -191,7 +207,7 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 			{state.status !== "selecting_agents" && (
 				<Chip
 					variant="outlined"
-					label={`${tr({ id: "hexudon.day" })} ${Math.min(state.day + 1, totalDays)}/${totalDays}`}
+					label={`${tr({ id: "hexudon.day" })} ${state.day + 1}`}
 				/>
 			)}
 			<Chip
@@ -221,7 +237,7 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 					{tr({ id: "hexudon.replay.button" })}
 				</Button>
 			)}
-			{state.status !== "selecting_agents" && (
+			{!noReset && state.status !== "selecting_agents" && (
 				<Button
 					size="small"
 					color="warning"
@@ -238,17 +254,18 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 
 	const playing = state.status === "in_progress" || state.status === "finished";
 
-	// Day strip: pick which day to (re)submit. A day <= state.day is editable
-	// (submitting a past day resets the later ones); the next unplayed day
-	// (state.day) is highlighted; future days are locked. Once finished
-	// (state.day === totalDays) every day is a re-submittable past day.
+	// Day strip: pick which day to (re)submit. Practice is open-ended (no day
+	// limit), so the days that exist are 0..state.day. In plain practice every
+	// one is editable (submitting a past day resets the later ones); in
+	// competitive practice only the CURRENT day (state.day) is submittable --
+	// past days are final, shown as read-only history. Current day highlighted.
 	const dayStrip = playing ? (
 		<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
 			<Typography variant="body2" color="textSecondary">
-				{tr({ id: "practice.editDay" })}:
+				{tr({ id: noReset ? "practice.currentDay" : "practice.editDay" })}:
 			</Typography>
-			{Array.from({ length: totalDays }, (_, d) => {
-				const editable = d <= state.day && d < totalDays;
+			{Array.from({ length: state.day + 1 }, (_, d) => {
+				const editable = noReset ? d === state.day : d <= state.day;
 				return (
 					<Chip
 						key={d}
@@ -321,11 +338,25 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams }) => {
 				/>
 			</Paper>
 
+			{/* Competitive practice: a shared leaderboard across all teams'
+			    solo games (ranking + scores only, never opponents' moves). */}
+			{noReset && (
+				<Paper variant="outlined" sx={{ p: 2 }}>
+					<PracticeLeaderboard
+						questionId={questionId}
+						teams={matchTeams || []}
+						ownTeamId={ownTeamId}
+					/>
+				</Paper>
+			)}
+
 			<ReplayDialog
 				gameId={practiceGameId}
 				mapConfig={mapConfig}
 				ownTeamId={ownTeamId}
-				opponents={otherTeams.map((t) => ({ id: t.id, name: t.name }))}
+				// Competitive practice hides opponents entirely (no peer compare);
+				// plain practice lets a team overlay others' end-of-day positions.
+				opponents={noReset ? [] : otherTeams.map((t) => ({ id: t.id, name: t.name }))}
 				questionId={questionId}
 				open={replayOpen}
 				onClose={() => setReplayOpen(false)}

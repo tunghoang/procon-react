@@ -32,8 +32,9 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 	const [loading, setLoading] = useState(false);
 	const [replayOpen, setReplayOpen] = useState(false);
 
-	const totalDays = mapConfig?.daySteps?.length ?? 0;
-
+	// Practice games are open-ended (no day limit): days 0..state.day-1 are
+	// resolved and state.day is the current one, so progress derives from
+	// state.day rather than a fixed configured total.
 	const load = useCallback(async () => {
 		setLoading(true);
 		try {
@@ -115,7 +116,7 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 				{state.status !== "selecting_agents" && (
 					<Chip
 						variant="outlined"
-						label={`${tr({ id: "hexudon.day" })} ${Math.min(state.day + 1, totalDays)}/${totalDays}`}
+						label={`${tr({ id: "hexudon.day" })} ${state.day + 1}`}
 					/>
 				)}
 				<Chip
@@ -158,7 +159,7 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 					<Alert severity="info">{tr({ id: "practice.spectate.notStarted" })}</Alert>
 				) : (
 					<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
-						{Array.from({ length: totalDays }, (_, d) => {
+						{Array.from({ length: state.day + 1 }, (_, d) => {
 							const resolved = d < state.day || state.status === "finished";
 							const isCurrent = d === state.day && state.status === "in_progress";
 							let color = "default";

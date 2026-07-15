@@ -5,9 +5,7 @@ import { GAME_SERVICE_API } from "../config/env";
 // It shares the team-manager JWT (same signing secret) but, unlike the
 // team-manager, requires the standard "Bearer <token>" scheme, and reports
 // errors under `detail` ({"detail": "..."} or a pydantic 422 detail array).
-//
-// Exported so the mock layer can swap this instance's transport adapter.
-export const gameClient = axios.create({ baseURL: GAME_SERVICE_API });
+const gameClient = axios.create({ baseURL: GAME_SERVICE_API });
 
 gameClient.interceptors.request.use((config) => {
 	const token = localStorage.getItem("token");
@@ -101,6 +99,13 @@ export const submitPracticeActions = (gameId, day, actions) =>
 // works via getGameReplay too, but this one isn't blocked by the team-in-game check.
 export const getPracticePeerReplay = (gameId) =>
 	gameClient.get("/game/practice/peer", { params: { game_id: gameId } });
+
+// Any authenticated team. Read a practice game's aggregate score ({ranking,
+// detail}) -- powers the competitive-practice shared leaderboard, where each
+// team plays its own solo game `${questionId}:${teamId}`. Exposes ranking/score
+// only, never step-by-step moves; restricted to practice games server-side.
+export const getPracticeScore = (gameId) =>
+	gameClient.get("/game/practice/score", { params: { game_id: gameId } });
 
 // Admin only. Reset a game to the agent-selection stage and delete EVERY
 // team's submissions across all days, so the whole match is replayed from
