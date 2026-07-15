@@ -39,6 +39,10 @@ import LoadingPage from "../loading-page";
 
 const POLL_MS = 3000;
 
+// Epoch seconds -> local clock time (matches the answers dialog's format).
+const formatClock = (epochSeconds) =>
+	epochSeconds ? new Date(epochSeconds * 1000).toLocaleTimeString() : "—";
+
 const formatCountdown = (totalSeconds) => {
 	const hours = Math.floor(totalSeconds / 3600);
 	const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -288,6 +292,10 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	const showHistoryButtons =
 		historySupported === true && (state.status === "finished" || state.day >= 1);
 
+	// Own team's live state (the service returns every team, but submit_count /
+	// last_submitted_at are attached only for the caller's own team).
+	const ownTeamState = ownTeamId ? state.teams?.[ownTeamId] : null;
+
 	const statusChip = (
 		<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
 			<Chip
@@ -302,6 +310,18 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 			) : null}
 			{stepsToday ? (
 				<Chip variant="outlined" label={`${tr({ id: "hexudon.steps" })}: ${stepsToday}`} />
+			) : null}
+			{/* Own team's submission cadence for the current day: how many times
+			    it has (re)submitted and when it last did. */}
+			{!isAdmin && state.status === "in_progress" && ownTeamId && ownTeamState ? (
+				<Chip
+					variant="outlined"
+					label={`${tr({ id: "hexudon.submit.count" })}: ${ownTeamState.submit_count ?? 0}${
+						ownTeamState.last_submitted_at
+							? ` · ${tr({ id: "hexudon.submit.last" })}: ${formatClock(ownTeamState.last_submitted_at)}`
+							: ""
+					}`}
+				/>
 			) : null}
 			{countdown !== null && state.status !== "finished" && (
 				<Chip
@@ -399,6 +419,12 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 									{tr({ id: "hexudon.standings.distinct" })}:{" "}
 									{(teamState.distinct_types || []).length},{" "}
 									{tr({ id: "hexudon.standings.servings" })}: {teamState.total_servings}
+									{state.status === "in_progress" &&
+										` — ${tr({ id: "hexudon.submit.count" })}: ${teamState.submit_count ?? 0}${
+											teamState.last_submitted_at
+												? ` (${tr({ id: "hexudon.submit.last" })}: ${formatClock(teamState.last_submitted_at)})`
+												: ""
+										}`}
 									{state.status === "selecting_agents" &&
 										` — ${tr({ id: teamState.types_selected ? "hexudon.kinds.selected" : "hexudon.kinds.waiting" })}`}
 								</Typography>
@@ -444,6 +470,9 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				open={replayOpen}
 				onClose={() => setReplayOpen(false)}
 				ownTeamId={ownTeamId}
+				// Real (competitive) match: a competing team must never see any
+				// opponent's trace. Admins/spectators keep the full multi-team view.
+				ownTeamOnly={!isPractice && !isAdmin}
 			/>
 			<GameConfigDialog gameId={gameId} open={configOpen} onClose={() => setConfigOpen(false)} />
 		</Stack>

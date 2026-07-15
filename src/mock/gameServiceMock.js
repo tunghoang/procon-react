@@ -306,6 +306,8 @@ const routes = [
 				if (existing) {
 					existing.actions = body.actions;
 					existing.submitted_at = now();
+					// Count every resubmission (last valid one still wins scoring).
+					existing.submit_count = (existing.submit_count || 1) + 1;
 				} else {
 					db.submissions.push({
 						game_id: body.game_id,
@@ -313,6 +315,7 @@ const routes = [
 						day: body.day,
 						actions: body.actions,
 						submitted_at: now(),
+						submit_count: 1,
 					});
 				}
 				return { ok: true, day: body.day };
@@ -340,7 +343,22 @@ const routes = [
 			return withDb((db) => {
 				const entry = syncGame(db, query.game_id);
 				requireTeamInGame(auth, entry.state);
-				return stateView(entry.state, now());
+				const view = stateView(entry.state, now());
+				// Attach the current day's submission metadata (count + latest
+				// time). A team sees ONLY its own; an admin sees every team's.
+				const day = entry.state.day;
+				Object.entries(view.teams || {}).forEach(([tid, tstate]) => {
+					if (!auth.isAdmin && String(tid) !== String(auth.teamId)) return;
+					const sub = db.submissions.find(
+						(x) =>
+							x.game_id === query.game_id &&
+							String(x.team_id) === String(tid) &&
+							x.day === day,
+					);
+					tstate.submit_count = sub ? sub.submit_count || 1 : 0;
+					tstate.last_submitted_at = sub ? sub.submitted_at : null;
+				});
+				return view;
 			});
 		},
 	},
@@ -395,6 +413,7 @@ const routes = [
 						team_id: s.team_id,
 						plan: s.actions,
 						submitted_at: s.submitted_at,
+						submit_count: s.submit_count || 1,
 					}))
 					.sort((a, b) => a.day - b.day || a.team_id.localeCompare(b.team_id));
 				return { actions: rows };

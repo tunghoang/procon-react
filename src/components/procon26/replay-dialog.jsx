@@ -64,6 +64,10 @@ const ReplayDialog = ({
 	ownTeamId,
 	opponents = null,
 	questionId = null,
+	// Real (competitive) match viewed by a competing team: show ONLY the own
+	// team -- an opponent's step-by-step trace (or even final position) must
+	// never be disclosed. Admins/spectators pass false and see every team.
+	ownTeamOnly = false,
 }) => {
 	const { formatMessage: tr } = useIntl();
 	const [data, setData] = useState(null);
@@ -120,8 +124,14 @@ const ReplayDialog = ({
 	const allTeamIds = useMemo(() => {
 		const ids = new Set();
 		days.forEach((d) => d.teams.forEach((t) => ids.add(String(t.team_id))));
-		return [...ids].sort();
-	}, [days]);
+		let arr = [...ids].sort();
+		// Competitive match, competing team: never surface any opponent. Keeping
+		// the own team the only selectable id transitively hides opponents from
+		// the board, the per-step table, and the team filter row.
+		if (ownTeamOnly && ownTeamId != null)
+			arr = arr.filter((tid) => String(tid) === String(ownTeamId));
+		return arr;
+	}, [days, ownTeamOnly, ownTeamId]);
 
 	// Colour keyed by team_id (not array position) so it never shifts across
 	// days or when the filter hides/shows other teams.
@@ -212,6 +222,8 @@ const ReplayDialog = ({
 					submitted: team.submitted,
 					servings: cur.servings,
 					total: team.servings,
+					types: cur.types ?? 0,
+					totalTypes: team.types ?? 0,
 					collectedNow: (cur.collected || []).length,
 					agents: cur.agents.map((a) => ({
 						cell: a.cell,
@@ -240,6 +252,8 @@ const ReplayDialog = ({
 				submitted: team.submitted,
 				servings: cur.servings,
 				total: team.servings,
+				types: cur.types ?? 0,
+				totalTypes: team.types ?? 0,
 			});
 		});
 		return map;
@@ -258,7 +272,7 @@ const ReplayDialog = ({
 	// Opponents' final position for the SELECTED day (matched by day number, not
 	// array index) -- a static end-of-day marker, never a step-by-step route.
 	const finalTeams = useMemo(() => {
-		if (!day || !showOpponents) return null;
+		if (!day || !showOpponents || ownTeamOnly) return null;
 		const out = [];
 		(opponents || []).forEach((op) => {
 			const rep = peerReplays[String(op.id)];
@@ -277,7 +291,7 @@ const ReplayDialog = ({
 			});
 		});
 		return out.length ? out : null;
-	}, [day, showOpponents, opponents, peerReplays, opponentColorById]);
+	}, [day, showOpponents, ownTeamOnly, opponents, peerReplays, opponentColorById]);
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -315,6 +329,33 @@ const ReplayDialog = ({
 								/>
 							))}
 						</Tabs>
+
+						{/* Day totals: total udon (servings) and total distinct udon
+						    types collected on the selected day, per team. */}
+						<Stack
+							direction="row"
+							spacing={1}
+							flexWrap="wrap"
+							alignItems="center"
+							useFlexGap>
+							<Typography variant="body2" color="textSecondary">
+								{tr({ id: "hexudon.replay.dayTotals" })}:
+							</Typography>
+							{allTeamIds.map((tid) => {
+								const t = dayStatsByTeamId.get(tid);
+								if (!t) return null;
+								const color = colorByTeamId.get(tid);
+								return (
+									<Chip
+										key={tid}
+										size="small"
+										variant="outlined"
+										sx={{ borderColor: color }}
+										label={`${tr({ id: "hexudon.answers.team" })} ${tid} · ${tr({ id: "hexudon.standings.servings" })}: ${t.total} · ${tr({ id: "hexudon.replay.types" })}: ${t.totalTypes}`}
+									/>
+								);
+							})}
+						</Stack>
 
 						<Stack direction="row" spacing={1} alignItems="center">
 							<IconButton
@@ -420,7 +461,7 @@ const ReplayDialog = ({
 													? ` (${tr({ id: "hexudon.standings.you" })})`
 													: ""}
 												{t
-													? ` · ${tr({ id: "hexudon.standings.servings" })}: ${t.servings}/${t.total}${
+													? ` · ${tr({ id: "hexudon.standings.servings" })}: ${t.servings}/${t.total} · ${tr({ id: "hexudon.replay.types" })}: ${t.types}/${t.totalTypes}${
 															t.submitted
 																? ""
 																: ` · ${tr({ id: "hexudon.replay.noSubmit" })}`
@@ -510,6 +551,9 @@ const ReplayDialog = ({
 												{tr({ id: "hexudon.standings.servings" })}
 											</TableCell>
 											<TableCell align="right">
+												{tr({ id: "hexudon.replay.types" })}
+											</TableCell>
+											<TableCell align="right">
 												{tr({ id: "hexudon.replay.collectedNow" })}
 											</TableCell>
 											<TableCell>
@@ -546,6 +590,11 @@ const ReplayDialog = ({
 													align="right"
 													sx={{ fontVariantNumeric: "tabular-nums" }}>
 													{t.servings}/{t.total}
+												</TableCell>
+												<TableCell
+													align="right"
+													sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{t.types}/{t.totalTypes}
 												</TableCell>
 												<TableCell
 													align="right"

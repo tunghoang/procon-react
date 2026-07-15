@@ -764,7 +764,9 @@ export function buildReplay(init, selections, submissions, uptoDay) {
 			perTeam[tid] = {
 				kinds: team.agents.map((a) => (a.type === "patrol" ? 0 : 1)),
 				servings: 0,
-				frames: [{ step: 0, agents: snapshot(team.agents), collected: [], servings: 0 }],
+				// Distinct udon brands (types) collected so far this day.
+				typesSet: new Set(),
+				frames: [{ step: 0, agents: snapshot(team.agents), collected: [], servings: 0, types: 0 }],
 			};
 		}
 
@@ -774,11 +776,16 @@ export function buildReplay(init, selections, submissions, uptoDay) {
 			(tid, step, ags, collected) => {
 				const pt = perTeam[tid];
 				pt.servings += collected.length;
+				for (const cell of collected) {
+					const spot = game.map.spots[String(cell)];
+					if (spot) pt.typesSet.add(spot.brand);
+				}
 				pt.frames.push({
 					step,
 					agents: snapshot(ags),
 					collected: [...collected],
 					servings: pt.servings,
+					types: pt.typesSet.size,
 				});
 			},
 		);
@@ -787,6 +794,7 @@ export function buildReplay(init, selections, submissions, uptoDay) {
 			team_id: tid,
 			kinds: pt.kinds,
 			servings: pt.servings,
+			types: pt.typesSet.size,
 			submitted: submittedTeams.has(tid),
 			frames: pt.frames,
 		}));

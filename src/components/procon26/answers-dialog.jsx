@@ -67,6 +67,7 @@ const AnswersDialog = ({ gameId, open, onClose, ownTeamId }) => {
 								<TableCell>{tr({ id: "hexudon.day" })}</TableCell>
 								<TableCell>{tr({ id: "hexudon.answers.team" })}</TableCell>
 								<TableCell>{tr({ id: "hexudon.answers.plan" })}</TableCell>
+								<TableCell align="right">{tr({ id: "hexudon.submit.count" })}</TableCell>
 								<TableCell>{tr({ id: "hexudon.answers.submittedAt" })}</TableCell>
 							</TableRow>
 						</TableHead>
@@ -105,6 +106,9 @@ const AnswersDialog = ({ gameId, open, onClose, ownTeamId }) => {
 												</Stack>
 											))}
 										</Stack>
+									</TableCell>
+									<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{row.submit_count ?? 1}
 									</TableCell>
 									<TableCell>
 										{row.submitted_at
