@@ -23,7 +23,7 @@ import LoadingPage from "../loading-page";
  * refreshes only on demand. Shows per-day submit progress, the latest
  * end-of-day board, and a step-by-step replay (with opponents' final positions).
  */
-const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }) => {
+const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents, noReset = false }) => {
 	const { formatMessage: tr } = useIntl();
 	const gameId = `${questionId}:${teamId}`;
 	const [state, setState] = useState(null);
@@ -32,9 +32,10 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 	const [loading, setLoading] = useState(false);
 	const [replayOpen, setReplayOpen] = useState(false);
 
-	// Practice games are open-ended (no day limit): days 0..state.day-1 are
-	// resolved and state.day is the current one, so progress derives from
-	// state.day rather than a fixed configured total.
+	// Plain practice is finite (a fixed configured total). Competitive practice
+	// (noReset) is open-ended: days 0..state.day-1 are resolved and state.day is
+	// the current one, so progress derives from state.day.
+	const totalDays = mapConfig?.daySteps?.length ?? 0;
 	const load = useCallback(async () => {
 		setLoading(true);
 		try {
@@ -116,7 +117,11 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 				{state.status !== "selecting_agents" && (
 					<Chip
 						variant="outlined"
-						label={`${tr({ id: "hexudon.day" })} ${state.day + 1}`}
+						label={
+							noReset
+								? `${tr({ id: "hexudon.day" })} ${state.day + 1}`
+								: `${tr({ id: "hexudon.day" })} ${Math.min(state.day + 1, totalDays)}/${totalDays}`
+						}
 					/>
 				)}
 				<Chip
@@ -159,7 +164,7 @@ const PracticeSpectate = ({ questionId, teamId, teamName, mapConfig, opponents }
 					<Alert severity="info">{tr({ id: "practice.spectate.notStarted" })}</Alert>
 				) : (
 					<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
-						{Array.from({ length: state.day + 1 }, (_, d) => {
+						{Array.from({ length: noReset ? state.day + 1 : totalDays }, (_, d) => {
 							const resolved = d < state.day || state.status === "finished";
 							const isCurrent = d === state.day && state.status === "in_progress";
 							let color = "default";

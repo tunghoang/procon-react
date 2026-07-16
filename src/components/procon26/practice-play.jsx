@@ -59,9 +59,11 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams, noReset = 
 	const [replayOpen, setReplayOpen] = useState(false);
 	const [configOpen, setConfigOpen] = useState(false);
 
-	// Practice games are open-ended (no day limit): the days that exist are
-	// 0..state.day -- state.day is the current, submittable day and 0..state.day-1
-	// are resolved. There is no fixed total, so day counts derive from state.day.
+	// Plain practice is FINITE (a fixed number of configured days, like a timed
+	// match). Competitive practice (noReset) is OPEN-ENDED: the days that exist
+	// are 0..state.day (state.day is the current submittable day, 0..state.day-1
+	// resolved), with no fixed total.
+	const totalDays = mapConfig?.daySteps?.length ?? 0;
 	const refresh = useCallback(async () => {
 		try {
 			const [st, cfg] = await Promise.all([
@@ -96,12 +98,13 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams, noReset = 
 	}, [refresh]);
 
 	// Default the edited day to the current (next unplayed) day whenever the game
-	// advances. Practice is open-ended so this is simply state.day.
+	// advances. Open-ended competitive practice = state.day; finite plain
+	// practice clamps to the last day once finished.
 	useEffect(() => {
 		if (state?.status === "in_progress" || state?.status === "finished") {
-			setSubmitDay(state.day);
+			setSubmitDay(noReset ? state.day : Math.min(state.day, totalDays - 1));
 		}
-	}, [state?.status, state?.day]);
+	}, [state?.status, state?.day, noReset, totalDays]);
 
 	// The day-info the editor validates against: the live /game/day for the
 	// current day, or the start-of-day frame from replay for a past day.
@@ -207,7 +210,11 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams, noReset = 
 			{state.status !== "selecting_agents" && (
 				<Chip
 					variant="outlined"
-					label={`${tr({ id: "hexudon.day" })} ${state.day + 1}`}
+					label={
+						noReset
+							? `${tr({ id: "hexudon.day" })} ${state.day + 1}`
+							: `${tr({ id: "hexudon.day" })} ${Math.min(state.day + 1, totalDays)}/${totalDays}`
+					}
 				/>
 			)}
 			<Chip
@@ -254,18 +261,19 @@ const PracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams, noReset = 
 
 	const playing = state.status === "in_progress" || state.status === "finished";
 
-	// Day strip: pick which day to (re)submit. Practice is open-ended (no day
-	// limit), so the days that exist are 0..state.day. In plain practice every
-	// one is editable (submitting a past day resets the later ones); in
-	// competitive practice only the CURRENT day (state.day) is submittable --
-	// past days are final, shown as read-only history. Current day highlighted.
+	// Day strip. Plain practice is finite (0..totalDays-1): every day up to the
+	// current one is editable, and submitting a past day resets the later ones.
+	// Competitive practice (noReset) is open-ended (0..state.day) and only the
+	// CURRENT day is submittable -- past days are final, shown as read-only
+	// history. The current day is highlighted in both.
+	const stripLength = noReset ? state.day + 1 : totalDays;
 	const dayStrip = playing ? (
 		<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
 			<Typography variant="body2" color="textSecondary">
 				{tr({ id: noReset ? "practice.currentDay" : "practice.editDay" })}:
 			</Typography>
-			{Array.from({ length: state.day + 1 }, (_, d) => {
-				const editable = noReset ? d === state.day : d <= state.day;
+			{Array.from({ length: stripLength }, (_, d) => {
+				const editable = noReset ? d === state.day : d <= state.day && d < totalDays;
 				return (
 					<Chip
 						key={d}

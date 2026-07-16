@@ -9,7 +9,7 @@ import { DashboardNavbar } from "../../components/dashboard-navbar";
 import GamePlay from "../../components/procon26/game-play";
 import PracticePlay from "../../components/procon26/practice-play";
 import PracticeSpectate from "../../components/procon26/practice-spectate";
-import PracticeLeaderboard from "../../components/procon26/practice-leaderboard";
+import CompetitivePracticePlay from "../../components/procon26/competitive-play";
 import LoadingPage from "../../components/loading-page";
 import { api, showMessage } from "../../api/commons";
 import { SERVICE_API } from "../../config/env";
@@ -20,7 +20,7 @@ import { copyText } from "../../utils/commons";
  * game (`${questionId}:${teamId}`) read-only. Driven by the team's submit state
  * (self-paced), not a wall-clock timer -- see PracticeSpectate.
  */
-const PracticeAdminView = ({ questionId, teams, mapConfig, noReset = false }) => {
+const PracticeAdminView = ({ questionId, teams, mapConfig }) => {
 	const { formatMessage: tr } = useIntl();
 	const [teamId, setTeamId] = useState(teams?.[0]?.id ?? null);
 
@@ -32,10 +32,6 @@ const PracticeAdminView = ({ questionId, teams, mapConfig, noReset = false }) =>
 		.map((t) => ({ id: t.id, name: t.name }));
 	return (
 		<Stack spacing={2}>
-			{/* Competitive practice: shared leaderboard across all teams up top. */}
-			{noReset && (
-				<PracticeLeaderboard questionId={questionId} teams={teams} ownTeamId={null} />
-			)}
 			<Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
 				<Typography variant="body2" color="textSecondary">
 					{tr({ id: "practice.viewTeam" })}:
@@ -158,14 +154,26 @@ const UserGame = () => {
 					{!gameId && <Typography color="error">Missing game id</Typography>}
 					{gameId && loadError && <Alert severity="error">{loadError}</Alert>}
 					{gameId && !loadError && !meta && <LoadingPage />}
+					{/* Timed competitive: one shared game. */}
 					{gameId && meta && !meta.isPractice && <GamePlay gameId={gameId} />}
-					{gameId && meta && meta.isPractice &&
+					{/* Competitive practice: ONE shared self-paced timeline (bare
+					    question id). Same view for teams (can submit) and admin
+					    (read-only, ownTeamId null). */}
+					{gameId && meta && meta.isPractice && meta.noReset && (
+						<CompetitivePracticePlay
+							questionId={gameId}
+							ownTeamId={isAdmin ? null : ownTeamId}
+							mapConfig={meta.mapConfig}
+							matchTeams={meta.teams}
+						/>
+					)}
+					{/* Plain practice: one self-paced solo game per team. */}
+					{gameId && meta && meta.isPractice && !meta.noReset &&
 						(isAdmin ? (
 							<PracticeAdminView
 								questionId={gameId}
 								teams={meta.teams}
 								mapConfig={meta.mapConfig}
-								noReset={meta.noReset}
 							/>
 						) : (
 							<PracticePlay
@@ -173,7 +181,7 @@ const UserGame = () => {
 								ownTeamId={ownTeamId}
 								mapConfig={meta.mapConfig}
 								matchTeams={meta.teams}
-								noReset={meta.noReset}
+								noReset={false}
 							/>
 						))}
 				</Container>

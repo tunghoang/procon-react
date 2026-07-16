@@ -107,11 +107,28 @@ export const getPracticePeerReplay = (gameId) =>
 export const getPracticeScore = (gameId) =>
 	gameClient.get("/game/practice/score", { params: { game_id: gameId } });
 
-// Admin only. Reset a game to the agent-selection stage and delete EVERY
-// team's submissions across all days, so the whole match is replayed from
-// scratch. For a practice match (one game per team) call this per team game.
-export const resetGame = (gameId) =>
-	gameClient.post("/game/reset", { game_id: gameId });
+// --- Competitive practice (ONE shared timeline; game_id = bare question id) --
+// Team or admin: the shared board (open day + overridable previous day) and the
+// days-owned standings. Same for every team.
+export const getCompetitiveState = (gameId) =>
+	gameClient.get("/game/competitive/state", { params: { game_id: gameId } });
+
+// Team only. Submit a day into the shared timeline: submitting the open day
+// advances it; submitting the last resolved day OVERRIDES it, accepted only if
+// the score strictly beats the current holder (server-enforced). actions:number[][].
+export const submitCompetitiveActions = (gameId, day, actions) =>
+	gameClient.post("/game/competitive/actions", { game_id: gameId, day, actions });
+
+// Admin only. Reset a game to agent selection + delete every team's submissions,
+// so the whole match is replayed from scratch. Plain practice = one game per team
+// (call per team game). For a TIMED match, pass `startsAt` (epoch seconds) to
+// re-anchor the schedule to a new Day-1 time; practice games are self-paced so
+// it's ignored.
+export const resetGame = (gameId, startsAt) =>
+	gameClient.post(
+		"/game/reset",
+		startsAt != null ? { game_id: gameId, startsAt } : { game_id: gameId },
+	);
 
 // Team only. Reset your OWN practice game back to agent selection so you can
 // play it again (clears your submissions across all days).

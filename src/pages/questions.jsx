@@ -48,6 +48,12 @@ const Questions = () => {
 		moves: [],
 	});
 	const [originalParams, setOriginalParams] = useState(null);
+	// Reset dialog for a TIMED match: admin picks the new Day-1 start time.
+	const [resetTimeDialog, setResetTimeDialog] = useState({
+		open: false,
+		row: null,
+		value: "",
+	});
 	const { apiCreate, apiEdit } = useApi("/question", "Question");
 	const {
 		data: questions,
@@ -390,54 +396,86 @@ const Questions = () => {
 		);
 	};
 
-	// Reset a question so every team replays it from scratch (clears all their
-	// submitted days + agent selection). A normal match is one shared game
-	// (id = question id); a practice match is one solo game per team
-	// (id = `${questionId}:${teamId}`), so reset each of those.
+	// A datetime-local input string (minute precision) for "now".
+	const nowLocalInput = () => {
+		const d = new Date();
+		d.setSeconds(0, 0);
+		return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+			.toISOString()
+			.slice(0, 16);
+	};
+
+	// Do the actual reset. Match kinds (from question_data):
+	//  - plain practice (is_practice && !no_reset): one solo game per team ->
+	//    reset each `${qid}:${teamId}`.
+	//  - competitive practice (is_practice && no_reset): ONE shared game -> reset
+	//    the bare question id (self-paced, no start time needed).
+	//  - timed competitive (!is_practice): ONE shared game -> reset the bare id
+	//    and re-anchor its schedule to `startsAtSec` (admin-picked Day-1 time).
+	const doReset = async (row, startsAtSec) => {
+		const qdata = JSON.parse(row.question_data || "{}");
+		const isPractice = !!qdata.is_practice;
+		const noReset = !!qdata.no_reset;
+		try {
+			if (isPractice && !noReset) {
+				const matchId = row.match_id ?? row.match?.id;
+				const m = await api.get(`${SERVICE_API}/match/${matchId}`);
+				const teams = m?.teams || [];
+				if (!teams.length) throw new Error("match has no teams");
+				const results = await Promise.allSettled(
+					teams.map((t) => resetGame(`${row.id}:${t.id}`)),
+				);
+				const failed = results.filter((r) => r.status === "rejected").length;
+				if (failed) {
+					showMessage(
+						tr(
+							{ id: "questions.resetPartial" },
+							{ ok: teams.length - failed, total: teams.length },
+						),
+						"warning",
+						6000,
+					);
+				} else {
+					showMessage(tr({ id: "questions.resetDone" }), "success");
+				}
+			} else {
+				// Shared game: competitive practice ignores startsAt (self-paced);
+				// a timed match re-anchors to the admin-picked start time.
+				await resetGame(String(row.id), isPractice ? undefined : startsAtSec);
+				showMessage(tr({ id: "questions.resetDone" }), "success");
+			}
+			await refetch();
+		} catch (error) {
+			showMessage(getGameError(error), "error", 6000);
+		}
+	};
+
 	const handleResetQuestion = (row) => {
 		const qdata = JSON.parse(row.question_data || "{}");
 		const isPractice = !!qdata.is_practice;
+		if (!isPractice) {
+			// Timed match: let the admin pick the new Day-1 start time first.
+			setResetTimeDialog({ open: true, row, value: nowLocalInput() });
+			return;
+		}
 		openConfirmDialog(
 			tr({ id: "questions.resetTitle" }),
 			tr({ id: "questions.resetConfirm" }),
 			async () => {
-				try {
-					if (isPractice) {
-						const matchId = row.match_id ?? row.match?.id;
-						const m = await api.get(`${SERVICE_API}/match/${matchId}`);
-						const teams = m?.teams || [];
-						if (!teams.length) throw new Error("match has no teams");
-						const results = await Promise.allSettled(
-							teams.map((t) => resetGame(`${row.id}:${t.id}`)),
-						);
-						const failed = results.filter(
-							(r) => r.status === "rejected",
-						).length;
-						if (failed) {
-							showMessage(
-								tr(
-									{ id: "questions.resetPartial" },
-									{ ok: teams.length - failed, total: teams.length },
-								),
-								"warning",
-								6000,
-							);
-						} else {
-							showMessage(tr({ id: "questions.resetDone" }), "success");
-						}
-					} else {
-						await resetGame(String(row.id));
-						showMessage(tr({ id: "questions.resetDone" }), "success");
-					}
-					await refetch();
-					closeConfirmDialog();
-				} catch (error) {
-					showMessage(getGameError(error), "error", 6000);
-					closeConfirmDialog();
-				}
+				await doReset(row, null);
+				closeConfirmDialog();
 			},
 			"warning",
 		);
+	};
+
+	const confirmResetTime = async () => {
+		const { row, value } = resetTimeDialog;
+		const startsAtSec = value
+			? Math.floor(new Date(value).getTime() / 1000)
+			: Math.floor(Date.now() / 1000);
+		setResetTimeDialog({ open: false, row: null, value: "" });
+		if (row) await doReset(row, startsAtSec);
 	};
 
 	const openConfirmDialog = (
@@ -721,6 +759,38 @@ const Questions = () => {
 						color={confirmDialog.confirmColor || "primary"}
 						variant="contained">
 						{confirmDialog.showCancel ? "Confirm" : "OK"}
+					</mui.Button>
+				</mui.DialogActions>
+			</mui.Dialog>
+			{/* Timed-match reset: admin picks the new Day-1 start time. */}
+			<mui.Dialog
+				open={resetTimeDialog.open}
+				onClose={() => setResetTimeDialog({ open: false, row: null, value: "" })}>
+				<mui.DialogTitle>{tr({ id: "questions.resetTitle" })}</mui.DialogTitle>
+				<mui.DialogContent>
+					<mui.Typography sx={{ whiteSpace: "pre-line", mb: 2 }}>
+						{tr({ id: "questions.resetConfirm" })}
+					</mui.Typography>
+					<mui.TextField
+						type="datetime-local"
+						fullWidth
+						label={tr({ id: "questions.startsAtLabel" })}
+						slotProps={{ inputLabel: { shrink: true } }}
+						value={resetTimeDialog.value}
+						onChange={(e) =>
+							setResetTimeDialog((p) => ({ ...p, value: e.target.value }))
+						}
+					/>
+				</mui.DialogContent>
+				<mui.DialogActions>
+					<mui.Button
+						onClick={() =>
+							setResetTimeDialog({ open: false, row: null, value: "" })
+						}>
+						Cancel
+					</mui.Button>
+					<mui.Button onClick={confirmResetTime} color="warning" variant="contained">
+						Confirm
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>
