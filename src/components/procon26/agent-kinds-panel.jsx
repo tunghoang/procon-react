@@ -23,7 +23,9 @@ const AgentKindsPanel = ({ mapConfig, onSubmit, submitting }) => {
 	return (
 		<Stack spacing={2}>
 			<Alert severity="info">{tr({ id: "hexudon.kinds.hint" })}</Alert>
-			<Stack spacing={1}>
+			{/* Cap the per-car list height so a full 8-car roster scrolls
+			    instead of stretching the panel down the page. */}
+			<Stack spacing={1} sx={{ maxHeight: 300, overflowY: "auto", pr: 1 }}>
 				{kinds.map((kind, index) => (
 					<Stack key={index} direction="row" spacing={2} alignItems="center">
 						<Typography sx={{ width: 130 }}>

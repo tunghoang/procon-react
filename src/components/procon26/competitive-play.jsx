@@ -190,8 +190,8 @@ const CompetitivePracticePlay = ({ questionId, ownTeamId, mapConfig, matchTeams 
 			<Typography variant="subtitle2" gutterBottom>
 				{tr({ id: "competitive.daysOwned" })}
 			</Typography>
-			<TableContainer>
-				<Table size="small">
+			<TableContainer sx={{ maxHeight: 360 }}>
+				<Table size="small" stickyHeader>
 					<TableHead>
 						<TableRow>
 							<TableCell>#</TableCell>
