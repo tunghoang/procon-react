@@ -27,6 +27,11 @@ const items = [
 		icon: <QuizIcon fontSize="small" />,
 		title: "Questions",
 	},
+	{
+		href: "/admin/round-standings",
+		icon: <SummarizeIcon fontSize="small" />,
+		title: "standings.nav",
+	},
 	// procon25 legacy — hidden for HEXUDON (routes still exist):
 	// {
 	// 	href: "/admin/answers",

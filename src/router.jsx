@@ -12,6 +12,7 @@ import Rounds from "./pages/rounds";
 import Questions from "./pages/questions";
 import Answers from "./pages/answers";
 import ScoreSummary from "./pages/score-summary";
+import RoundStandings from "./pages/round-standings";
 import Reset from "./pages/reset";
 import Login from "./pages/login";
 import NotFound from "./pages/not-found";
@@ -148,6 +149,14 @@ const adminScoreSummaryRoute = createRoute({
 	component: ScoreSummary,
 });
 
+// HEXUDON round standings (admin only -- the endpoints behind it sit under
+// requireAdmin in the team-manager).
+const adminRoundStandingsRoute = createRoute({
+	getParentRoute: () => adminLayoutRoute,
+	path: "/admin/round-standings",
+	component: RoundStandings,
+});
+
 const adminResetRoute = createRoute({
 	getParentRoute: () => adminLayoutRoute,
 	path: "/admin/reset",
@@ -200,6 +209,7 @@ const routeTree = rootRoute.addChildren([
 		adminQuestionsRoute,
 		adminAnswersRoute,
 		adminScoreSummaryRoute,
+		adminRoundStandingsRoute,
 		adminResetRoute,
 	]),
 	forbiddenRoute,

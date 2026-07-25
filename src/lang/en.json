@@ -260,5 +260,17 @@
   "practice.spectate.progress": "Submit progress",
   "practice.spectate.notStarted": "This team hasn't started yet (still selecting agent types).",
   "practice.spectate.waited": "waited",
-  "practice.spectate.endOfDay": "End of day"
+  "practice.spectate.endOfDay": "End of day",
+  "standings.nav": "Round standings",
+  "standings.title": "HEXUDON round standings",
+  "standings.pickRound": "Pick a round to see its standings.",
+  "standings.empty": "No scored match in this round yet.",
+  "standings.scoringNote": "Each match is scored by finishing position (1st = 1 point) and the round total is the sum of those positions, so the LOWEST total wins. A team on a match's roster that never competed (no agent kinds chosen) takes that match's LAST position; a match a team was not rostered for does not count at all.",
+  "standings.matchesCounted": "Matches counted",
+  "standings.rankPoints": "Rank points",
+  "standings.dnp": "DNP",
+  "standings.dnpHint": "Did not compete (no agent kinds chosen) — scored as this match's last position.",
+  "standings.notInRoster": "Not on this match's roster — this match does not count for the team.",
+  "standings.notScored": "Matches not included:",
+  "Refresh": "Refresh"
 }

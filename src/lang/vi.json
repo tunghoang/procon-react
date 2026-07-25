@@ -260,5 +260,17 @@
   "practice.spectate.progress": "Tiến độ nộp",
   "practice.spectate.notStarted": "Đội này chưa bắt đầu (đang chọn loại xe).",
   "practice.spectate.waited": "đợi",
-  "practice.spectate.endOfDay": "Cuối ngày"
+  "practice.spectate.endOfDay": "Cuối ngày",
+  "standings.nav": "Xếp hạng vòng",
+  "standings.title": "Xếp hạng vòng HEXUDON",
+  "standings.pickRound": "Hãy chọn một vòng để xem xếp hạng.",
+  "standings.empty": "Vòng này chưa có trận nào được tính điểm.",
+  "standings.scoringNote": "Mỗi trận tính theo thứ hạng (hạng 1 = 1 điểm), tổng cả vòng là tổng các thứ hạng đó, nên tổng NHỎ NHẤT xếp trên. Đội có trong roster mà không thi đấu (không chọn loại xe) sẽ nhận HẠNG CUỐI của trận đó; trận nào đội không có trong roster thì không tính.",
+  "standings.matchesCounted": "Số trận tính",
+  "standings.rankPoints": "Điểm hạng",
+  "standings.dnp": "KTĐ",
+  "standings.dnpHint": "Không thi đấu (không chọn loại xe) — bị tính là hạng cuối của trận này.",
+  "standings.notInRoster": "Không có trong roster trận này — trận này không tính cho đội.",
+  "standings.notScored": "Các trận không được tính:",
+  "Refresh": "Làm mới"
 }
