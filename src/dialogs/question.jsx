@@ -303,14 +303,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const startsAtLabel = instance?.raw_questions?.startsAt
 		? new Date(instance.raw_questions.startsAt * 1000).toLocaleString()
 		: null;
-	// With a non-zero selection window, Day 1 does NOT open at startsAt but that
-	// many seconds later (engine: day_start = selection_start + limit). Show it,
-	// or an operator reads the start time as the first day's deadline clock.
+	// startsAt IS Day 1's opening; the agent-kind window is the N seconds BEFORE
+	// it (engine: selection_start_time = start_time - limit, and selection is
+	// refused both before that and after startsAt). Show when teams may start
+	// choosing, since that instant is not visible anywhere else.
 	const selectionWindowSeconds = instance?.raw_questions?.agent_selection_time_limit;
-	const dayOneOpensLabel =
+	const selectionOpensLabel =
 		instance?.raw_questions?.startsAt && selectionWindowSeconds
 			? new Date(
-					(instance.raw_questions.startsAt + selectionWindowSeconds) * 1000,
+					(instance.raw_questions.startsAt - selectionWindowSeconds) * 1000,
 				).toLocaleString()
 			: null;
 
@@ -541,14 +542,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												{startsAtLabel && (
 													<Alert severity="info">
 														{tr({ id: "questions.startsAtLabel" })}: {startsAtLabel}
-														{dayOneOpensLabel && (
+														{selectionOpensLabel && (
 															<>
 																{" — "}
 																{tr(
-																	{ id: "questions.dayOneOpensAt" },
+																	{ id: "questions.selectionOpensAt" },
 																	{ seconds: Math.round(selectionWindowSeconds) },
 																)}
-																: {dayOneOpensLabel}
+																: {selectionOpensLabel}
 															</>
 														)}
 													</Alert>

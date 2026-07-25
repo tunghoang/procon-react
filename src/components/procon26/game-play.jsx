@@ -424,6 +424,7 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 								mapConfig={teamConfig}
 								onSubmit={handleKinds}
 								submitting={submitting}
+								opensIn={state.selection_opens_in ?? 0}
 							/>
 						) : (
 							<LoadingPage />
@@ -431,7 +432,14 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					</Stack>
 				)}
 
-				{state.status === "in_progress" && !isAdmin && dayInformation && (
+				{/* Missed the agent-kind window -> the engine refuses every
+				    submission for the rest of the match, so say so instead of
+				    offering a plan editor whose submit can only fail. */}
+				{state.status !== "selecting_agents" && !isAdmin && ownTeamState?.missed_selection && (
+					<Alert severity="error">{tr({ id: "hexudon.kinds.missed" })}</Alert>
+				)}
+
+				{state.status === "in_progress" && !isAdmin && !ownTeamState?.missed_selection && dayInformation && (
 					dayInformation.agents.length ? (
 						<PlanEditor
 							mapConfig={mapConfig}
@@ -471,6 +479,10 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 										}`}
 									{state.status === "selecting_agents" &&
 										` — ${tr({ id: teamState.types_selected ? "hexudon.kinds.selected" : "hexudon.kinds.waiting" })}`}
+									{/* Missed the window -> out of the match; the admin
+									    needs to see why a team's score stays at zero. */}
+									{teamState.missed_selection &&
+										` — ${tr({ id: "hexudon.kinds.missedShort" })}`}
 								</Typography>
 							</Box>
 						))}

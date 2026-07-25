@@ -12,17 +12,27 @@ import { useIntl } from "react-intl";
 
 /**
  * Pre-match agent-kind selection: one 0 (patrol) / 1 (refuel) per agent, in
- * agent order. Teams may resubmit until the selection window closes; a team
- * that never answers is locked to all-patrol.
+ * agent order. The window is bounded at BOTH ends (the N seconds before the
+ * match's start time), so `opensIn` > 0 means the engine would refuse a choice
+ * for now and the panel stays disabled. A team that never answers cannot submit
+ * any day at all — see hexudon.kinds.hint.
  */
-const AgentKindsPanel = ({ mapConfig, onSubmit, submitting }) => {
+const AgentKindsPanel = ({ mapConfig, onSubmit, submitting, opensIn = 0 }) => {
 	const { formatMessage: tr } = useIntl();
 	const agentCount = (mapConfig.agents || []).length;
 	const [kinds, setKinds] = useState(() => new Array(agentCount).fill(0));
+	const notOpenYet = opensIn > 0;
 
 	return (
 		<Stack spacing={2}>
-			<Alert severity="info">{tr({ id: "hexudon.kinds.hint" })}</Alert>
+			<Alert severity={notOpenYet ? "warning" : "info"}>
+				{notOpenYet
+					? tr(
+							{ id: "hexudon.kinds.notOpenYet" },
+							{ seconds: Math.ceil(opensIn) },
+						)
+					: tr({ id: "hexudon.kinds.hint" })}
+			</Alert>
 			{/* Cap the per-car list height so a full 8-car roster scrolls
 			    instead of stretching the panel down the page. */}
 			<Stack spacing={1} sx={{ maxHeight: 300, overflowY: "auto", pr: 1 }}>
@@ -56,7 +66,11 @@ const AgentKindsPanel = ({ mapConfig, onSubmit, submitting }) => {
 				))}
 			</Stack>
 			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
-				<Button variant="contained" disabled={submitting} onClick={() => onSubmit(kinds)}>
+				<Button
+					variant="contained"
+					disabled={submitting || notOpenYet}
+					onClick={() => onSubmit(kinds)}
+				>
 					{tr({ id: "hexudon.kinds.submit" })}
 				</Button>
 				{/* Live counts, updated as toggles change. */}
