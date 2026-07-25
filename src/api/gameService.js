@@ -141,6 +141,14 @@ export const resetPractice = (gameId) =>
 // (game_id/startsAt/teams are placeholders the caller must replace with the
 // real question id, the admin's chosen start time, and the match's actual
 // team roster before saving).
+// Admin only. What each difficulty tier actually produces, straight from
+// map_gen.py's DIFFICULTY_CONFIGS -> {difficulties: [{name, width, height,
+// days, daySeconds, spots, brands, stocks, agents, selectionSeconds,
+// pondRatio, roadRatio, mountainRatio, stepFraction, fuelFraction}]}, each
+// value being {min, max, fixed}. Read (not hard-coded) so the dialog can't
+// drift from the generator when the tiers are re-tuned.
+export const getDifficulties = () => gameClient.get("/game/difficulties");
+
 export const generateMap = (difficulty, teams, seed) =>
 	gameClient.post("/game/generate", {
 		difficulty,

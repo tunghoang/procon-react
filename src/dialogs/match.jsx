@@ -21,6 +21,7 @@ import { useFetchData } from "../api";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
 import { DateTimePicker } from "@mui/x-date-pickers";
+import { withZeroSeconds } from "../utils/commons";
 const useStyles = makeStyles({
 	root: {
 		// overflow: "visible",
@@ -33,13 +34,6 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 	// Convert string dates to Date objects if needed
 	const startTime = instance?.start_time ? new Date(instance.start_time) : null;
 	const endTime = instance?.end_time ? new Date(instance.end_time) : null;
-
-	const withZeroSeconds = (date) => {
-		if (!date) return null;
-		const d = new Date(date);
-		d.setSeconds(0, 0);
-		return d;
-	};
 
 	return (
 		<Dialog

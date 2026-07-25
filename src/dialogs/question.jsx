@@ -32,11 +32,26 @@ import { SERVICE_API } from "../config/env";
 import { useContext, useState, useMemo, useEffect } from "react";
 import Context from "../context";
 import CodeEditor from "../components/code-editor";
-import { generateMap, getGameError } from "../api/gameService";
+import { generateMap, getDifficulties, getGameError } from "../api/gameService";
+import { withZeroSeconds } from "../utils/commons";
 import { validateInitShape } from "../components/procon26/board-generator";
 import HexBoard from "../components/procon26/hex-board";
 
 const DIFFICULTIES = ["easy", "medium", "hard", "very_hard"];
+
+// A {min, max, fixed} window from GET /game/difficulties -> "14" or "10-14".
+const showRange = (range) => {
+	if (!range) return "?";
+	const fmt = (v) => Math.round(v);
+	return range.fixed ? `${fmt(range.min)}` : `${fmt(range.min)}-${fmt(range.max)}`;
+};
+
+// The same window as a share of the board, e.g. {0.08, 0.08} -> "8%".
+const showPercent = (range) => {
+	if (!range) return "?";
+	const fmt = (v) => `${Math.round(v * 100)}%`;
+	return range.fixed ? fmt(range.min) : `${Math.round(range.min * 100)}-${fmt(range.max)}`;
+};
 
 const useStyles = makeStyles({
 	root: {
@@ -72,14 +87,22 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 		// Absolute Day-1 start time (a Date). Defaults to 2 min out, and to the
 		// match's own start_time once the match loads (below). The days run
 		// continuously from here; the match end is simply start + total day time.
-		starts_at: new Date(Date.now() + 2 * 60 * 1000),
+		// Truncated to the whole minute: the picker can only edit hours/minutes,
+		// so a stray :47 from `Date.now()` would silently offset the whole match
+		// schedule (see withZeroSeconds).
+		starts_at: withZeroSeconds(new Date(Date.now() + 2 * 60 * 1000)),
 		// Default the map seed to the current timestamp (ms) so every new
 		// question gets a fresh, unique board without the admin clicking the
 		// dice. Re-seeded each time the dialog opens (below); the dice still
 		// re-rolls, and after Generate the field shows the seed actually used.
 		seed: Date.now(),
+		// Agent-kind selection window, in seconds AFTER starts_at. Prefilled
+		// from the chosen difficulty (map_gen's agent_selection_time_limit) once
+		// the tier specs load; 0 keeps Day 1 starting exactly at starts_at.
+		selection_seconds: 0,
 	});
 	const [generating, setGenerating] = useState(false);
+	const [difficultySpecs, setDifficultySpecs] = useState(null);
 	const [matchTeams, setMatchTeams] = useState(null);
 	const [manualText, setManualText] = useState("");
 	const [manualErrors, setManualErrors] = useState([]);
@@ -95,6 +118,45 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 		}
 	}, [open]);
 
+	// What each tier actually produces (map_gen.py's DIFFICULTY_CONFIGS, served
+	// by GET /game/difficulties). Fetched instead of hard-coded so re-tuning the
+	// generator doesn't need a frontend change. Fetched once and then cached for
+	// the session; a failure (or a service without the endpoint) just leaves the
+	// summary hidden and is retried the next time the dialog opens.
+	useEffect(() => {
+		if (!open || difficultySpecs) return undefined;
+		let cancelled = false;
+		(async () => {
+			try {
+				const response = await getDifficulties();
+				if (!cancelled) setDifficultySpecs(response?.difficulties || []);
+			} catch {
+				// Leave it unset: the summary is informational, and the deps stay
+				// unchanged so this does not spin.
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [open, difficultySpecs]);
+
+	const activeSpec = useMemo(
+		() => (difficultySpecs || []).find((d) => d.name === genParams.difficulty) || null,
+		[difficultySpecs, genParams.difficulty],
+	);
+
+	// Adopt the tier's own agent-selection window whenever the tier changes. It
+	// used to be hard-coded to 0 here, so map_gen's agent_selection_time_limit
+	// (60/45/45/30 s) never reached the engine no matter what it was set to. An
+	// admin edit sticks until the difficulty is changed again.
+	useEffect(() => {
+		if (!activeSpec || activeSpec.selectionSeconds == null) return;
+		setGenParams((prev) => ({
+			...prev,
+			selection_seconds: Math.round(activeSpec.selectionSeconds),
+		}));
+	}, [activeSpec]);
+
 	// The game's team roster is frozen at creation — fetch the match's teams
 	// so Generate can bake them into the init body.
 	useEffect(() => {
@@ -108,9 +170,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				if (!cancelled) {
 					setMatchTeams(match?.teams || []);
 					// Default the Day-1 start to the match's own start_time so
-					// setting it on the match flows straight into the game.
+					// setting it on the match flows straight into the game. Zeroed
+					// to the minute: a match created without touching its own picker
+					// took start_time from the model's NOW() default and carries the
+					// second it happened to be created at.
 					if (match?.start_time) {
-						setGenParams((prev) => ({ ...prev, starts_at: new Date(match.start_time) }));
+						setGenParams((prev) => ({
+							...prev,
+							starts_at: withZeroSeconds(new Date(match.start_time)),
+						}));
 					}
 				}
 			} catch {
@@ -166,7 +234,13 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				throw new Error("map generation returned no teams");
 			}
 			const sharedAgents = response.teams[0].agents;
-			const startsAtSec = Math.floor(new Date(genParams.starts_at).getTime() / 1000);
+			// The single point where a start time reaches the engine: pin it to the
+			// whole minute the admin actually chose. The picker edits only hours and
+			// minutes but keeps whatever seconds its value had, and every deadline
+			// downstream (the agent-kind window, each day's response deadline) is
+			// anchored on this instant.
+			const startsAt = withZeroSeconds(genParams.starts_at);
+			const startsAtSec = startsAt ? Math.floor(startsAt.getTime() / 1000) : NaN;
 			if (!Number.isFinite(startsAtSec)) {
 				throw new Error("invalid start time");
 			}
@@ -176,11 +250,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 				// start_time). Days run continuously from here; the match "end" is
 				// simply startsAt + the sum of the day durations.
 				startsAt: startsAtSec,
-				// Day 1 begins exactly AT startsAt; the lead-in (now .. startsAt) IS
-				// the agent-type selection window (teams pick during the countdown).
-				// agent_selection_time_limit=0 means no extra window is tacked on
-				// after startsAt.
-				agent_selection_time_limit: 0,
+				// Agent-kind window, in seconds after startsAt: the engine closes
+				// selection at startsAt + this and opens Day 1 there. Teams may also
+				// pick during the whole lead-in (now .. startsAt) -- the engine puts
+				// no lower bound on selection -- so this is the extra window they get
+				// once the match opens. 0 = Day 1 starts exactly at startsAt.
+				agent_selection_time_limit: Math.max(
+					0,
+					Number(genParams.selection_seconds) || 0,
+				),
 				teams: matchTeams.map((t) => ({ team_id: String(t.id), agents: sharedAgents })),
 			};
 			delete init.game_id; // meaningless until the question is actually created
@@ -225,6 +303,16 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const startsAtLabel = instance?.raw_questions?.startsAt
 		? new Date(instance.raw_questions.startsAt * 1000).toLocaleString()
 		: null;
+	// With a non-zero selection window, Day 1 does NOT open at startsAt but that
+	// many seconds later (engine: day_start = selection_start + limit). Show it,
+	// or an operator reads the start time as the first day's deadline clock.
+	const selectionWindowSeconds = instance?.raw_questions?.agent_selection_time_limit;
+	const dayOneOpensLabel =
+		instance?.raw_questions?.startsAt && selectionWindowSeconds
+			? new Date(
+					(instance.raw_questions.startsAt + selectionWindowSeconds) * 1000,
+				).toLocaleString()
+			: null;
 
 	return (
 		<Dialog classes={{ paperScrollPaper: classes.root }} open={open} onClose={close}>
@@ -320,11 +408,28 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												<DateTimePicker
 													label={tr({ id: "questions.startTime" })}
 													value={genParams.starts_at}
-													onChange={(v) => setGenParams((prev) => ({ ...prev, starts_at: v }))}
+													onChange={(v) =>
+														setGenParams((prev) => ({
+															...prev,
+															starts_at: withZeroSeconds(v),
+														}))
+													}
 													slotProps={{ textField: { size: "small", fullWidth: true } }}
 												/>
 											</Grid>
-											<Grid size={{ xs: 3 }}>
+											<Grid size={{ xs: 2 }}>
+												<TextField
+													label={tr({ id: "questions.selectionSeconds" })}
+													type="number"
+													size="small"
+													fullWidth
+													value={genParams.selection_seconds}
+													onChange={changeGenNumber("selection_seconds")}
+													helperText={tr({ id: "questions.selectionHint" })}
+													inputProps={{ min: 0 }}
+												/>
+											</Grid>
+											<Grid size={{ xs: 2 }}>
 												<Stack direction="row" spacing={0.5} alignItems="center">
 													<TextField label="Seed" type="number" fullWidth size="small"
 														value={genParams.seed} onChange={changeGenNumber("seed")} />
@@ -342,7 +447,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 													</IconButton>
 												</Stack>
 											</Grid>
-											<Grid size={{ xs: 3 }} sx={{ display: "flex", alignItems: "center" }}>
+											<Grid size={{ xs: 2 }} sx={{ display: "flex", alignItems: "center" }}>
 												<Button
 													variant="contained"
 													fullWidth
@@ -354,6 +459,37 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												</Button>
 											</Grid>
 										</Grid>
+
+										{/* What the selected tier will produce, read from the
+										generator itself (GET /game/difficulties) so it stays
+										true after map_gen.py is re-tuned. The exact daySteps /
+										fuel of a generated board are randomized inside their
+										spec windows and appear below after Generate. */}
+										{activeSpec && (
+											<Stack spacing={0.5}>
+												<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
+													<Typography variant="caption" color="textSecondary">
+														{tr({ id: "questions.difficultySpec" })}:
+													</Typography>
+													{[
+														[tr({ id: "questions.mapSize" }), `${showRange(activeSpec.width)}x${showRange(activeSpec.height)}`],
+														[tr({ id: "questions.days" }), showRange(activeSpec.days)],
+														[tr({ id: "questions.secondsPerDay" }), showRange(activeSpec.daySeconds)],
+														[tr({ id: "questions.agents" }), showRange(activeSpec.agents)],
+														[tr({ id: "questions.spots" }), showRange(activeSpec.spots)],
+														[tr({ id: "questions.brands" }), showRange(activeSpec.brands)],
+														[tr({ id: "questions.stocks" }), showRange(activeSpec.stocks)],
+													].map(([label, value]) => (
+														<Chip key={label} size="small" variant="outlined" label={`${label}: ${value}`} />
+													))}
+												</Stack>
+												<Typography variant="caption" color="textSecondary">
+													{tr({ id: "questions.terrainMix" })}:{" "}
+													{showPercent(activeSpec.pondRatio)} / {showPercent(activeSpec.roadRatio)} /{" "}
+													{showPercent(activeSpec.mountainRatio)}
+												</Typography>
+											</Stack>
+										)}
 
 										{/* Per-day duration, populated from what map_gen.py generated --
 										days still always run back-to-back (no gaps: the docs rule
@@ -405,6 +541,16 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												{startsAtLabel && (
 													<Alert severity="info">
 														{tr({ id: "questions.startsAtLabel" })}: {startsAtLabel}
+														{dayOneOpensLabel && (
+															<>
+																{" — "}
+																{tr(
+																	{ id: "questions.dayOneOpensAt" },
+																	{ seconds: Math.round(selectionWindowSeconds) },
+																)}
+																: {dayOneOpensLabel}
+															</>
+														)}
 													</Alert>
 												)}
 												<HexBoard mapConfig={hexudonPreview} radius={9} />

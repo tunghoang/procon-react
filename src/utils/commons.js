@@ -52,10 +52,29 @@ const roundNumber = (number) => {
   return Math.round(number * 100) / 100;
 };
 
+/**
+ * Truncate a date to the whole minute.
+ *
+ * A <DateTimePicker> only exposes fields down to the minute, but it PRESERVES
+ * the seconds of whatever value it was handed -- and those seconds are usually
+ * stray: a `new Date()`/`Date.now() + 2min` default carries the current second,
+ * and a match row whose start_time fell back to the model's NOW() default keeps
+ * the second it was created at. Without this, a schedule an admin reads as
+ * "14:30" really starts at 14:30:47, and every downstream deadline (agent-kind
+ * window, each day's response deadline) inherits that offset.
+ */
+const withZeroSeconds = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  d.setSeconds(0, 0);
+  return d;
+};
+
 export {
   copyText,
   formatDateTime,
   roundNumber,
   setLocalStorage,
   shortFormatDateTime,
+  withZeroSeconds,
 };

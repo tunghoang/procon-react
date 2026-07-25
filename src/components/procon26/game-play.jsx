@@ -58,7 +58,30 @@ const useCountdown = (endsAtEpoch) => {
 		return () => clearInterval(timer);
 	}, []);
 	if (!endsAtEpoch) return null;
-	return Math.max(0, Math.floor(endsAtEpoch - now));
+	// CEIL, not floor: with 29.94 s left (the poll's own latency alone eats the
+	// first tick) flooring displays "29" for a 30 s window, so a configured
+	// window never showed its own number. Ceil counts 30 -> 1 and reaches 0
+	// exactly at the deadline.
+	return Math.max(0, Math.ceil(endsAtEpoch - now));
+};
+
+/**
+ * The clock, isolated in its own component on purpose: it re-renders every
+ * second, and GamePlay draws the whole SVG board (up to 32x32 = 1024 hexes) plus
+ * the plan editor. Keeping the tick's state here means the second hand no longer
+ * re-renders the board.
+ */
+const CountdownChip = ({ endsAt }) => {
+	const countdown = useCountdown(endsAt);
+	if (countdown === null) return null;
+	return (
+		<Chip
+			variant="outlined"
+			color={countdown < 15 ? "error" : "default"}
+			sx={{ "& .MuiChip-label": { fontVariantNumeric: "tabular-nums" } }}
+			label={`⏱ ${formatCountdown(countdown)}`}
+		/>
+	);
 };
 
 /**
@@ -95,6 +118,8 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	// Absolute day deadline, re-anchored from state.day_deadline_in each poll so
 	// it is immune to client/server clock skew — used for BOTH roles.
 	const [dayEndsAt, setDayEndsAt] = useState(null);
+	// Same treatment for the agent-selection deadline (state.selection_deadline_in).
+	const [selectionDeadlineAt, setSelectionDeadlineAt] = useState(null);
 	const [result, setResult] = useState(null);
 	const [loadError, setLoadError] = useState(null);
 	// Team /game/config load failure — kept separate from loadError (which a
@@ -165,12 +190,25 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	// --- polling --------------------------------------------------------------
 	const refreshState = useCallback(async () => {
 		try {
+			// Anchor the relative deadlines on the instant the request was SENT,
+			// not the instant the reply was parsed. The server measured "x seconds
+			// left" somewhere between the two, so anchoring on send can only
+			// under-state the remaining time, while anchoring on receive adds the
+			// whole round trip and would show a team time the engine will not
+			// honour. Under-stating is the safe direction for a submit deadline.
+			const requestedAt = Date.now() / 1000;
 			const next = await getGameState(gameId);
 			setState(next);
 			setLoadError(null);
 			setDayEndsAt(
 				next.day_deadline_in !== null && next.day_deadline_in !== undefined
-					? Date.now() / 1000 + next.day_deadline_in
+					? requestedAt + next.day_deadline_in
+					: null,
+			);
+			setSelectionDeadlineAt(
+				next.selection_deadline_in !== null &&
+					next.selection_deadline_in !== undefined
+					? requestedAt + next.selection_deadline_in
 					: null,
 			);
 			if (!isAdmin && next.status !== "finished") {
@@ -239,9 +277,23 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	// Countdown target: selection window end while selecting; the day
 	// deadline while playing (teams read it from /game/day, admins derive it
 	// from state.day_deadline_in).
-	const selectionEndsAt = questionConfig
-		? questionConfig.startsAt + (questionConfig.agent_selection_time_limit ?? 60)
-		: null;
+	//
+	// The selection deadline comes from the ENGINE (state.selection_deadline_in,
+	// re-anchored per poll like dayEndsAt) so it always matches the window the
+	// engine actually enforces. Only if the service doesn't send it do we derive
+	// it from the config -- and then from a REAL configured limit, never an
+	// invented default: the old `?? 60` silently counted 60 s on any game whose
+	// stored init body omitted agent_selection_time_limit, regardless of what
+	// the match was configured with.
+	const configuredSelectionSeconds =
+		mapConfig?.agent_selection_time_limit ??
+		questionConfig?.agent_selection_time_limit ??
+		null;
+	const selectionEndsAt =
+		selectionDeadlineAt ??
+		(questionConfig && configuredSelectionSeconds !== null
+			? questionConfig.startsAt + configuredSelectionSeconds
+			: null);
 	// day_deadline_in (re-anchored to the client clock each poll) is returned to
 	// both roles, so the day countdown uses it regardless of role — immune to
 	// client/server clock skew, unlike the absolute /game/day endsAt.
@@ -249,9 +301,8 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 		state?.status === "selecting_agents" ? selectionEndsAt : dayEndsAt;
 	// Practice games are self-paced (no wall-clock deadline) -- no countdown.
 	const isPractice = !!questionConfig?.is_practice;
-	const countdown = useCountdown(
-		state?.status === "finished" || isPractice ? null : countdownTarget,
-	);
+	const countdownEndsAt =
+		state?.status === "finished" || isPractice ? null : countdownTarget;
 
 	const handleKinds = async (types) => {
 		setSubmitting(true);
@@ -323,14 +374,7 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					}`}
 				/>
 			) : null}
-			{countdown !== null && state.status !== "finished" && (
-				<Chip
-					variant="outlined"
-					color={countdown < 15 ? "error" : "default"}
-					sx={{ "& .MuiChip-label": { fontVariantNumeric: "tabular-nums" } }}
-					label={`⏱ ${formatCountdown(countdown)}`}
-				/>
-			)}
+			{state.status !== "finished" && <CountdownChip endsAt={countdownEndsAt} />}
 			<Box sx={{ flex: 1 }} />
 			<Button
 				size="small"
