@@ -222,6 +222,11 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				setResult(await getGameResult(gameId));
 			}
 		} catch (e) {
+			// A 429 from the server's per-team throttle is transient by
+			// definition: keep the last known state and let the next poll pick
+			// things up, rather than replacing the screen with an alarming error
+			// (e.g. when a team has several tabs open on the same match).
+			if (e.response?.status === 429) return;
 			setLoadError(getGameError(e));
 		}
 	}, [gameId, isAdmin]);
