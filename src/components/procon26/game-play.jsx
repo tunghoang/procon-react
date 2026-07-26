@@ -251,6 +251,12 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	}, [state, gameId]);
 
 	const mapConfig = teamConfig || questionConfig;
+	// The board (map, spots, steps, fuel) is published when the match opens, so
+	// before that a team holds only the schedule: both the game service's
+	// /game/config and the manager's question_data flag it `board_withheld`.
+	// Admins always get the real thing.
+	const boardWithheld =
+		!isAdmin && (!!mapConfig?.board_withheld || !mapConfig?.map?.cells);
 	const dayInformation = isAdmin ? null : dayInfo;
 	const stepsToday = state?.steps_today;
 	const totalDays =
@@ -404,14 +410,18 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				/>
 			)}
 			<Box sx={{ flex: 1 }} />
-			<Button
-				size="small"
-				variant="outlined"
-				startIcon={<TuneIcon />}
-				onClick={() => setConfigOpen(true)}
-			>
-				{tr({ id: "hexudon.config.button" })}
-			</Button>
+			{/* The config dialog reads /game/board, which a team may only open
+			    once the match starts -- don't offer a button that 409s. */}
+			{!boardWithheld && (
+				<Button
+					size="small"
+					variant="outlined"
+					startIcon={<TuneIcon />}
+					onClick={() => setConfigOpen(true)}
+				>
+					{tr({ id: "hexudon.config.button" })}
+				</Button>
+			)}
 			{showHistoryButtons && (
 				<Button
 					size="small"
@@ -533,15 +543,30 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 			</Paper>
 
 			<Paper variant="outlined" sx={{ p: 1.5 }}>
-				<HexBoard
-					mapConfig={mapConfig}
-					dayInformation={dayInformation}
-					adminTeams={isAdmin ? state.teams : null}
-					roadByCell={isAdmin ? state.road_condition : null}
-					paths={state.status === "in_progress" && !isAdmin ? paths : {}}
-					selectedAgent={selectedAgent}
-					radius={16}
-				/>
+				{boardWithheld ? (
+					// Nothing to draw yet: the board is published when the match
+					// opens, so say when that is instead of showing an empty frame.
+					<Alert severity="info">
+						{tr(
+							{ id: "hexudon.boardWithheld" },
+							{
+								time: questionConfig?.startsAt
+									? formatClock(questionConfig.startsAt)
+									: "—",
+							},
+						)}
+					</Alert>
+				) : (
+					<HexBoard
+						mapConfig={mapConfig}
+						dayInformation={dayInformation}
+						adminTeams={isAdmin ? state.teams : null}
+						roadByCell={isAdmin ? state.road_condition : null}
+						paths={state.status === "in_progress" && !isAdmin ? paths : {}}
+						selectedAgent={selectedAgent}
+						radius={16}
+					/>
+				)}
 			</Paper>
 
 			<AnswersDialog

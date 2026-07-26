@@ -55,7 +55,15 @@ const HexBoard = ({
 	const [zoom, setZoom] = useState(1);
 	const radius = baseRadius * zoom;
 	const layout = useMemo(() => hexLayout(radius), [radius]);
-	const cells = useMemo(() => flattenCells(mapConfig), [mapConfig]);
+	// No board to draw: a config whose map is withheld until the match opens
+	// (see the game service's Game.board_is_public). The caller shows the
+	// "opens at ..." note; drawing nothing here keeps every hook above it
+	// unconditional and stops flattenCells from dereferencing a missing map.
+	const hasMap = !!mapConfig?.map?.cells;
+	const cells = useMemo(
+		() => (hasMap ? flattenCells(mapConfig) : []),
+		[hasMap, mapConfig],
+	);
 	// Replay passes an explicit per-day road-condition map; live play derives it
 	// from the day information's traffics.
 	const traffic = useMemo(
@@ -68,9 +76,11 @@ const HexBoard = ({
 	);
 	const spotsByPos = useMemo(() => {
 		const result = {};
-		for (const spot of mapConfig.spots || []) result[spot.pos] = spot;
+		for (const spot of mapConfig?.spots || []) result[spot.pos] = spot;
 		return result;
 	}, [mapConfig]);
+
+	if (!hasMap) return null;
 
 	const { width, height } = mapConfig.map;
 	const svgWidth = (width + 1.5) * layout.width;

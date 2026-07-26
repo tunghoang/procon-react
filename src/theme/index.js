@@ -112,6 +112,12 @@ const theme = {
       styleOverrides: {
         root: {
           backgroundColor: '#F3F4F6',
+          // A sticky head positions the CELLS, and MUI then paints them
+          // background.default -- lighter than this head. Keep the same grey so
+          // a scrolling table's header matches every other table's.
+          '& .MuiTableCell-stickyHeader': {
+            backgroundColor: '#F3F4F6'
+          },
           '.MuiTableCell-root': {
             color: '#374151'
           },

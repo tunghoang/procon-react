@@ -13,6 +13,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -50,6 +51,12 @@ const Questions = () => {
 	const [originalParams, setOriginalParams] = useState(null);
 	// Reset dialog for a TIMED match: admin picks the new Day-1 start time.
 	const [resetTimeDialog, setResetTimeDialog] = useState({
+		open: false,
+		row: null,
+		value: "",
+	});
+	// Auto-reset cron: interval in minutes per question (0/empty = off).
+	const [autoResetDialog, setAutoResetDialog] = useState({
 		open: false,
 		row: null,
 		value: "",
@@ -314,6 +321,54 @@ const Questions = () => {
 								<RestartAltIcon fontSize="small" />
 							</mui.IconButton>
 						</mui.Tooltip>
+						{/* Auto-reset cron. The icon carries the state so a recycling
+						    question is visible without opening anything. */}
+						<mui.Tooltip
+							title={
+								row.auto_reset_minutes > 0
+									? `${tr(
+											{ id: "questions.autoResetOn" },
+											{ minutes: row.auto_reset_minutes },
+										)}${
+											row.auto_reset_at_sec
+												? ` — ${tr(
+														{ id: "questions.autoResetNext" },
+														{
+															// Epoch SECONDS (the column has no
+															// timezone; see the model comment).
+															time: new Date(
+																Number(row.auto_reset_at_sec) * 1000,
+															).toLocaleTimeString(),
+														},
+													)}`
+												: ""
+										}`
+									: tr({ id: "questions.autoReset" })
+							}>
+							<mui.IconButton
+								size="small"
+								color={row.auto_reset_minutes > 0 ? "info" : "default"}
+								onClick={() =>
+									setAutoResetDialog({
+										open: true,
+										row,
+										value: String(row.auto_reset_minutes || ""),
+									})
+								}>
+								<ScheduleIcon fontSize="small" />
+							</mui.IconButton>
+						</mui.Tooltip>
+						{row.auto_reset_minutes > 0 && (
+							<mui.Chip
+								size="small"
+								color="info"
+								variant="outlined"
+								label={tr(
+									{ id: "questions.autoResetOn" },
+									{ minutes: row.auto_reset_minutes },
+								)}
+							/>
+						)}
 						<mui.Tooltip title={tr({ id: "Edit" })}>
 							<mui.IconButton
 								size="small"
@@ -467,6 +522,30 @@ const Questions = () => {
 			},
 			"warning",
 		);
+	};
+
+	// Save (or clear) the auto-reset interval. The manager owns the timer; the
+	// first run is scheduled one interval from now, never immediately.
+	const saveAutoReset = async (minutes) => {
+		const { row } = autoResetDialog;
+		setAutoResetDialog({ open: false, row: null, value: "" });
+		if (!row) return;
+		try {
+			await api.put(`${SERVICE_API}/question/${row.id}/auto-reset`, { minutes });
+			showMessage(
+				minutes > 0
+					? tr({ id: "questions.autoResetSaved" }, { minutes })
+					: tr({ id: "questions.autoResetCleared" }),
+				"success",
+			);
+			await refetch();
+		} catch (error) {
+			showMessage(
+				error.response?.data?.message || error.message,
+				"error",
+				6000,
+			);
+		}
 	};
 
 	const confirmResetTime = async () => {
@@ -790,6 +869,52 @@ const Questions = () => {
 						Cancel
 					</mui.Button>
 					<mui.Button onClick={confirmResetTime} color="warning" variant="contained">
+						Confirm
+					</mui.Button>
+				</mui.DialogActions>
+			</mui.Dialog>
+			{/* Auto-reset cron: interval in minutes, or off. */}
+			<mui.Dialog
+				open={autoResetDialog.open}
+				onClose={() => setAutoResetDialog({ open: false, row: null, value: "" })}>
+				<mui.DialogTitle>{tr({ id: "questions.autoResetTitle" })}</mui.DialogTitle>
+				<mui.DialogContent>
+					<mui.Typography sx={{ whiteSpace: "pre-line", mb: 2 }}>
+						{tr({ id: "questions.autoResetHint" })}
+					</mui.Typography>
+					<mui.TextField
+						type="number"
+						fullWidth
+						autoFocus
+						label={tr({ id: "questions.autoResetMinutes" })}
+						slotProps={{ htmlInput: { min: 1, max: 1440, step: 1 } }}
+						value={autoResetDialog.value}
+						onChange={(e) =>
+							setAutoResetDialog((p) => ({ ...p, value: e.target.value }))
+						}
+					/>
+				</mui.DialogContent>
+				<mui.DialogActions>
+					<mui.Button
+						onClick={() =>
+							setAutoResetDialog({ open: false, row: null, value: "" })
+						}>
+						Cancel
+					</mui.Button>
+					{autoResetDialog.row?.auto_reset_minutes > 0 && (
+						<mui.Button color="error" onClick={() => saveAutoReset(0)}>
+							{tr({ id: "questions.autoResetOff" })}
+						</mui.Button>
+					)}
+					<mui.Button
+						color="info"
+						variant="contained"
+						disabled={
+							!Number.isInteger(Number(autoResetDialog.value)) ||
+							Number(autoResetDialog.value) < 1 ||
+							Number(autoResetDialog.value) > 1440
+						}
+						onClick={() => saveAutoReset(Number(autoResetDialog.value))}>
 						Confirm
 					</mui.Button>
 				</mui.DialogActions>
