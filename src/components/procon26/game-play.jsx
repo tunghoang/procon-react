@@ -26,6 +26,7 @@ import {
 	submitActions,
 } from "../../api/gameService";
 import { api, showMessage } from "../../api/commons";
+import { formatCountdown } from "../../utils/commons";
 import { SERVICE_API } from "../../config/env";
 import { validatePlan } from "./game-handler";
 import HexBoard from "./hex-board";
@@ -42,14 +43,6 @@ const POLL_MS = 3000;
 // Epoch seconds -> local clock time (matches the answers dialog's format).
 const formatClock = (epochSeconds) =>
 	epochSeconds ? new Date(epochSeconds * 1000).toLocaleTimeString() : "—";
-
-const formatCountdown = (totalSeconds) => {
-	const hours = Math.floor(totalSeconds / 3600);
-	const minutes = Math.floor((totalSeconds % 3600) / 60);
-	const seconds = totalSeconds % 60;
-	const mmss = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-	return hours > 0 ? `${hours}:${mmss}` : mmss;
-};
 
 const useCountdown = (endsAtEpoch) => {
 	const [now, setNow] = useState(() => Date.now() / 1000);
@@ -71,15 +64,15 @@ const useCountdown = (endsAtEpoch) => {
  * the plan editor. Keeping the tick's state here means the second hand no longer
  * re-renders the board.
  */
-const CountdownChip = ({ endsAt }) => {
+const CountdownChip = ({ endsAt, icon = "⏱", urgent = true }) => {
 	const countdown = useCountdown(endsAt);
 	if (countdown === null) return null;
 	return (
 		<Chip
 			variant="outlined"
-			color={countdown < 15 ? "error" : "default"}
+			color={urgent && countdown < 15 ? "error" : "default"}
 			sx={{ "& .MuiChip-label": { fontVariantNumeric: "tabular-nums" } }}
-			label={`⏱ ${formatCountdown(countdown)}`}
+			label={`${icon} ${formatCountdown(countdown)}`}
 		/>
 	);
 };
@@ -120,6 +113,10 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	const [dayEndsAt, setDayEndsAt] = useState(null);
 	// Same treatment for the agent-selection deadline (state.selection_deadline_in).
 	const [selectionDeadlineAt, setSelectionDeadlineAt] = useState(null);
+	// ...and for the instant the window OPENS (state.selection_opens_in), so the
+	// screen counts down to the opening instead of pretending the window is
+	// already running from the moment the question exists.
+	const [selectionOpensAt, setSelectionOpensAt] = useState(null);
 	const [result, setResult] = useState(null);
 	const [loadError, setLoadError] = useState(null);
 	// Team /game/config load failure — kept separate from loadError (which a
@@ -211,6 +208,12 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					? requestedAt + next.selection_deadline_in
 					: null,
 			);
+			setSelectionOpensAt(
+				next.selection_opens_in !== null &&
+					next.selection_opens_in !== undefined
+					? requestedAt + next.selection_opens_in
+					: null,
+			);
 			if (!isAdmin && next.status !== "finished") {
 				try {
 					setDayInfo(await getGameDay(gameId));
@@ -299,11 +302,23 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 		(questionConfig && configuredSelectionSeconds !== null
 			? questionConfig.startsAt + configuredSelectionSeconds
 			: null);
+	// Read per poll, not per second: a 1 s tick in GamePlay would re-render the
+	// whole board (CountdownChip is a separate component for exactly that
+	// reason). Worst case the picker unlocks one poll late; the engine is the
+	// authority either way. Practice games send null here and stay open.
+	const selectionNotOpenYet = (state?.selection_opens_in ?? 0) > 0;
 	// day_deadline_in (re-anchored to the client clock each poll) is returned to
 	// both roles, so the day countdown uses it regardless of role — immune to
 	// client/server clock skew, unlike the absolute /game/day endsAt.
+	//
+	// While selecting: count down to the window's OPENING if it has not opened
+	// (nothing can be chosen before that), otherwise to its close.
 	const countdownTarget =
-		state?.status === "selecting_agents" ? selectionEndsAt : dayEndsAt;
+		state?.status === "selecting_agents"
+			? selectionNotOpenYet
+				? selectionOpensAt
+				: selectionEndsAt
+			: dayEndsAt;
 	// Practice games are self-paced (no wall-clock deadline) -- no countdown.
 	const isPractice = !!questionConfig?.is_practice;
 	const countdownEndsAt =
@@ -379,7 +394,15 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					}`}
 				/>
 			) : null}
-			{state.status !== "finished" && <CountdownChip endsAt={countdownEndsAt} />}
+			{/* A locked clock while the agent-kind window has not opened: it counts
+			    down to the OPENING, so nobody reads it as "you may choose now". */}
+			{state.status !== "finished" && (
+				<CountdownChip
+					endsAt={countdownEndsAt}
+					icon={selectionNotOpenYet ? "🔒" : "⏱"}
+					urgent={!selectionNotOpenYet}
+				/>
+			)}
 			<Box sx={{ flex: 1 }} />
 			<Button
 				size="small"
@@ -437,14 +460,16 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					</Stack>
 				)}
 
-				{/* Missed the agent-kind window -> the engine refuses every
-				    submission for the rest of the match, so say so instead of
-				    offering a plan editor whose submit can only fail. */}
+				{/* Missed the agent-kind window -> the engine defaulted the team to
+				    all-patrol. It plays on, so this is a note above the plan
+				    editor, not a wall. */}
 				{state.status !== "selecting_agents" && !isAdmin && ownTeamState?.missed_selection && (
-					<Alert severity="error">{tr({ id: "hexudon.kinds.missed" })}</Alert>
+					<Alert severity="warning" sx={{ mb: 2 }}>
+						{tr({ id: "hexudon.kinds.missed" })}
+					</Alert>
 				)}
 
-				{state.status === "in_progress" && !isAdmin && !ownTeamState?.missed_selection && dayInformation && (
+				{state.status === "in_progress" && !isAdmin && dayInformation && (
 					dayInformation.agents.length ? (
 						<PlanEditor
 							mapConfig={mapConfig}
@@ -484,8 +509,8 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 										}`}
 									{state.status === "selecting_agents" &&
 										` — ${tr({ id: teamState.types_selected ? "hexudon.kinds.selected" : "hexudon.kinds.waiting" })}`}
-									{/* Missed the window -> out of the match; the admin
-									    needs to see why a team's score stays at zero. */}
+									{/* Missed the window -> playing with kinds it did not
+									    choose; the admin needs to see that. */}
 									{teamState.missed_selection &&
 										` — ${tr({ id: "hexudon.kinds.missedShort" })}`}
 								</Typography>

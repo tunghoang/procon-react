@@ -9,13 +9,14 @@ import {
 	Typography,
 } from "@mui/material";
 import { useIntl } from "react-intl";
+import { formatCountdown } from "../../utils/commons";
 
 /**
  * Pre-match agent-kind selection: one 0 (patrol) / 1 (refuel) per agent, in
  * agent order. The window is bounded at BOTH ends (the N seconds before the
  * match's start time), so `opensIn` > 0 means the engine would refuse a choice
- * for now and the panel stays disabled. A team that never answers cannot submit
- * any day at all — see hexudon.kinds.hint.
+ * for now and the panel stays disabled. A team that never answers is defaulted
+ * to all-patrol and plays on — see hexudon.kinds.hint.
  */
 const AgentKindsPanel = ({ mapConfig, onSubmit, submitting, opensIn = 0 }) => {
 	const { formatMessage: tr } = useIntl();
@@ -29,7 +30,7 @@ const AgentKindsPanel = ({ mapConfig, onSubmit, submitting, opensIn = 0 }) => {
 				{notOpenYet
 					? tr(
 							{ id: "hexudon.kinds.notOpenYet" },
-							{ seconds: Math.ceil(opensIn) },
+							{ time: formatCountdown(opensIn) },
 						)
 					: tr({ id: "hexudon.kinds.hint" })}
 			</Alert>
@@ -45,6 +46,10 @@ const AgentKindsPanel = ({ mapConfig, onSubmit, submitting, opensIn = 0 }) => {
 						<ToggleButtonGroup
 							exclusive
 							size="small"
+							// Locked, not merely unsubmittable: before the window opens
+							// the engine refuses a choice, so the buttons must not
+							// invite one either.
+							disabled={notOpenYet}
 							value={kind}
 							sx={{
 								"& .MuiToggleButton-root.Mui-selected": {

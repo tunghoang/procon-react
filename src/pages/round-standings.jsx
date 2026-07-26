@@ -1,6 +1,6 @@
 import * as mui from "@mui/material";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -16,9 +16,9 @@ import { debugError } from "../utils/debug";
  *
  * Scoring: every match is ranked by the engine, a team's score there is its
  * FINISHING POSITION (1st = 1), and the round total is the sum of those
- * positions -- so the SMALLEST total wins. A match a team did not compete in
- * (not on the roster, or no agent kinds chosen) is skipped rather than counted
- * as a last place, which is why "Matches counted" sits next to every total.
+ * positions -- so the SMALLEST total wins. A rostered team that never competed
+ * (no agent kinds chosen) takes that match's LAST position, shown as "N · DNP";
+ * a match a team was not rostered for does not count for it at all.
  *
  * This is separate from the legacy /answer/summary page: HEXUDON teams submit
  * straight to the game service, so the manager's `answer` table is empty for
@@ -33,6 +33,8 @@ const RoundStandings = () => {
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
+	// Column sort; the default (key null) keeps the server's round ranking.
+	const [sort, setSort] = useState({ key: null, dir: "asc" });
 
 	const fetchSummary = async () => {
 		if (!roundId) return;
@@ -75,6 +77,63 @@ const RoundStandings = () => {
 		}
 	};
 
+	const matches = data?.matches || [];
+	const teams = data?.teams || [];
+
+	// Click-to-sort. `null` key = the server's own order (round rank).
+	const sortValue = (team, key) => {
+		if (key === "team") return team.team_name?.toLowerCase() ?? "";
+		if (key === "counted") return team.matches_counted;
+		if (key === "points") return team.rank_points;
+		if (key?.startsWith("match:")) {
+			// A match the team was not rostered for has no position at all.
+			return team.per_match?.[key.slice(6)]?.position ?? null;
+		}
+		return team.rank; // "rank"
+	};
+
+	const sortedTeams = useMemo(() => {
+		if (!sort.key) return teams;
+		const dir = sort.dir === "desc" ? -1 : 1;
+		return [...teams].sort((a, b) => {
+			const av = sortValue(a, sort.key);
+			const bv = sortValue(b, sort.key);
+			// Teams with no value for this column (unranked, or absent from that
+			// match) always sit at the bottom, whichever way the column is sorted.
+			const aMissing = av === null || av === undefined;
+			const bMissing = bv === null || bv === undefined;
+			if (aMissing !== bMissing) return aMissing ? 1 : -1;
+			if (aMissing && bMissing) return 0;
+			if (typeof av === "string") return av.localeCompare(bv) * dir;
+			return (av - bv) * dir;
+		});
+	}, [teams, sort]);
+
+	const toggleSort = (key) =>
+		setSort((prev) =>
+			prev.key === key
+				? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+				: { key, dir: "asc" },
+		);
+
+	const headCell = (key, label, align, reactKey) => (
+		<mui.TableCell
+			key={reactKey ?? key}
+			align={align}
+			sortDirection={sort.key === key ? sort.dir : false}
+		>
+			<mui.TableSortLabel
+				active={sort.key === key}
+				direction={sort.key === key ? sort.dir : "asc"}
+				onClick={() => toggleSort(key)}
+			>
+				{label}
+			</mui.TableSortLabel>
+		</mui.TableCell>
+	);
+
+	// Placed after every hook: an early return above useMemo would make that
+	// hook conditional, which React rejects on the next render.
 	if (!roundId) {
 		return (
 			<mui.Box sx={{ p: 3 }}>
@@ -82,9 +141,6 @@ const RoundStandings = () => {
 			</mui.Box>
 		);
 	}
-
-	const matches = data?.matches || [];
-	const teams = data?.teams || [];
 
 	// A team's cell in a match column: the position it scored there. A team that
 	// was on the roster but never competed still scores -- the match's last
@@ -144,7 +200,6 @@ const RoundStandings = () => {
 
 			<mui.Paper component="main" sx={{ pt: 0, pb: 4, px: 2 }}>
 				<mui.Stack spacing={2} sx={{ pt: 2 }}>
-					<mui.Alert severity="info">{tr({ id: "standings.scoringNote" })}</mui.Alert>
 					{error && <mui.Alert severity="error">{error}</mui.Alert>}
 					{loading && <mui.LinearProgress />}
 
@@ -153,30 +208,50 @@ const RoundStandings = () => {
 					)}
 
 					{!!teams.length && (
-						<mui.TableContainer component={mui.Paper} variant="outlined">
-							<mui.Table size="small">
+						// A round can hold many matches, so the table scrolls sideways
+						// instead of squeezing the columns; minWidth keeps each match
+						// column readable rather than letting the browser shrink them.
+						<mui.TableContainer
+							component={mui.Paper}
+							variant="outlined"
+							sx={{ overflowX: "auto" }}
+						>
+							<mui.Table
+								size="small"
+								stickyHeader
+								sx={{ minWidth: 420 + matches.length * 110 }}
+							>
 								<mui.TableHead>
 									<mui.TableRow>
-										<mui.TableCell>#</mui.TableCell>
-										<mui.TableCell>{tr({ id: "hexudon.standings.team" })}</mui.TableCell>
-										{matches.map((m) => (
-											<mui.TableCell key={m.question_id} align="center">
-												<mui.Typography variant="caption" display="block">
-													{m.match_name}
-												</mui.Typography>
-												{m.question_name}
-											</mui.TableCell>
-										))}
-										<mui.TableCell align="right">
-											{tr({ id: "standings.matchesCounted" })}
-										</mui.TableCell>
-										<mui.TableCell align="right">
-											<b>{tr({ id: "standings.rankPoints" })}</b>
-										</mui.TableCell>
+										{headCell("rank", "#", "left")}
+										{headCell("team", tr({ id: "hexudon.standings.team" }), "left")}
+										{matches.map((m) =>
+											headCell(
+												`match:${m.question_id}`,
+												<>
+													<mui.Typography variant="caption" display="block">
+														{m.match_name}
+													</mui.Typography>
+													{m.question_name}
+												</>,
+												"center",
+												m.question_id,
+											),
+										)}
+										{headCell(
+											"counted",
+											tr({ id: "standings.matchesCounted" }),
+											"right",
+										)}
+										{headCell(
+											"points",
+											<b>{tr({ id: "standings.rankPoints" })}</b>,
+											"right",
+										)}
 									</mui.TableRow>
 								</mui.TableHead>
 								<mui.TableBody>
-									{teams.map((team) => (
+									{sortedTeams.map((team) => (
 										<mui.TableRow key={team.team_id} hover>
 											<mui.TableCell>{team.rank ?? "—"}</mui.TableCell>
 											<mui.TableCell>{team.team_name}</mui.TableCell>
@@ -185,7 +260,18 @@ const RoundStandings = () => {
 													{cellFor(team, m)}
 												</mui.TableCell>
 											))}
-											<mui.TableCell align="right">{team.matches_counted}</mui.TableCell>
+											<mui.TableCell align="right">
+												{team.matches_counted}
+												{team.matches_missed > 0 && (
+													<mui.Typography
+														variant="caption"
+														color="warning.main"
+														sx={{ ml: 0.5 }}
+													>
+														({team.matches_missed} {tr({ id: "standings.dnp" })})
+													</mui.Typography>
+												)}
+											</mui.TableCell>
 											<mui.TableCell align="right">
 												<b>{team.rank_points}</b>
 											</mui.TableCell>
@@ -196,18 +282,9 @@ const RoundStandings = () => {
 						</mui.TableContainer>
 					)}
 
-					{!!data?.skipped?.length && (
-						<mui.Alert severity="warning">
-							<b>{tr({ id: "standings.notScored" })}</b>
-							<ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-								{data.skipped.map((s) => (
-									<li key={s.question_id}>
-										{s.match_name} / {s.question_name} — {s.reason}
-									</li>
-								))}
-							</ul>
-						</mui.Alert>
-					)}
+					{/* Matches the engine could not score (practice questions, games
+					    never initialised) are deliberately NOT shown here -- they stay
+					    in the API response and in the export's "Not scored" sheet. */}
 				</mui.Stack>
 			</mui.Paper>
 		</>

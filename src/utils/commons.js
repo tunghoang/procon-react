@@ -70,8 +70,22 @@ const withZeroSeconds = (date) => {
   return d;
 };
 
+/**
+ * Seconds remaining -> "mm:ss" (or "h:mm:ss" past an hour). Shared so the play
+ * screen's clock and the agent-kind panel's "opens in ..." never disagree.
+ */
+const formatCountdown = (totalSeconds) => {
+  const total = Math.max(0, Math.ceil(totalSeconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const mmss = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return hours > 0 ? `${hours}:${mmss}` : mmss;
+};
+
 export {
   copyText,
+  formatCountdown,
   formatDateTime,
   roundNumber,
   setLocalStorage,
