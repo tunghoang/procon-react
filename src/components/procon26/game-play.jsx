@@ -455,8 +455,9 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 			<Paper variant="outlined" sx={{ p: 2 }}>
 				{state.status === "selecting_agents" && !isAdmin && (
 					<Stack spacing={2}>
-						{/* Selection is open for the whole lead-in; the countdown
-						    above ticks down to Day 1. */}
+						{/* The window opens at startsAt (locked before that, with the
+						    clock above counting down to it) and closes when Day 1
+						    opens one window later. */}
 						{teamConfig ? (
 							<AgentKindsPanel
 								mapConfig={teamConfig}

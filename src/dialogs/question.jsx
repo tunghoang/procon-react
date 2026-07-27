@@ -246,15 +246,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			}
 			const init = {
 				...response,
-				// Absolute Day-1 start chosen by the admin (defaults to the match's
-				// start_time). Days run continuously from here; the match "end" is
-				// simply startsAt + the sum of the day durations.
+				// Absolute match opening chosen by the admin (defaults to the match's
+				// start_time): teams get the board and the agent-kind window there,
+				// Day 1 follows one window later, and days run continuously from it.
 				startsAt: startsAtSec,
-				// Agent-kind window, in seconds after startsAt: the engine closes
-				// selection at startsAt + this and opens Day 1 there. Teams may also
-				// pick during the whole lead-in (now .. startsAt) -- the engine puts
-				// no lower bound on selection -- so this is the extra window they get
-				// once the match opens. 0 = Day 1 starts exactly at startsAt.
+				// Agent-kind window, in seconds AFTER startsAt: the engine opens
+				// selection at startsAt, closes it at startsAt + this, and opens Day 1
+				// at that same instant. Nothing is readable or choosable before
+				// startsAt. 0 = no window at all (Day 1 starts exactly at startsAt and
+				// every team is defaulted to all-patrol).
 				agent_selection_time_limit: Math.max(
 					0,
 					Number(genParams.selection_seconds) || 0,
@@ -303,15 +303,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const startsAtLabel = instance?.raw_questions?.startsAt
 		? new Date(instance.raw_questions.startsAt * 1000).toLocaleString()
 		: null;
-	// startsAt IS Day 1's opening; the agent-kind window is the N seconds BEFORE
-	// it (engine: selection_start_time = start_time - limit, and selection is
-	// refused both before that and after startsAt). Show when teams may start
-	// choosing, since that instant is not visible anywhere else.
+	// startsAt OPENS the match: the board is published and the agent-kind window
+	// runs for N seconds from there (engine: selection_start_time = start_time),
+	// with Day 1 opening when it closes. Show that Day-1 instant, since it is the
+	// one the schedule turns on and it is not visible anywhere else.
 	const selectionWindowSeconds = instance?.raw_questions?.agent_selection_time_limit;
-	const selectionOpensLabel =
+	const dayOneOpensLabel =
 		instance?.raw_questions?.startsAt && selectionWindowSeconds
 			? new Date(
-					(instance.raw_questions.startsAt - selectionWindowSeconds) * 1000,
+					(instance.raw_questions.startsAt + selectionWindowSeconds) * 1000,
 				).toLocaleString()
 			: null;
 
@@ -542,14 +542,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												{startsAtLabel && (
 													<Alert severity="info">
 														{tr({ id: "questions.startsAtLabel" })}: {startsAtLabel}
-														{selectionOpensLabel && (
+														{dayOneOpensLabel && (
 															<>
 																{" — "}
 																{tr(
 																	{ id: "questions.selectionOpensAt" },
 																	{ seconds: Math.round(selectionWindowSeconds) },
 																)}
-																: {selectionOpensLabel}
+																{`, ${tr({ id: "questions.dayOneOpensAt" })}: ${dayOneOpensLabel}`}
 															</>
 														)}
 													</Alert>
