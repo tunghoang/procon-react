@@ -455,9 +455,9 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 			<Paper variant="outlined" sx={{ p: 2 }}>
 				{state.status === "selecting_agents" && !isAdmin && (
 					<Stack spacing={2}>
-						{/* The window opens at startsAt (locked before that, with the
-						    clock above counting down to it) and closes when Day 1
-						    opens one window later. */}
+						{/* The pre-match window opens one window before startsAt (locked
+						    before that, with the clock above counting down to it) and
+						    closes when Day 1 opens at startsAt. */}
 						{teamConfig ? (
 							<AgentKindsPanel
 								mapConfig={teamConfig}
@@ -551,8 +551,13 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 						{tr(
 							{ id: "hexudon.boardWithheld" },
 							{
+								// startsAt is Day 1; the board goes out one pre-match
+								// window earlier, which is the instant to show.
 								time: questionConfig?.startsAt
-									? formatClock(questionConfig.startsAt)
+									? formatClock(
+											questionConfig.startsAt -
+												(configuredSelectionSeconds ?? 0),
+										)
 									: "—",
 							},
 						)}

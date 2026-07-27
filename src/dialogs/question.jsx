@@ -246,15 +246,15 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 			}
 			const init = {
 				...response,
-				// Absolute match opening chosen by the admin (defaults to the match's
-				// start_time): teams get the board and the agent-kind window there,
-				// Day 1 follows one window later, and days run continuously from it.
+				// Absolute match start chosen by the admin (defaults to the match's
+				// start_time) = Day 1's opening, per the official schema. Days run
+				// continuously from here.
 				startsAt: startsAtSec,
-				// Agent-kind window, in seconds AFTER startsAt: the engine opens
-				// selection at startsAt, closes it at startsAt + this, and opens Day 1
-				// at that same instant. Nothing is readable or choosable before
-				// startsAt. 0 = no window at all (Day 1 starts exactly at startsAt and
-				// every team is defaulted to all-patrol).
+				// Pre-match window, in seconds BEFORE startsAt: the engine publishes
+				// the board and opens agent-kind selection at startsAt - this, closes
+				// selection at startsAt, and opens Day 1 there. Nothing is readable or
+				// choosable earlier. 0 = no pre-match phase at all (the board appears
+				// with Day 1 and every team is defaulted to all-patrol).
 				agent_selection_time_limit: Math.max(
 					0,
 					Number(genParams.selection_seconds) || 0,
@@ -303,15 +303,17 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const startsAtLabel = instance?.raw_questions?.startsAt
 		? new Date(instance.raw_questions.startsAt * 1000).toLocaleString()
 		: null;
-	// startsAt OPENS the match: the board is published and the agent-kind window
-	// runs for N seconds from there (engine: selection_start_time = start_time),
-	// with Day 1 opening when it closes. Show that Day-1 instant, since it is the
-	// one the schedule turns on and it is not visible anywhere else.
+	// startsAt IS the match start = Day 1's opening (official schema: "the
+	// startsAt key records the start time of the match"). The pre-match phase is
+	// the N seconds before it: the board is published and agent kinds are chosen
+	// there (engine: selection_start_time = start_time - limit). Show that
+	// instant, since it is when teams actually get something and it is not
+	// visible anywhere else.
 	const selectionWindowSeconds = instance?.raw_questions?.agent_selection_time_limit;
-	const dayOneOpensLabel =
+	const selectionOpensLabel =
 		instance?.raw_questions?.startsAt && selectionWindowSeconds
 			? new Date(
-					(instance.raw_questions.startsAt + selectionWindowSeconds) * 1000,
+					(instance.raw_questions.startsAt - selectionWindowSeconds) * 1000,
 				).toLocaleString()
 			: null;
 
@@ -542,14 +544,14 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 												{startsAtLabel && (
 													<Alert severity="info">
 														{tr({ id: "questions.startsAtLabel" })}: {startsAtLabel}
-														{dayOneOpensLabel && (
+														{selectionOpensLabel && (
 															<>
 																{" — "}
 																{tr(
 																	{ id: "questions.selectionOpensAt" },
 																	{ seconds: Math.round(selectionWindowSeconds) },
 																)}
-																{`, ${tr({ id: "questions.dayOneOpensAt" })}: ${dayOneOpensLabel}`}
+																: {selectionOpensLabel}
 															</>
 														)}
 													</Alert>
