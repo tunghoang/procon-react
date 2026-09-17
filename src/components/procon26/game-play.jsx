@@ -37,6 +37,7 @@ import AnswersDialog from "./answers-dialog";
 import ReplayDialog from "./replay-dialog";
 import GameConfigDialog from "./game-config-dialog";
 import LoadingPage from "../loading-page";
+import { isStaff } from "../../utils/roles";
 
 const POLL_MS = 3000;
 
@@ -101,7 +102,8 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 			return null;
 		}
 	}, [contextTeam]);
-	const isAdmin = !!decodedTeam?.is_admin;
+	// Superadmin, or a group manager spectating its own group's game.
+	const isAdmin = isStaff(decodedTeam);
 	const ownTeamId = decodedTeam?.id !== undefined ? String(decodedTeam.id) : null;
 
 	const [questionConfig, setQuestionConfig] = useState(null); // parsed question_data

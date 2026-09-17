@@ -1,8 +1,11 @@
 import PropTypes from "prop-types";
+import { useContext } from "react";
 import { Box, Button, Divider } from "@mui/material";
 import { Link, useSearch } from "@tanstack/react-router";
 import Logo from "./logo";
 import { NavItem } from "./nav-item";
+import Context from "../context";
+import { isSuperAdmin } from "../utils/roles";
 
 import { Blackboard as BlackboardIcon } from "../icons/blackboard";
 import QuizIcon from "@mui/icons-material/Quiz";
@@ -10,12 +13,21 @@ import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import PeopleIcon from "@mui/icons-material/People";
 import WarningIcon from "@mui/icons-material/Warning";
 import SummarizeIcon from "@mui/icons-material/Summarize";
+import SchoolIcon from "@mui/icons-material/School";
 
+// `superOnly` items are the organiser's structure; a group manager gets the
+// rest, scoped to its group by the backend.
 const items = [
 	{
 		href: "/admin/teams",
 		icon: <PeopleIcon fontSize="small" />,
 		title: "Teams",
+	},
+	{
+		href: "/admin/groups",
+		icon: <SchoolIcon fontSize="small" />,
+		title: "Groups",
+		superOnly: true,
 	},
 	{
 		href: "/admin/matches",
@@ -48,6 +60,8 @@ const items = [
 export const DashboardSidebar = (props) => {
 	const { open, width = 280 } = props;
 	const searchParams = useSearch({ strict: false });
+	const { team } = useContext(Context);
+	const visibleItems = items.filter((item) => !item.superOnly || isSuperAdmin(team));
 
 	return (
 		<Box
@@ -75,7 +89,7 @@ export const DashboardSidebar = (props) => {
 				}}>
 				<Logo sx={{ p: 3 }} />
 				<Box sx={{ flexGrow: 1 }}>
-					{items.map((item) => (
+					{visibleItems.map((item) => (
 						<NavItem
 							key={item.title}
 							icon={item.icon}

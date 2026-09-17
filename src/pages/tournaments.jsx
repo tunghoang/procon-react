@@ -16,6 +16,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "@tanstack/react-router";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
+import { isSuperAdmin } from "../utils/roles";
 
 const Tournaments = () => {
 	const [showDialog, setShowDialog] = useState(false);
@@ -23,7 +24,9 @@ const Tournaments = () => {
 	const { updateContext, team } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
 	const navigate = useNavigate();
-	const isReadOnly = !team || !team.is_admin;
+	// Tournaments are the organiser's structure: a group manager only browses
+	// them on its way to a round.
+	const isReadOnly = !isSuperAdmin(team);
 	const { useConfirmDelete, apiCreate, apiEdit } = useApi(
 		"/tournament",
 		"Tournament"

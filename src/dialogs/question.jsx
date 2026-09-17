@@ -36,6 +36,7 @@ import { generateMap, getDifficulties, getGameError } from "../api/gameService";
 import { withZeroSeconds } from "../utils/commons";
 import { validateInitShape } from "../components/procon26/board-generator";
 import HexBoard from "../components/procon26/hex-board";
+import { isSuperAdmin } from "../utils/roles";
 
 const DIFFICULTIES = ["easy", "medium", "hard", "very_hard"];
 
@@ -70,8 +71,12 @@ const useStyles = makeStyles({
  */
 const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	const classes = useStyles();
-	const { round } = useContext(Context);
+	const { round, team } = useContext(Context);
 	const { formatMessage: tr } = useIntl();
+	// The board generator (POST /game/generate) is the organiser's tool; a
+	// group manager creates boards by pasting init JSON only, so it gets a
+	// single Manual tab.
+	const canGenerate = isSuperAdmin(team);
 	const [tabValue, setTabValue] = useState(0);
 	const { data: matches } = useFetchData({
 		path: "/match",
@@ -109,7 +114,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 
 	useEffect(() => {
 		if (open) {
-			setTabValue(0);
+			setTabValue(canGenerate ? 0 : 1);
 			setManualText("");
 			setManualErrors([]);
 			// Fresh unique seed per dialog open, so consecutive new questions
@@ -124,7 +129,7 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 	// the session; a failure (or a service without the endpoint) just leaves the
 	// summary hidden and is retried the next time the dialog opens.
 	useEffect(() => {
-		if (!open || difficultySpecs) return undefined;
+		if (!open || !canGenerate || difficultySpecs) return undefined;
 		let cancelled = false;
 		(async () => {
 			try {
@@ -384,8 +389,8 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 					) : (
 						<Box>
 							<Tabs value={tabValue} onChange={(evt, v) => setTabValue(v)}>
-								<Tab label={tr({ id: "questions.tabGenerate" })} />
-								<Tab label={tr({ id: "questions.tabManual" })} />
+								{canGenerate && <Tab value={0} label={tr({ id: "questions.tabGenerate" })} />}
+								<Tab value={1} label={tr({ id: "questions.tabManual" })} />
 							</Tabs>
 							<Box sx={{ mt: 2 }}>
 								{tabValue === 0 && (

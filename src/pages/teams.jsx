@@ -1,15 +1,30 @@
-import { Paper, Chip, Box } from "@mui/material";
+import { Paper, Chip, Box, Typography } from "@mui/material";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import { useIntl } from "react-intl";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useApi, useFetchData } from "../api";
 import TeamDialog from "../dialogs/team";
+import { GroupMembersDialog } from "../dialogs/group";
 import PageToolbar from "../components/page-toolbar";
 import DataTable from "../components/DataTable/data-table";
 import TeamPasswordDialog from "../dialogs/password";
+import Context from "../context";
+import { isManager, isSuperAdmin, managerGroupId } from "../utils/roles";
 
+/**
+ * Accounts. Two audiences:
+ *   superadmin     every account; create/edit/delete, roles, group assignment.
+ *   group manager  its own group's members (the backend returns only those);
+ *                  it may pull UNGROUPED accounts into the group and drop
+ *                  members out, nothing else -- accounts are created by the
+ *                  organiser.
+ */
 const Teams = () => {
 	const { formatMessage: tr } = useIntl();
+	const { team: me } = useContext(Context);
+	const superadmin = isSuperAdmin(me);
+	const manager = isManager(me);
 	const [selectedTeamIds, setSelectedTeamIds] = useState([]);
 	const search = useSearch({ strict: false });
 	const { apiCreate, apiEdit, useConfirmDelete } = useApi("/team", "Team");
@@ -46,6 +61,12 @@ const Teams = () => {
 		return chipColors[id % chipColors.length];
 	};
 
+	const roleLabel = (row) => {
+		if (row.is_admin) return tr({ id: "role.admin" });
+		if (row.group_role === "manager") return tr({ id: "role.manager" });
+		return tr({ id: "role.user" });
+	};
+
 	const columns = [
 		{
 			field: "id",
@@ -68,12 +89,39 @@ const Teams = () => {
 		{
 			field: "is_admin",
 			headerName: "Role",
-			flex: 1,
+			flex: 0.8,
 			headerClassName: "tableHeader",
-			valueGetter: (params) => {
-				return params.row.is_admin ? "Admin" : "User";
-			},
+			renderCell: ({ row }) => (
+				<Chip
+					size="small"
+					label={roleLabel(row)}
+					color={row.is_admin ? "error" : row.group_role === "manager" ? "secondary" : "default"}
+					variant={row.is_admin || row.group_role === "manager" ? "filled" : "outlined"}
+				/>
+			),
+			valueGetter: (params) => roleLabel(params.row),
 		},
+		// Which school the account belongs to. Hidden for a manager: every row
+		// it sees is its own group by construction.
+		...(superadmin
+			? [
+					{
+						field: "group",
+						headerName: tr({ id: "group.field" }),
+						flex: 0.8,
+						headerClassName: "tableHeader",
+						renderCell: ({ row }) =>
+							row.group ? (
+								<Chip size="small" variant="outlined" color="secondary" label={row.group.name} />
+							) : (
+								<Typography variant="caption" color="text.disabled">
+									{tr({ id: "group.none" })}
+								</Typography>
+							),
+						valueGetter: (params) => params.row.group?.name || "",
+					},
+				]
+			: []),
 		{
 			field: "Matches",
 			headerName: "Matches",
@@ -113,7 +161,14 @@ const Teams = () => {
 	const [currentTeam, setCurrentTeam] = useState({});
 
 	const clickNew = () => {
-		setCurrentTeam({ name: "", account: "", is_admin: false, password: "" });
+		setCurrentTeam({
+			name: "",
+			account: "",
+			is_admin: false,
+			group_id: null,
+			group_role: "member",
+			password: "",
+		});
 		setDialogName("TeamDialog");
 	};
 	const openDialog = (name) => {
@@ -133,11 +188,21 @@ const Teams = () => {
 		if (result.length) await refetch();
 	};
 	const saveInstance = async () => {
+		// Only the account's own columns -- not the nested group/Matches the
+		// list row carries.
+		const payload = {
+			name: currentTeam.name,
+			account: currentTeam.account,
+			password: currentTeam.password,
+			is_admin: !!currentTeam.is_admin,
+			group_id: currentTeam.is_admin ? null : currentTeam.group_id ?? null,
+			group_role: currentTeam.is_admin ? "member" : currentTeam.group_role || "member",
+		};
 		let result;
 		if (currentTeam.id) {
-			result = await apiEdit(currentTeam.id, currentTeam);
+			result = await apiEdit(currentTeam.id, payload);
 		} else {
-			result = await apiCreate(currentTeam);
+			result = await apiCreate(payload);
 		}
 		if (result) await refetch();
 		setDialogName("");
@@ -146,13 +211,19 @@ const Teams = () => {
 		setCurrentTeam({ ...currentTeam, ...changes });
 	};
 
+	// The manager's own group, for the membership dialog. The list endpoint
+	// already returns only this group's rows, so its name is on any of them.
+	const myGroup = manager
+		? { id: managerGroupId(me), name: teams.find((t) => t.group)?.group?.name || me?.name }
+		: null;
+
 	return (
 		<>
 			<PageToolbar
-				title={tr({ id: "Teams" })}
-				showNew={true}
-				showEdit={(selectedTeamIds || []).length === 1}
-				showDelete={(selectedTeamIds || []).length}
+				title={manager ? tr({ id: "group.myMembers" }) : tr({ id: "Teams" })}
+				showNew={superadmin}
+				showEdit={superadmin && (selectedTeamIds || []).length === 1}
+				showDelete={superadmin && (selectedTeamIds || []).length}
 				handleNew={clickNew}
 				editBtns={[
 					{
@@ -165,6 +236,18 @@ const Teams = () => {
 					},
 				]}
 				handleDelete={clickDelete}
+				customBtns={
+					manager
+						? [
+								{
+									label: tr({ id: "group.manageMembers" }),
+									fn: () => setDialogName("GroupMembersDialog"),
+									color: "primary",
+									icon: <GroupAddIcon />,
+								},
+							]
+						: []
+				}
 			/>
 			<Paper
 				component="main"
@@ -194,6 +277,15 @@ const Teams = () => {
 				save={saveInstance}
 				handleChange={changeInstance}
 			/>
+			{manager && (
+				<GroupMembersDialog
+					open={dialogName === "GroupMembersDialog"}
+					group={myGroup}
+					selfId={me?.id}
+					close={closeDialog}
+					onChanged={refetch}
+				/>
+			)}
 		</>
 	);
 };

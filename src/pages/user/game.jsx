@@ -14,6 +14,7 @@ import LoadingPage from "../../components/loading-page";
 import { api, showMessage } from "../../api/commons";
 import { SERVICE_API } from "../../config/env";
 import { copyText } from "../../utils/commons";
+import { isStaff } from "../../utils/roles";
 
 /**
  * Admin view of a PRACTICE match: pick a team and spectate that team's solo
@@ -79,7 +80,10 @@ const UserGame = () => {
 			return null;
 		}
 	}, []);
-	const isAdmin = !!decoded?.is_admin;
+	// Spectator (no seat): a superadmin, or a group manager on its own group's
+	// game -- the engine treats both as admin there (a manager elsewhere is
+	// refused like any stranger).
+	const isAdmin = isStaff(decoded);
 	const ownTeamId = decoded?.id !== undefined ? String(decoded.id) : null;
 
 	const [meta, setMeta] = useState(null); // { isPractice, mapConfig, teams }

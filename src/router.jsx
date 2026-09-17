@@ -8,6 +8,7 @@ import {
 import Tournaments from "./pages/tournaments";
 import Matches from "./pages/matches";
 import Teams from "./pages/teams";
+import Groups from "./pages/groups";
 import Rounds from "./pages/rounds";
 import Questions from "./pages/questions";
 import Answers from "./pages/answers";
@@ -131,6 +132,14 @@ const adminMatchesRoute = createRoute({
 	component: Matches,
 });
 
+// Groups (schools) and their managers -- superadmin only (the page itself
+// bounces anyone else; the endpoints are requireAdmin).
+const adminGroupsRoute = createRoute({
+	getParentRoute: () => adminLayoutRoute,
+	path: "/admin/groups",
+	component: Groups,
+});
+
 const adminQuestionsRoute = createRoute({
 	getParentRoute: () => adminLayoutRoute,
 	path: "/admin/questions",
@@ -205,6 +214,7 @@ const routeTree = rootRoute.addChildren([
 	competitionGameRoute,
 	adminLayoutRoute.addChildren([
 		adminTeamsRoute,
+		adminGroupsRoute,
 		adminMatchesRoute,
 		adminQuestionsRoute,
 		adminAnswersRoute,

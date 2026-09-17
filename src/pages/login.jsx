@@ -17,6 +17,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { jwtDecode } from "jwt-decode";
 import Context from "../context";
 import { apiSignIn } from "../api";
+import { isStaff } from "../utils/roles";
 
 const Login = () => {
 	const { formatMessage } = useIntl();
@@ -47,20 +48,22 @@ const Login = () => {
 			updateLocalStorage({ token: result.token });
 
 			// The signin body is {id, token} for the admin backdoor and
-			// {id, is_admin, token} for teams — the JWT payload always carries
-			// is_admin, so decode it for the redirect decision.
-			let isAdmin = !!result.is_admin;
+			// {id, is_admin, group_id, group_role, token} for teams — the JWT
+			// payload always carries the role fields, so decode it for the
+			// redirect decision. Staff (superadmin or group manager) land in the
+			// admin area, teams on the competition screen.
+			let staff = isStaff(result);
 			try {
-				isAdmin = !!jwtDecode(result.token)?.is_admin;
+				staff = isStaff(jwtDecode(result.token));
 			} catch {
-				// fall back to the response field
+				// fall back to the response fields
 			}
 
 			// Check if there's a redirect URL
 			if (search?.redirect) {
 				const redirectPath = decodeURIComponent(search.redirect);
 				navigate({ to: redirectPath });
-			} else if (isAdmin) {
+			} else if (staff) {
 				navigate({ to: "/tournament" });
 			} else {
 				navigate({ to: "/competition" });

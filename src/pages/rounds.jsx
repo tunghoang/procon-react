@@ -20,6 +20,7 @@ import { BulkAddTeamsToRoundDialog } from "../dialogs/round-teams";
 import AddIcon from "@mui/icons-material/Add";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
+import { isSuperAdmin, isStaff } from "../utils/roles";
 
 const Rounds = () => {
 	const { tournamentId } = useParams({ strict: false });
@@ -31,7 +32,10 @@ const Rounds = () => {
 	const [loadingMatches, setLoadingMatches] = useState(false);
 	const { updateContext, team } = useContext(Context);
 	const navigate = useNavigate();
-	const isReadOnly = !team || !team.is_admin;
+	// Rounds themselves are superadmin-only; a group manager may still step
+	// into a round's matches (its own group's) from here.
+	const isReadOnly = !isSuperAdmin(team);
+	const canEnterMatches = isStaff(team);
 	const { apiCreate, useConfirmDelete, apiEdit } = useApi("/round", "Round");
 
 	const { formatMessage: tr } = useIntl();
@@ -161,7 +165,7 @@ const Rounds = () => {
 											isReadOnly ? null : () => handleManageTeams(round)
 										}
 										handleEditDetail={
-											isReadOnly
+											!canEnterMatches
 												? null
 												: () => {
 														updateContext({ round });

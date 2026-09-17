@@ -30,6 +30,7 @@ import LanguageTrans from "./language-trans";
 import Logo from "./logo";
 import Breadcrumb from "./breadcrumb";
 import TeamPasswordDialog from "../dialogs/password";
+import { isStaff } from "../utils/roles";
 
 const DashboardNavbarRoot = styled(AppBar)(({ theme }) => ({
 	backgroundColor: theme.palette.background.paper,
@@ -149,7 +150,7 @@ export const DashboardNavbar = (props) => {
 								<HttpsIcon />
 							</IconButton>
 						</Tooltip>
-						{team?.is_admin && (
+						{isStaff(team) && (
 							<Tooltip title={tr({ id: "nav.adminArea" })}>
 								<IconButton
 									aria-label={tr({ id: "nav.adminArea" })}
@@ -169,7 +170,7 @@ export const DashboardNavbar = (props) => {
 										width: 40,
 									}}
 									src={
-										team?.is_admin
+										isStaff(team)
 											? "/static/images/avatars/gigachad.png"
 											: "/static/images/avatars/avatar_1.png"
 									}>

@@ -18,6 +18,7 @@ import Context from "../context";
 import { ManageTeamMatchDialog, MatchDialog } from "../dialogs/match";
 import { formatDateTime } from "../utils/commons";
 import { TimeIs } from "../components/time-is";
+import { isStaff, isSuperAdmin } from "../utils/roles";
 
 const Matches = () => {
 	const routeParams = useParams({ strict: false });
@@ -26,7 +27,9 @@ const Matches = () => {
 		routeParams.roundId || searchParams.roundId || searchParams.round_id;
 	const { formatMessage: tr } = useIntl();
 	const { team } = useContext(Context);
-	const isReadOnly = !team || !team.is_admin;
+	// Superadmin or group manager may edit; the backend keeps a manager to its
+	// own group's matches (the list it gets back is already just those).
+	const isReadOnly = !isStaff(team);
 	const [selectedMatchIds, setSelectedMatchIds] = useState([]);
 	const [showTimeFilter, setShowTimeFilter] = useState(false);
 	const [timeFrom, setTimeFrom] = useState("");
@@ -204,6 +207,11 @@ const Matches = () => {
 			renderCell: ({ row }) => (
 				<mui.Stack direction="row" spacing={0.5} alignItems="center">
 					<span>{row.name}</span>
+					{row.group && (
+						<mui.Tooltip title={tr({ id: "group.matchOwnedBy" }, { name: row.group.name })}>
+							<mui.Chip size="small" color="secondary" variant="outlined" label={row.group.name} />
+						</mui.Tooltip>
+					)}
 					{row.is_practice && (
 						<mui.Chip
 							size="small"
@@ -483,6 +491,7 @@ const Matches = () => {
 			is_active: false,
 			is_practice: false,
 			no_reset: false,
+			group_id: "",
 			team_id: "",
 		});
 		setDialogName("MatchDialog");
@@ -513,10 +522,14 @@ const Matches = () => {
 		} else {
 			// Mode (is_practice / no_reset) is create-time only: the game service
 			// builds the per-mode games at /game/init and can't switch afterwards.
+			// group_id: a superadmin may hand the match to a group (its roster
+			// is then limited to that group's members); the backend forces a
+			// manager's own group regardless of what is sent.
 			result = await apiCreate({
 				...fields,
 				is_practice: !!currentMatch.is_practice,
 				no_reset: !!currentMatch.is_practice && !!currentMatch.no_reset,
+				group_id: currentMatch.group_id || null,
 				round_id: roundId,
 			});
 		}
@@ -657,12 +670,14 @@ const Matches = () => {
 					close={closeDialog}
 					save={saveInstance}
 					handleChange={changeInstance}
+					canPickGroup={isSuperAdmin(team)}
 				/>
 			)}
 			{dialogName === "ManageTeamMatchDialog" && (
 				<ManageTeamMatchDialog
 					open={dialogName === "ManageTeamMatchDialog"}
 					close={closeDialog}
+					groupId={currentMatch.group_id ?? currentMatch.group?.id ?? null}
 					teams={currentMatch.teams}
 					handleAdd={(teams) => handleAction(teams, "add")}
 					handleDelete={(teams) => handleAction(teams, "delete")}

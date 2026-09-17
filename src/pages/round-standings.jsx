@@ -1,9 +1,11 @@
 import * as mui from "@mui/material";
 import { useIntl } from "react-intl";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
+import PauseIcon from "@mui/icons-material/Pause";
+import PlayIcon from "@mui/icons-material/PlayArrow";
 import { api } from "../api/commons";
 import { SERVICE_API } from "../config/env";
 import PageToolbar from "../components/page-toolbar";
@@ -23,7 +25,13 @@ import { debugError } from "../utils/debug";
  * This is separate from the legacy /answer/summary page: HEXUDON teams submit
  * straight to the game service, so the manager's `answer` table is empty for
  * these matches and only /game/result has the scores.
+ *
+ * The table auto-refreshes while the tab is visible; the toggle in the toolbar
+ * turns it off (useful once the standings are final and being read out).
  */
+
+/** Deliberately slow: see the `inFlight` comment for what one refresh costs. */
+const AUTO_REFRESH_MS = 20000;
 const RoundStandings = () => {
 	const { formatMessage: tr } = useIntl();
 	const { round } = useContext(Context);
@@ -35,19 +43,35 @@ const RoundStandings = () => {
 	const [error, setError] = useState(null);
 	// Column sort; the default (key null) keeps the server's round ranking.
 	const [sort, setSort] = useState({ key: null, dir: "asc" });
+	const [autoRefresh, setAutoRefresh] = useState(true);
+	const [lastUpdated, setLastUpdated] = useState(null);
+	// Guards the poll: one summary costs the backend a sequential /game/result
+	// per question in the round (20+ during a real event, 10 s timeout each), so
+	// a slow response must never let ticks pile up on top of each other.
+	const inFlight = useRef(false);
 
-	const fetchSummary = async () => {
-		if (!roundId) return;
-		setLoading(true);
-		setError(null);
+	/** @param background true for a poll tick -- keeps the table on screen. */
+	const fetchSummary = async ({ background = false } = {}) => {
+		if (!roundId || inFlight.current) return;
+		inFlight.current = true;
+		if (!background) setLoading(true);
 		try {
-			setData(await api.get(`${SERVICE_API}/round/${roundId}/hexudon-summary`));
+			const next = await api.get(
+				`${SERVICE_API}/round/${roundId}/hexudon-summary`,
+			);
+			setData(next);
+			setError(null);
+			setLastUpdated(new Date());
 		} catch (e) {
 			debugError("round standings", e);
 			setError(e.response?.data?.message || e.message);
-			setData(null);
+			// A failed POLL keeps the last good table up: blanking the standings
+			// mid-event over one hiccup is worse than showing slightly stale
+			// numbers next to the error.
+			if (!background) setData(null);
 		} finally {
-			setLoading(false);
+			inFlight.current = false;
+			if (!background) setLoading(false);
 		}
 	};
 
@@ -55,6 +79,25 @@ const RoundStandings = () => {
 		fetchSummary();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [roundId]);
+
+	// Poll while the tab is visible. Hidden tabs are skipped (a projector left
+	// on another window should not keep hammering the engine), and becoming
+	// visible again refreshes immediately rather than waiting out the interval.
+	useEffect(() => {
+		if (!autoRefresh || !roundId) return undefined;
+		const tick = () => {
+			if (document.visibilityState === "visible") {
+				fetchSummary({ background: true });
+			}
+		};
+		const id = setInterval(tick, AUTO_REFRESH_MS);
+		document.addEventListener("visibilitychange", tick);
+		return () => {
+			clearInterval(id);
+			document.removeEventListener("visibilitychange", tick);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [autoRefresh, roundId]);
 
 	const handleExport = async () => {
 		try {
@@ -184,11 +227,19 @@ const RoundStandings = () => {
 					{
 						key: "refresh",
 						icon: <RefreshIcon />,
-						onClick: fetchSummary,
+						onClick: () => fetchSummary(),
 						tooltip: tr({ id: "Refresh" }),
 					},
 				]}
 				customBtns={[
+					{
+						label: autoRefresh
+							? tr({ id: "standings.autoOn" })
+							: tr({ id: "standings.autoOff" }),
+						icon: autoRefresh ? <PauseIcon /> : <PlayIcon />,
+						fn: () => setAutoRefresh((on) => !on),
+						color: autoRefresh ? "primary" : "inherit",
+					},
 					{
 						label: tr({ id: "export-to-excel" }),
 						icon: <DownloadIcon />,
@@ -200,6 +251,15 @@ const RoundStandings = () => {
 
 			<mui.Paper component="main" sx={{ pt: 0, pb: 4, px: 2 }}>
 				<mui.Stack spacing={2} sx={{ pt: 2 }}>
+					{lastUpdated && (
+						<mui.Typography variant="caption" color="text.secondary">
+							{tr({ id: "standings.updatedAt" })}{" "}
+							{lastUpdated.toLocaleTimeString()}
+							{autoRefresh
+								? ` - ${tr({ id: "standings.autoEvery" })} ${AUTO_REFRESH_MS / 1000}s`
+								: ` - ${tr({ id: "standings.autoPaused" })}`}
+						</mui.Typography>
+					)}
 					{error && <mui.Alert severity="error">{error}</mui.Alert>}
 					{loading && <mui.LinearProgress />}
 

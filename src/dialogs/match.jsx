@@ -27,9 +27,17 @@ const useStyles = makeStyles({
 		// overflow: "visible",
 	},
 });
-const MatchDialog = ({ open, instance, close, save, handleChange }) => {
+const MatchDialog = ({ open, instance, close, save, handleChange, canPickGroup = false }) => {
 	const classes = useStyles();
 	const { formatMessage: tr } = useIntl();
+	// Groups (schools) the superadmin may hand the match to. A group manager
+	// never sees this field: its matches belong to its own group by
+	// construction (the backend forces it).
+	const { data: groups } = useFetchData({
+		path: "/group",
+		name: "Group",
+		isFetch: canPickGroup && !instance?.id,
+	});
 
 	// Convert string dates to Date objects if needed
 	const startTime = instance?.start_time ? new Date(instance.start_time) : null;
@@ -143,6 +151,25 @@ const MatchDialog = ({ open, instance, close, save, handleChange }) => {
 								{tr({ id: "match.mode.competitivePractice" })}
 							</MenuItem>
 						</TextField>
+						{canPickGroup && !instance?.id && (
+							<TextField
+								select
+								margin="dense"
+								label={tr({ id: "group.field" })}
+								fullWidth
+								variant="standard"
+								value={instance?.group_id ?? ""}
+								onChange={(evt) => handleChange({ group_id: evt.target.value })}
+								helperText={tr({ id: "group.matchHelp" })}
+							>
+								<MenuItem value="">{tr({ id: "group.none" })}</MenuItem>
+								{(groups || []).map((g) => (
+									<MenuItem key={g.id} value={g.id}>
+										{g.name}
+									</MenuItem>
+								))}
+							</TextField>
+						)}
 					</Stack>
 				</DialogContent>
 				<DialogActions>
@@ -266,6 +293,9 @@ const ManageTeamMatchDialog = ({
 	handleDelete,
 	isBulkMode = false,
 	handleDeleteAll,
+	// A group match only takes that group's members (the backend rejects
+	// anyone else), so offer only those. null = an organiser match, anyone.
+	groupId = null,
 }) => {
 	const classes = useStyles();
 	const { formatMessage: tr } = useIntl();
@@ -274,7 +304,9 @@ const ManageTeamMatchDialog = ({
 	const [selectedTeamsToRemove, setSelectedTeamsToRemove] = useState([]);
 
 	const availableTeams = allTeams.filter(
-		(item) => !teams?.find((team) => team.id === item.id)
+		(item) =>
+			!teams?.find((team) => team.id === item.id) &&
+			(groupId == null || Number(item.group_id) === Number(groupId))
 	);
 
 	const handleAddTeams = async () => {

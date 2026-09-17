@@ -2,7 +2,6 @@ import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
-	DialogContentText,
 	TextField,
 	DialogActions,
 	Button,
@@ -10,18 +9,35 @@ import {
 	MenuItem,
 	InputLabel,
 	FormControl,
+	FormHelperText,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useIntl } from "react-intl";
+import { useFetchData } from "../api";
 
 const useStyles = makeStyles({
 	root: {
 		// overflow: "visible",
 	},
 });
-const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
+
+// The role select folds the two backend fields into one choice:
+//   user     is_admin=false, group_role=member
+//   manager  is_admin=false, group_role=manager  (needs a group)
+//   admin    is_admin=true  (superadmin; group is irrelevant)
+const roleOf = (instance) => {
+	if (instance?.is_admin) return "admin";
+	if (instance?.group_role === "manager") return "manager";
+	return "user";
+};
+
+/** Create / edit an account -- superadmin only. */
+const TeamDialog = ({ open, instance, close, save, handleChange }) => {
 	const classes = useStyles();
 	const { formatMessage: tr } = useIntl();
+	const { data: groups } = useFetchData({ path: "/group", name: "Group", isFetch: open });
+	const role = roleOf(instance);
+	const managerWithoutGroup = role === "manager" && !instance?.group_id;
 	return (
 		<Dialog
 			classes={{ paperScrollPaper: classes.root }}
@@ -66,27 +82,48 @@ const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
 							labelId="role"
 							label="Role"
 							type="text"
-							name="is_admin"
-							value={(instance || {}).is_admin}
+							name="role"
+							value={role}
 							onChange={(evt) => {
-								handleChange({ is_admin: evt.target.value });
+								const next = evt.target.value;
+								handleChange({
+									is_admin: next === "admin",
+									group_role: next === "manager" ? "manager" : "member",
+								});
 							}}>
-							<MenuItem value={false}>User</MenuItem>
-							<MenuItem value={true}>Admin</MenuItem>
+							<MenuItem value="user">{tr({ id: "role.user" })}</MenuItem>
+							<MenuItem value="manager">{tr({ id: "role.manager" })}</MenuItem>
+							<MenuItem value="admin">{tr({ id: "role.admin" })}</MenuItem>
 						</Select>
+						<FormHelperText>{tr({ id: `role.help.${role}` })}</FormHelperText>
 					</FormControl>
-					{/* <TextField margin="dense" label="Username" type="text" fullWidth variant="standard" disabled={!!(instance || {}).id}
-            name="username" value={(instance || {}).username} onChange={(evt) => { handleChange({ username: evt.target.value }) }} />
-          <TextField margin="dense" label="Email" type="email" fullWidth variant="standard" disabled={!!(instance || {}).id}
-            name="email" value={(instance || {}).email} onChange={(evt) => { handleChange({ email: evt.target.value }) }} />
-          <TextField margin="dense" label="Full name" type="text" fullWidth variant="standard"
-            name="name" value={(instance || {}).full_name} onChange={(evt) => { handleChange({ full_name: evt.target.value }) }} />
-          <TextField margin="dense" label="Date of birth" type="text" fullWidth variant="standard" readOnly
-            name="date_of_birth" value={(instance || {}).date_of_birth} onClick={() => setIsOpen(!isOpen)} />
-          <TextField margin="dense" label="Address" type="text" fullWidth variant="standard"
-            name="address" value={(instance || {}).address} onChange={(evt) => { handleChange({ address: evt.target.value }) }} />
-          <TextField margin="dense" label="Phone" type="text" fullWidth variant="standard"
-            name="Phone" value={(instance || {}).phone} onChange={(evt) => { handleChange({ phone: evt.target.value }) }} /> */}
+					{role !== "admin" && (
+						<FormControl
+							variant="standard"
+							sx={{ m: 0, minWidth: 120 }}
+							fullWidth
+							error={managerWithoutGroup}>
+							<InputLabel id="group">{tr({ id: "group.field" })}</InputLabel>
+							<Select
+								labelId="group"
+								label={tr({ id: "group.field" })}
+								name="group_id"
+								value={(instance || {}).group_id ?? ""}
+								onChange={(evt) => {
+									handleChange({ group_id: evt.target.value === "" ? null : evt.target.value });
+								}}>
+								<MenuItem value="">{tr({ id: "group.none" })}</MenuItem>
+								{(groups || []).map((g) => (
+									<MenuItem key={g.id} value={g.id}>
+										{g.name}
+									</MenuItem>
+								))}
+							</Select>
+							{managerWithoutGroup && (
+								<FormHelperText>{tr({ id: "group.managerNeedsGroup" })}</FormHelperText>
+							)}
+						</FormControl>
+					)}
 					{!(instance || {}).id && (
 						<TextField
 							margin="dense"
@@ -105,7 +142,9 @@ const TeamDialog = ({ open, instance, close, save, handleChange, type }) => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={close}>{tr({ id: "Cancel" })}</Button>
-					<Button onClick={save}>{tr({ id: "Save" })}</Button>
+					<Button onClick={save} disabled={managerWithoutGroup}>
+						{tr({ id: "Save" })}
+					</Button>
 				</DialogActions>
 			</form>
 		</Dialog>
