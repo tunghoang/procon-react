@@ -6,11 +6,18 @@ import { SERVICE_API } from "../config/env";
 // ever gets its own group back, whatever id it asks for.
 const GROUP_URL = SERVICE_API + "/group";
 
+/** Tolerate both an already-unwrapped array and a {count, data} envelope. */
+const asList = (result) =>
+	Array.isArray(result) ? result : Array.isArray(result?.data) ? result.data : [];
+
 /** Members of a group: [{id, name, account, group_role, is_admin}]. */
 export const apiGroupMembers = async (groupId) => {
 	try {
-		const result = await doGet(`${GROUP_URL}/${groupId}/members`);
-		return result?.data || [];
+		// doGet already unwraps the axios body AND the server's {count, data}
+		// envelope (the response interceptor returns `.data`, doGet reads
+		// `.data` again), so `result` IS the array. Reading `.data` a third
+		// time made this dialog permanently empty.
+		return asList(await doGet(`${GROUP_URL}/${groupId}/members`));
 	} catch (e) {
 		if (!e.handled) showMessage(getError(e), "error");
 		return [];
@@ -20,8 +27,7 @@ export const apiGroupMembers = async (groupId) => {
 /** Accounts that could be added to the group (ungrouped ones for a manager). */
 export const apiGroupCandidates = async (groupId) => {
 	try {
-		const result = await doGet(`${GROUP_URL}/${groupId}/candidates`);
-		return result?.data || [];
+		return asList(await doGet(`${GROUP_URL}/${groupId}/candidates`));
 	} catch (e) {
 		if (!e.handled) showMessage(getError(e), "error");
 		return [];
