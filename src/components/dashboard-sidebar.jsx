@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import { useContext } from "react";
-import { Box, Button, Divider } from "@mui/material";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Box, Divider } from "@mui/material";
 import Logo from "./logo";
 import { NavItem } from "./nav-item";
 import Context from "../context";
@@ -11,7 +10,6 @@ import { Blackboard as BlackboardIcon } from "../icons/blackboard";
 import QuizIcon from "@mui/icons-material/Quiz";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import PeopleIcon from "@mui/icons-material/People";
-import WarningIcon from "@mui/icons-material/Warning";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import SchoolIcon from "@mui/icons-material/School";
 
@@ -59,7 +57,6 @@ const items = [
 
 export const DashboardSidebar = (props) => {
 	const { open, width = 280 } = props;
-	const searchParams = useSearch({ strict: false });
 	const { team } = useContext(Context);
 	const visibleItems = items.filter((item) => !item.superOnly || isSuperAdmin(team));
 
@@ -99,31 +96,6 @@ export const DashboardSidebar = (props) => {
 					))}
 					<Divider light={true} />
 				</Box>
-				{/* procon25 legacy — the reset page calls endpoints that do not
-				    exist in the backend; hidden for HEXUDON (route still exists).
-				<Box sx={{ pb: 2, px: 2 }}>
-					<Link
-						to="/admin/reset"
-						search={searchParams}
-						style={{ width: "100%", textDecoration: "none" }}>
-						<Button
-							fullWidth
-							startIcon={<WarningIcon />}
-							sx={{
-								backgroundColor: "#d32f2f",
-								color: "#fff",
-								justifyContent: "flex-start",
-								px: 3,
-								py: 1,
-								textTransform: "none",
-								"&:hover": {
-									backgroundColor: "#b71c1c",
-								},
-							}}>
-							Admin Actions
-						</Button>
-					</Link>
-				</Box> */}
 			</Box>
 		</Box>
 	);

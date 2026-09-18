@@ -31,6 +31,7 @@ import {
 	getGameError,
 	getPracticePeerReplay,
 } from "../../api/gameService";
+import { runPool, withRetryOn429 } from "../../utils/pool";
 import HexBoard from "./hex-board";
 import LoadingPage from "../loading-page";
 
@@ -77,6 +78,8 @@ const ReplayDialog = ({
 	const [playing, setPlaying] = useState(false);
 	const [selectedTeamIds, setSelectedTeamIds] = useState(null); // null until data loads
 	const [peerReplays, setPeerReplays] = useState({}); // {oppId: replay} — practice opponents
+	// A peer fetch is waiting out a 429's Retry-After (see utils/pool.js).
+	const [throttled, setThrottled] = useState(false);
 	const [showOpponents, setShowOpponents] = useState(true);
 	const timer = useRef(null);
 
@@ -100,15 +103,27 @@ const ReplayDialog = ({
 	useEffect(() => {
 		if (!open || !questionId || !opponents?.length) return;
 		let cancelled = false;
-		Promise.all(
-			opponents.map((op) =>
-				getPracticePeerReplay(`${questionId}:${op.id}`)
-					.then((r) => [String(op.id), r])
-					.catch(() => null),
-			),
-		).then((pairs) => {
+		setThrottled(false);
+		// At most 3 in flight: one request per opponent in a single tick blew
+		// through the engine's per-token read budget (5/s, burst 10), so on a
+		// big roster the tail came back 429 and those opponents silently
+		// vanished from the overlay.
+		runPool(opponents, (op) =>
+			withRetryOn429(() => getPracticePeerReplay(`${questionId}:${op.id}`), {
+				onRateLimited: () => {
+					if (!cancelled) setThrottled(true);
+				},
+			}).then((r) => [String(op.id), r]),
+		).then((results) => {
 			if (cancelled) return;
-			setPeerReplays(Object.fromEntries(pairs.filter(Boolean)));
+			setThrottled(false);
+			setPeerReplays(
+				Object.fromEntries(
+					results
+						.filter((r) => r.status === "fulfilled" && r.value)
+						.map((r) => r.value),
+				),
+			);
 		});
 		return () => {
 			cancelled = true;
@@ -307,6 +322,9 @@ const ReplayDialog = ({
 				</IconButton>
 			</DialogTitle>
 			<DialogContent dividers>
+				{throttled && (
+					<Alert severity="info">{tr({ id: "hexudon.rateLimited" })}</Alert>
+				)}
 				{error && <Alert severity="error">{error}</Alert>}
 				{!error && !data && <LoadingPage />}
 				{!error && data && days.length === 0 && (

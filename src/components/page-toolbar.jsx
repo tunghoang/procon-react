@@ -1,4 +1,4 @@
-import { Toolbar, Button, Typography } from "@mui/material";
+import { Toolbar, Button, Tooltip, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -11,6 +11,11 @@ const PageToolbar = ({
 	showEdit,
 	showDelete,
 	handleNew,
+	// Create is sometimes offered before its prerequisite exists (e.g. a match
+	// needs a round). Disable it WITH a reason rather than letting the form
+	// open and fail on the server.
+	newDisabled = false,
+	newTooltip = "",
 	editBtns,
 	handleDelete,
 	customBtns = [],
@@ -28,10 +33,16 @@ const PageToolbar = ({
 				<></>
 			)}
 			{showNew ? (
-				<Button onClick={handleNew}>
-					<AddIcon />
-					{tr({ id: "Create" })}
-				</Button>
+				// A disabled MUI Button swallows pointer events, so the tooltip
+				// needs its own wrapper element to hang off.
+				<Tooltip title={newTooltip || ""}>
+					<span>
+						<Button onClick={handleNew} disabled={newDisabled}>
+							<AddIcon />
+							{tr({ id: "Create" })}
+						</Button>
+					</span>
+				</Tooltip>
 			) : (
 				<></>
 			)}

@@ -277,6 +277,16 @@ const QuestionDialog = ({ open, instance, close, save, handleChange }) => {
 		}
 	};
 
+	/**
+	 * Accept a pasted /game/init body.
+	 *
+	 * The payload is stored EXACTLY as pasted, `teams` included: the backend
+	 * re-points `teams[].team_id` at the match's real roster before it registers
+	 * the game (question.js#applyMatchRoster) and reuses the first non-empty
+	 * `agents` list as the start layout every team shares. So the pasted ids are
+	 * not authoritative -- see questions.manualHint -- but the entry carrying
+	 * `agents` still has to be there, which is why nothing is stripped here.
+	 */
 	const handleManualApply = () => {
 		try {
 			const parsed = JSON.parse(manualText);

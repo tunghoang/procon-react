@@ -9,6 +9,11 @@ export const TERRAIN_NAMES = ["plain", "road", "mountain", "pond"];
 // Official traffic status codes: Smooth/Congested/Jam.
 export const TRAFFIC_NAMES = ["smooth", "congested", "jam"];
 
+// Marker error used by every helper below when the board has not been
+// published to this team yet. Callers test `hasBoard()` and show the proper
+// placeholder; this exists so a stray path still fails loudly-but-safely.
+export const BOARD_WITHHELD = "board-withheld";
+
 // Travel time (steps) and fuel cost, taken from the departure cell.
 export const TRAVEL_TIME = { plain: 2, mountain: 3 }; // road depends on status
 export const ROAD_TRAVEL_TIME = [1, 2, 4]; // by traffic status code
@@ -55,8 +60,20 @@ export const neighborCell = (width, height, cell, direction) => {
 	return nr * width + nc;
 };
 
+/**
+ * True once a config actually carries the board.
+ *
+ * A TEAM's config is REDACTED until the board is published (`/game/config`
+ * answers `{board_withheld: true, ...}` with no `map`), so every helper below
+ * must be able to say "not yet" instead of dereferencing `map.cells` -- that
+ * throw during the first render of Day 1 was the blank-play-screen bug.
+ */
+export const hasBoard = (mapConfig) => !!mapConfig?.map?.cells;
+
 // Flatten the official 2D `map.cells` terrain-code rows to a cell-id array.
-export const flattenCells = (mapConfig) => mapConfig.map.cells.flat();
+// Returns [] for a withheld/absent board rather than throwing.
+export const flattenCells = (mapConfig) =>
+	hasBoard(mapConfig) ? mapConfig.map.cells.flat() : [];
 
 // {pos: statusCode} lookup from the official day information `traffics`.
 export const trafficByPos = (dayInformation) => {
@@ -79,6 +96,11 @@ export const travelTimeFrom = (terrainCode, cell, traffic) => {
  * {steps, path, error} — fuel feasibility stays with the server.
  */
 export const simulateCommands = (mapConfig, traffic, startPos, commands) => {
+	if (!hasBoard(mapConfig)) {
+		// The board is not published yet: report it instead of crashing the
+		// caller (the play screen renders the "withheld" placeholder on this).
+		return { steps: 0, path: [startPos], error: BOARD_WITHHELD };
+	}
 	const cells = flattenCells(mapConfig);
 	const width = mapConfig.map.width;
 	const height = mapConfig.map.height;
@@ -125,6 +147,10 @@ export const simulateCommands = (mapConfig, traffic, startPos, commands) => {
  * current fuel; fuel is charged from the departure cell (matching the engine).
  */
 export const projectFuelNoRefuel = (mapConfig, startPos, startFuel, commands) => {
+	// No board, no projection -- and certainly no "will run dry" warning.
+	if (!hasBoard(mapConfig)) {
+		return { ranOut: false, atCommand: null, endFuel: startFuel };
+	}
 	const cells = flattenCells(mapConfig);
 	const width = mapConfig.map.width;
 	const height = mapConfig.map.height;
@@ -150,6 +176,12 @@ export const projectFuelNoRefuel = (mapConfig, startPos, startFuel, commands) =>
  */
 export const validatePlan = (mapConfig, dayInformation, plan, requiredSteps) => {
 	const agents = dayInformation?.agents || [];
+	if (!hasBoard(mapConfig)) {
+		// Nothing can be validated against a board we do not have. Returning a
+		// shaped result (rather than throwing) keeps the plan editor and the
+		// board preview renderable while the config is re-fetched.
+		return { valid: false, error: BOARD_WITHHELD, agents: [] };
+	}
 	const traffic = trafficByPos(dayInformation);
 	if (!Array.isArray(plan) || plan.length !== agents.length) {
 		return {

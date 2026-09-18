@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
 	Button,
@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useIntl } from "react-intl";
 import { formatCountdown } from "../../utils/commons";
+import { normalizeKinds } from "../../utils/agent-kinds";
 
 /**
  * Pre-match agent-kind selection: one 0 (patrol) / 1 (refuel) per agent, in
@@ -17,11 +18,41 @@ import { formatCountdown } from "../../utils/commons";
  * match's start time), so `opensIn` > 0 means the engine would refuse a choice
  * for now and the panel stays disabled. A team that never answers is defaulted
  * to all-patrol and plays on — see hexudon.kinds.hint.
+ *
+ * `submittedKinds` is what the ENGINE already has for this team (from
+ * /game/state, once `types_selected`). Selection may be re-sent until the
+ * window closes, so the toggles must start from the live choice: showing
+ * all-patrol after a submit made a team believe its refuel cars were gone, and
+ * a second submit from that screen really did overwrite them with patrols.
+ *
+ * Note that /game/state reports kinds as the STRINGS "patrol"/"refuel" (the
+ * engine's AgentType is a str enum) while the submit body and /game/day use
+ * 0/1 -- utils/agent-kinds.js accepts both, and is the only place that
+ * conversion lives.
  */
-const AgentKindsPanel = ({ mapConfig, onSubmit, submitting, opensIn = 0 }) => {
+const AgentKindsPanel = ({
+	mapConfig,
+	onSubmit,
+	submitting,
+	opensIn = 0,
+	submittedKinds = null,
+}) => {
 	const { formatMessage: tr } = useIntl();
 	const agentCount = (mapConfig.agents || []).length;
-	const [kinds, setKinds] = useState(() => new Array(agentCount).fill(0));
+	const normalize = (source) => normalizeKinds(source, agentCount);
+	const [kinds, setKinds] = useState(() => normalize(submittedKinds));
+	// Adopt the engine's kinds once (and again if the team submits from another
+	// tab), but never fight the user mid-edit: only a CHANGED server value is
+	// taken, so local toggling still wins between polls.
+	const lastAdopted = useRef(JSON.stringify(normalize(submittedKinds)));
+	useEffect(() => {
+		if (!submittedKinds) return;
+		const next = JSON.stringify(normalize(submittedKinds));
+		if (next === lastAdopted.current) return;
+		lastAdopted.current = next;
+		setKinds(JSON.parse(next));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [JSON.stringify(submittedKinds), agentCount]);
 	const notOpenYet = opensIn > 0;
 
 	return (

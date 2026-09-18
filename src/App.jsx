@@ -12,8 +12,7 @@ import { ConfirmProvider } from "material-ui-confirm";
 
 import themeFn from "./theme";
 
-import viVN from "./lang/vi.json";
-import enUS from "./lang/en.json";
+import { messagesFor, setIntlLocale } from "./i18n";
 
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -21,19 +20,8 @@ import { setLocalStorage } from "./utils/commons";
 import { jwtDecode } from "jwt-decode";
 import LoadingPage from "./components/loading-page";
 import { router } from "./router";
-import { setRouter } from "./api/commons";
+import { LOGOUT_EVENT, setRouter } from "./api/commons";
 import { Agentation } from "agentation";
-
-function loadMessages(locale) {
-	switch (locale) {
-		case "vi-VN":
-			return viVN;
-		case "en-US":
-			return enUS;
-		default:
-			return enUS;
-	}
-}
 
 export function App() {
 	const [token, setToken] = useState(localStorage.getItem("token"));
@@ -50,6 +38,16 @@ export function App() {
 		setRouter(router);
 	}, []);
 
+	// The axios layer clears the token from localStorage on a 401, but only
+	// this component can clear it from STATE -- without that, `require-admin`
+	// and every isStaff() check kept trusting the expired session (a Back
+	// press re-rendered the admin area as if still signed in).
+	useEffect(() => {
+		const onLogout = () => setToken(null);
+		window.addEventListener(LOGOUT_EVENT, onLogout);
+		return () => window.removeEventListener(LOGOUT_EVENT, onLogout);
+	}, []);
+
 	useEffect(() => {
 		if (token) {
 			try {
@@ -59,8 +57,20 @@ export function App() {
 				setToken(null);
 				localStorage.removeItem("token");
 			}
+		} else {
+			// Logout (or a 401 auto-logout) clears the token but used to leave
+			// the decoded team behind, so every isStaff()/role check went on
+			// believing the previous session -- the admin area stayed reachable
+			// and the navbar kept showing that account.
+			setTeam(null);
 		}
 	}, [token]);
+
+	// Keep the standalone intl instance (used by the axios layer's toasts,
+	// which live outside the React tree) on the locale the UI is showing.
+	useEffect(() => {
+		setIntlLocale(locale);
+	}, [locale]);
 
 	// Update router context whenever token or team changes
 	useEffect(() => {
@@ -100,7 +110,7 @@ export function App() {
 					}
 				},
 			}}>
-			<IntlProvider locale={locale} messages={loadMessages(locale)}>
+			<IntlProvider locale={locale} messages={messagesFor(locale)}>
 				<LocalizationProvider dateAdapter={AdapterDateFns}>
 					<ThemeProvider theme={themeFn(locale)}>
 						<ConfirmProvider>

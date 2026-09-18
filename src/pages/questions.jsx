@@ -2,8 +2,8 @@ import * as mui from "@mui/material";
 import { useIntl } from "react-intl";
 import { useState } from "react";
 import { useApi, useFetchData } from "../api";
-import { api, showMessage } from "../api/commons";
-import { apiBulkDeleteQuestions } from "../api/question";
+import { api, getError, showMessage } from "../api/commons";
+import { apiBulkDeleteQuestions, apiResetQuestion } from "../api/question";
 import { QuestionDialog, QuestionDataDialog } from "../dialogs/question";
 import { ScoreDataDialog } from "../dialogs/answer";
 import PageToolbar from "../components/page-toolbar";
@@ -21,7 +21,13 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { debugLog } from "../utils/debug";
 import { SERVICE_API } from "../config/env";
-import { resetGame, getGameError } from "../api/gameService";
+import { orderArrowState, planOrderSwap } from "../utils/question-order";
+import {
+	SELECTION_FALLBACK_SECONDS,
+	defaultStartsAtInput,
+	earliestStartsAt,
+	selectionSecondsOf,
+} from "../utils/reset-start";
 
 const Questions = () => {
 	const routeParams = useParams({ strict: false });
@@ -48,12 +54,14 @@ const Questions = () => {
 		questionName: "",
 		moves: [],
 	});
-	const [originalParams, setOriginalParams] = useState(null);
 	// Reset dialog for a TIMED match: admin picks the new Day-1 start time.
+	// `limit` is that question's own agent-kind window in seconds, which sets
+	// the earliest legal start (see SELECTION_FALLBACK_SECONDS).
 	const [resetTimeDialog, setResetTimeDialog] = useState({
 		open: false,
 		row: null,
 		value: "",
+		limit: SELECTION_FALLBACK_SECONDS,
 	});
 	// Auto-reset cron: interval in minutes per question (0/empty = off).
 	const [autoResetDialog, setAutoResetDialog] = useState({
@@ -123,9 +131,12 @@ const Questions = () => {
 			headerClassName: "tableHeader",
 			filterable: false,
 			renderCell: ({ row }) => {
-				const currentIndex = questions.findIndex((q) => q.id === row.id);
-				const isFirst = currentIndex === 0;
-				const isLast = currentIndex === questions.length - 1;
+				// Order is per MATCH (the backend numbers questions inside their
+				// own match), so the arrows must only ever swap with a neighbour
+				// in the SAME match. Against the unfiltered, cross-match list
+				// they happily traded `order` with a question of another match,
+				// renumbering both. Rules + tests: utils/question-order.js.
+				const { isFirst, isLast } = orderArrowState(questions, row);
 				return (
 					<mui.Stack direction="row" alignItems="center" spacing={0}>
 						<mui.Typography
@@ -420,28 +431,17 @@ const Questions = () => {
 	};
 
 	const handleEditQuestion = (questionRow) => {
-		const question_data = JSON.parse(questionRow.question_data || "{}");
-		const size =
-			question_data.field?.size || question_data.parameters?.size || 12;
-		setCurrentItem({
-			...questionRow,
-			...question_data,
-			size,
-		});
-		// Store original params for comparison
-		setOriginalParams({
-			size,
-			mode: questionRow.mode,
-			max_ops: questionRow.max_ops,
-			rotations: questionRow.rotations,
-		});
+		// The row as it is -- NOT with question_data spread over it. Only
+		// name/description are editable (the board is immutable), and the
+		// dialog's preview reads `question_data` itself.
+		setCurrentItem({ ...questionRow });
 		setDialogName("QuestionDialog");
 	};
 
 	const handleDeleteQuestion = async (questionId) => {
 		openConfirmDialog(
-			"Delete Question",
-			"Are you sure you want to delete this question? This will also delete all associated answers.",
+			tr({ id: "questions.deleteTitle" }),
+			tr({ id: "questions.deleteConfirm" }),
 			async () => {
 				const result = await apiBulkDeleteQuestions([questionId]);
 				if (result) await refetch();
@@ -451,57 +451,70 @@ const Questions = () => {
 		);
 	};
 
-	// A datetime-local input string (minute precision) for "now".
-	const nowLocalInput = () => {
-		const d = new Date();
-		d.setSeconds(0, 0);
-		return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-			.toISOString()
-			.slice(0, 16);
-	};
-
-	// Do the actual reset. Match kinds (from question_data):
-	//  - plain practice (is_practice && !no_reset): one solo game per team ->
-	//    reset each `${qid}:${teamId}`.
-	//  - competitive practice (is_practice && no_reset): ONE shared game -> reset
-	//    the bare question id (self-paced, no start time needed).
-	//  - timed competitive (!is_practice): ONE shared game -> reset the bare id
-	//    and re-anchor its schedule to `startsAtSec` (admin-picked Day-1 time).
+	// Do the actual reset -- ONE call to the team-manager, never a per-team
+	// fan-out from the browser.
+	//
+	// The manager knows whether the question is one shared game (timed or
+	// competitive practice) or N per-team practice games, mints its own service
+	// token (a group manager's token is not an engine admin), and re-anchors
+	// `question_data.startsAt` so the board gate and the play screen's
+	// countdown follow the reset. Doing it here burst one engine request per
+	// team against a 5/s read budget and reported "10/12".
+	//
+	// `startsAtSec` is ignored for practice questions (self-paced); undefined
+	// lets the server pick `now + window + 1 min`.
 	const doReset = async (row, startsAtSec) => {
-		const qdata = JSON.parse(row.question_data || "{}");
-		const isPractice = !!qdata.is_practice;
-		const noReset = !!qdata.no_reset;
 		try {
-			if (isPractice && !noReset) {
-				const matchId = row.match_id ?? row.match?.id;
-				const m = await api.get(`${SERVICE_API}/match/${matchId}`);
-				const teams = m?.teams || [];
-				if (!teams.length) throw new Error("match has no teams");
-				const results = await Promise.allSettled(
-					teams.map((t) => resetGame(`${row.id}:${t.id}`)),
+			const result = await apiResetQuestion(row.id, startsAtSec);
+			const failed = result?.failed || [];
+			const reset = result?.reset || [];
+			// Games the engine does not have. For PLAIN practice the bare
+			// question id never exists, so a `missing` entry there is normal --
+			// but if NOTHING reset and everything was missing, the question has
+			// no games on the engine at all and calling that "reset" would be a
+			// lie the admin acts on.
+			const missing = result?.missing || [];
+			if (failed.length) {
+				// 502 partial: some games did reset. Name the ones that did not,
+				// with the engine's reason -- "10/12" alone left the admin
+				// guessing which two.
+				showMessage(
+					tr(
+						{ id: "questions.resetPartial" },
+						{
+							ok: reset.length,
+							total: reset.length + failed.length,
+							games: failed
+								.map((f) => `${f.id}${f.reason ? `: ${f.reason}` : ""}`)
+								.join("; "),
+						},
+					),
+					"warning",
+					9000,
 				);
-				const failed = results.filter((r) => r.status === "rejected").length;
-				if (failed) {
-					showMessage(
-						tr(
-							{ id: "questions.resetPartial" },
-							{ ok: teams.length - failed, total: teams.length },
-						),
-						"warning",
-						6000,
-					);
-				} else {
-					showMessage(tr({ id: "questions.resetDone" }), "success");
-				}
+			} else if (!reset.length && missing.length) {
+				showMessage(
+					tr(
+						{ id: "questions.resetNothing" },
+						{ count: missing.length, games: missing.join(", ") },
+					),
+					"warning",
+					9000,
+				);
 			} else {
-				// Shared game: competitive practice ignores startsAt (self-paced);
-				// a timed match re-anchors to the admin-picked start time.
-				await resetGame(String(row.id), isPractice ? undefined : startsAtSec);
-				showMessage(tr({ id: "questions.resetDone" }), "success");
+				showMessage(
+					result?.startsAt
+						? tr(
+								{ id: "questions.resetDoneAt" },
+								{ time: new Date(result.startsAt * 1000).toLocaleString() },
+							)
+						: tr({ id: "questions.resetDone" }),
+					"success",
+				);
 			}
 			await refetch();
 		} catch (error) {
-			showMessage(getGameError(error), "error", 6000);
+			showMessage(getError(error), "error", 6000);
 		}
 	};
 
@@ -509,15 +522,27 @@ const Questions = () => {
 		const qdata = JSON.parse(row.question_data || "{}");
 		const isPractice = !!qdata.is_practice;
 		if (!isPractice) {
-			// Timed match: let the admin pick the new Day-1 start time first.
-			setResetTimeDialog({ open: true, row, value: nowLocalInput() });
+			// Timed match: let the admin pick the new Day-1 start time, defaulted
+			// to `now + agent-kind window + 1 min` (the same value the server
+			// would choose). Pre-filling the current minute used to hand every
+			// team a window that was already closed -> all-patrol for everyone.
+			const limit = selectionSecondsOf(row.question_data);
+			setResetTimeDialog({
+				open: true,
+				row,
+				// Rounded UP to the next whole minute (utils/reset-start.js), so
+				// the prefilled value can never sit under the minimum the field's
+				// own helper text -- and confirmResetTime below -- enforce.
+				value: defaultStartsAtInput(limit),
+				limit,
+			});
 			return;
 		}
 		openConfirmDialog(
 			tr({ id: "questions.resetTitle" }),
 			tr({ id: "questions.resetConfirm" }),
 			async () => {
-				await doReset(row, null);
+				await doReset(row, undefined);
 				closeConfirmDialog();
 			},
 			"warning",
@@ -548,12 +573,41 @@ const Questions = () => {
 		}
 	};
 
+	const closeResetTimeDialog = () =>
+		setResetTimeDialog({
+			open: false,
+			row: null,
+			value: "",
+			limit: SELECTION_FALLBACK_SECONDS,
+		});
+
 	const confirmResetTime = async () => {
-		const { row, value } = resetTimeDialog;
+		const { row, value, limit } = resetTimeDialog;
+		// Empty field = let the server choose its own default.
 		const startsAtSec = value
 			? Math.floor(new Date(value).getTime() / 1000)
-			: Math.floor(Date.now() / 1000);
-		setResetTimeDialog({ open: false, row: null, value: "" });
+			: undefined;
+		// The server refuses anything earlier than `now + limit` with a 400.
+		// Catch it here too: the dialog may have sat open long enough for its
+		// own prefilled value to age past the minimum.
+		if (startsAtSec !== undefined) {
+			const earliest = earliestStartsAt(limit);
+			if (startsAtSec < earliest) {
+				showMessage(
+					tr(
+						{ id: "questions.resetTooEarly" },
+						{
+							seconds: limit,
+							time: new Date(earliest * 1000).toLocaleString(),
+						},
+					),
+					"error",
+					7000,
+				);
+				return;
+			}
+		}
+		closeResetTimeDialog();
 		if (row) await doReset(row, startsAtSec);
 	};
 
@@ -610,27 +664,20 @@ const Questions = () => {
 
 	const handleMoveQuestion = async (questionId, direction) => {
 		try {
-			const currentIndex = questions.findIndex((q) => q.id === questionId);
-			if (currentIndex === -1) return;
+			// Swap within the question's own match only -- see the `order`
+			// column's comment. `null` = the move is not possible.
+			const plan = planOrderSwap(questions, questionId, direction);
+			if (!plan) return;
 
-			const targetIndex =
-				direction === "up" ? currentIndex - 1 : currentIndex + 1;
-			if (targetIndex < 0 || targetIndex >= questions.length) return;
-
-			const currentQuestion = questions[currentIndex];
-			const targetQuestion = questions[targetIndex];
-
-			// Swap orders
-			const currentOrder = currentQuestion.order ?? currentIndex;
-			const targetOrder = targetQuestion.order ?? targetIndex;
-
-			// Update both questions silently (without showing success messages)
+			// Update both questions silently (without showing success messages).
+			// Two writes to the MANAGER (never the engine), so the concurrency
+			// pool is not needed here.
 			await Promise.all([
-				api.put(`${SERVICE_API}/question/${currentQuestion.id}`, {
-					order: targetOrder,
+				api.put(`${SERVICE_API}/question/${plan.current.id}`, {
+					order: plan.currentOrder,
 				}),
-				api.put(`${SERVICE_API}/question/${targetQuestion.id}`, {
-					order: currentOrder,
+				api.put(`${SERVICE_API}/question/${plan.target.id}`, {
+					order: plan.targetOrder,
 				}),
 			]);
 			showMessage(tr({ id: "questions.orderChanged" }), "success");
@@ -671,8 +718,8 @@ const Questions = () => {
 	};
 	const clickDelete = async () => {
 		openConfirmDialog(
-			"Delete Questions",
-			`Are you sure you want to delete ${selectedIds.length} question(s)? This will also delete all associated answers.`,
+			tr({ id: "questions.deleteManyTitle" }),
+			tr({ id: "questions.deleteManyConfirm" }, { count: selectedIds.length }),
 			async () => {
 				const result = await apiBulkDeleteQuestions(selectedIds);
 				if (result) {
@@ -687,94 +734,32 @@ const Questions = () => {
 	const saveInstance = async () => {
 		debugLog("Saving question with data:", currentItem);
 
-		// Handle Manual Update for Existing Question
-		// If type is explicitly 'manual' (set by QuestionDialog when editing manual field)
-		if (currentItem.id && currentItem.type === "manual") {
-			openConfirmDialog(
-				"⚠️ Update Manual Question",
-				"You have updated the question data manually.\n\nThis will:\n• Update the board\n• Delete ALL existing answers for this question\n• Cannot be undone\n\nDo you want to continue?",
-				async () => {
-					try {
-						// apiEdit calls updateQuestion in backend, which we updated to delete answers if type=manual & raw_questions present
-						await apiEdit(currentItem.id, currentItem);
-						showMessage(tr({ id: "questions.updatedManually" }), "success");
-						await refetch();
-						closeConfirmDialog();
-						setDialogName("");
-						setOriginalParams(null);
-					} catch (error) {
-						debugLog("Failed to update manual question:", error);
-						const errorMessage =
-							error.response?.data?.message || "Failed to update question";
-						showMessage(errorMessage, "error");
-						closeConfirmDialog();
-					}
-				},
-				"warning",
-			);
-			return;
-		}
-
-		// Check if editing and parameters changed (for non-manual questions)
-		if (currentItem.id && originalParams && currentItem.mode != null) {
-			const paramsChanged =
-				originalParams.size !== currentItem.size ||
-				originalParams.mode !== currentItem.mode ||
-				originalParams.max_ops !== currentItem.max_ops ||
-				originalParams.rotations !== currentItem.rotations;
-
-			if (paramsChanged) {
-				// Show warning dialog
-				openConfirmDialog(
-					"⚠️ Regenerate Question",
-					"You have changed the question parameters (size, mode, max_ops, or rotations).\n\nThis will:\n• Generate a completely new board\n• Delete ALL existing answers for this question\n• Cannot be undone\n\nDo you want to continue?",
-					async () => {
-						try {
-							await api.put(
-								`${SERVICE_API}/question/${currentItem.id}/regenerate-with-params`,
-								{
-									size: currentItem.size,
-									mode: currentItem.mode,
-									max_ops: currentItem.max_ops,
-									rotations: currentItem.rotations,
-									name: currentItem.name,
-									description: currentItem.description,
-								},
-							);
-							showMessage(
-								"Question updated and regenerated successfully",
-								"success",
-							);
-							await refetch();
-							closeConfirmDialog();
-							setDialogName("");
-							setOriginalParams(null);
-						} catch (error) {
-							debugLog("Failed to regenerate question:", error);
-							const errorMessage =
-								error.response?.data?.message ||
-								"Failed to regenerate question";
-							showMessage(errorMessage, "error");
-							closeConfirmDialog();
-						}
-					},
-					"warning",
-				);
-				return;
-			}
-		}
-
+		// An EXISTING question can only be renamed/re-described: the board is
+		// fixed at /game/init time and the backend rejects any attempt to
+		// rewrite it. The old "manual update" and "regenerate with params"
+		// branches here belonged to a previous contest year's square boards and
+		// were unreachable from this dialog (which offers no board fields in
+		// edit mode) -- they only ever produced 400s if a stale `type`/`mode`
+		// field slipped through.
 		// Normal save (no params changed or creating new)
 		let result;
 		if (currentItem.id) {
-			result = await apiEdit(currentItem.id, currentItem);
+			// EXACTLY {name, description}. A HEXUDON board is fixed at
+			// /game/init time, and PUT /question/:id now rejects any body that
+			// carries `question_data`/`raw_questions`/`type` -- so spreading the
+			// whole row (as this used to) made renaming a question always fail
+			// with "the board is immutable". `order` travels on its own from the
+			// reorder arrows.
+			result = await apiEdit(currentItem.id, {
+				name: currentItem.name,
+				description: currentItem.description ?? null,
+			});
 		} else {
 			result = await apiCreate(currentItem);
 			setCurrentItem({});
 		}
 		if (result) await refetch();
 		setDialogName("");
-		setOriginalParams(null);
 	};
 	const changeInstance = (changes) => {
 		setCurrentItem({ ...currentItem, ...changes });
@@ -831,20 +816,20 @@ const Questions = () => {
 				</mui.DialogContent>
 				<mui.DialogActions>
 					{confirmDialog.showCancel && (
-						<mui.Button onClick={closeConfirmDialog}>Cancel</mui.Button>
+						<mui.Button onClick={closeConfirmDialog}>
+							{tr({ id: "Cancel" })}
+						</mui.Button>
 					)}
 					<mui.Button
 						onClick={confirmDialog.onConfirm}
 						color={confirmDialog.confirmColor || "primary"}
 						variant="contained">
-						{confirmDialog.showCancel ? "Confirm" : "OK"}
+						{tr({ id: confirmDialog.showCancel ? "Confirm" : "OK" })}
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>
 			{/* Timed-match reset: admin picks the new Day-1 start time. */}
-			<mui.Dialog
-				open={resetTimeDialog.open}
-				onClose={() => setResetTimeDialog({ open: false, row: null, value: "" })}>
+			<mui.Dialog open={resetTimeDialog.open} onClose={closeResetTimeDialog}>
 				<mui.DialogTitle>{tr({ id: "questions.resetTitle" })}</mui.DialogTitle>
 				<mui.DialogContent>
 					<mui.Typography sx={{ whiteSpace: "pre-line", mb: 2 }}>
@@ -855,6 +840,18 @@ const Questions = () => {
 						fullWidth
 						label={tr({ id: "questions.startsAtLabel" })}
 						slotProps={{ inputLabel: { shrink: true } }}
+						// The pre-match window is [startsAt - limit, startsAt), so a
+						// Day 1 closer than `limit` from now opens a window that is
+						// already (partly) over -- the server refuses it with a 400.
+						helperText={tr(
+							{ id: "questions.resetMinHint" },
+							{
+								seconds: resetTimeDialog.limit,
+								time: new Date(
+									earliestStartsAt(resetTimeDialog.limit) * 1000,
+								).toLocaleString(),
+							},
+						)}
 						value={resetTimeDialog.value}
 						onChange={(e) =>
 							setResetTimeDialog((p) => ({ ...p, value: e.target.value }))
@@ -862,14 +859,11 @@ const Questions = () => {
 					/>
 				</mui.DialogContent>
 				<mui.DialogActions>
-					<mui.Button
-						onClick={() =>
-							setResetTimeDialog({ open: false, row: null, value: "" })
-						}>
-						Cancel
+					<mui.Button onClick={closeResetTimeDialog}>
+						{tr({ id: "Cancel" })}
 					</mui.Button>
 					<mui.Button onClick={confirmResetTime} color="warning" variant="contained">
-						Confirm
+						{tr({ id: "Confirm" })}
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>
@@ -899,7 +893,7 @@ const Questions = () => {
 						onClick={() =>
 							setAutoResetDialog({ open: false, row: null, value: "" })
 						}>
-						Cancel
+						{tr({ id: "Cancel" })}
 					</mui.Button>
 					{autoResetDialog.row?.auto_reset_minutes > 0 && (
 						<mui.Button color="error" onClick={() => saveAutoReset(0)}>
@@ -915,7 +909,7 @@ const Questions = () => {
 							Number(autoResetDialog.value) > 1440
 						}
 						onClick={() => saveAutoReset(Number(autoResetDialog.value))}>
-						Confirm
+						{tr({ id: "Confirm" })}
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>

@@ -2,7 +2,7 @@ import { Paper, Chip, Box, Stack, IconButton, Tooltip, Typography } from "@mui/m
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import GroupsIcon from "@mui/icons-material/Groups";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 import { useNavigate } from "@tanstack/react-router";
 import { useApi, useFetchData } from "../api";
@@ -33,10 +33,15 @@ const Groups = () => {
 		loading,
 	} = useFetchData({ path: "/group", name: "Group" });
 
-	if (team && !isSuperAdmin(team)) {
-		navigate({ to: "/forbidden", replace: true });
-		return null;
-	}
+	// Bounce a non-superadmin from an EFFECT, never from the render body:
+	// navigating while rendering mutates the router mid-render, which React
+	// warns about and which can leave the page half-mounted.
+	const allowed = !team || isSuperAdmin(team);
+	useEffect(() => {
+		if (team && !isSuperAdmin(team)) {
+			navigate({ to: "/forbidden", replace: true });
+		}
+	}, [team, navigate]);
 
 	const columns = [
 		{ field: "id", headerName: "ID", width: 80, headerClassName: "tableHeader" },
@@ -133,6 +138,8 @@ const Groups = () => {
 		if (result) await refetch();
 		setDialogName("");
 	};
+
+	if (!allowed) return null;
 
 	return (
 		<>

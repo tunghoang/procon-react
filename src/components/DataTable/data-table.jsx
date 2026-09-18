@@ -8,6 +8,7 @@ import {
 	flexRender,
 } from "@tanstack/react-table";
 import * as mui from "@mui/material";
+import { useIntl } from "react-intl";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
@@ -29,6 +30,7 @@ import {
 import { NoData } from "../../icons/no-data";
 
 const DataTable = (props) => {
+	const { formatMessage: tr } = useIntl();
 	const {
 		onRefresh,
 		columns,
@@ -304,13 +306,13 @@ const DataTable = (props) => {
 							variant="contained"
 							size="small"
 							onClick={() => onTimeFilterSearch && onTimeFilterSearch()}>
-							Search
+							{tr({ id: "table.search" })}
 						</mui.Button>
 						<mui.Button
 							variant="outlined"
 							size="small"
 							onClick={() => onTimeFilterClear && onTimeFilterClear()}>
-							Clear
+							{tr({ id: "table.clear" })}
 						</mui.Button>
 					</mui.Stack>
 				) : (
@@ -323,34 +325,39 @@ const DataTable = (props) => {
 							onClick={() => table.setPageIndex(0)}
 							disabled={!table.getCanPreviousPage()}
 							size="small"
-							title="First Page">
+							title={tr({ id: "table.firstPage" })}>
 							<FirstPageIcon fontSize="small" />
 						</mui.IconButton>
 						<mui.IconButton
 							onClick={() => table.previousPage()}
 							disabled={!table.getCanPreviousPage()}
 							size="small"
-							title="Previous Page">
+							title={tr({ id: "table.prevPage" })}>
 							<ChevronLeftIcon fontSize="small" />
 						</mui.IconButton>
 						<mui.Typography
 							variant="body2"
 							sx={{ px: 1, minWidth: 100, textAlign: "center" }}>
-							Page {table.getState().pagination.pageIndex + 1} of{" "}
-							{table.getPageCount()}
+							{tr(
+								{ id: "table.pageOf" },
+								{
+									page: table.getState().pagination.pageIndex + 1,
+									total: table.getPageCount(),
+								},
+							)}
 						</mui.Typography>
 						<mui.IconButton
 							onClick={() => table.nextPage()}
 							disabled={!table.getCanNextPage()}
 							size="small"
-							title="Next Page">
+							title={tr({ id: "table.nextPage" })}>
 							<ChevronRightIcon fontSize="small" />
 						</mui.IconButton>
 						<mui.IconButton
 							onClick={() => table.setPageIndex(table.getPageCount() - 1)}
 							disabled={!table.getCanNextPage()}
 							size="small"
-							title="Last Page">
+							title={tr({ id: "table.lastPage" })}>
 							<LastPageIcon fontSize="small" />
 						</mui.IconButton>
 						<mui.Select
@@ -375,18 +382,18 @@ const DataTable = (props) => {
 					<mui.IconButton
 						onClick={(e) => setAnchorEl(e.currentTarget)}
 						size="small"
-						title="Show/Hide Columns">
+						title={tr({ id: "table.columns" })}>
 						<ViewColumnIcon />
 					</mui.IconButton>
 					<mui.IconButton
 						onClick={handleFilterClick}
 						size="small"
-						title="Toggle Filters"
+						title={tr({ id: "table.toggleFilters" })}
 						color={showFilters || showTimeFilter ? "primary" : "default"}>
 						<FilterListIcon />
 					</mui.IconButton>
 					{onRefresh && (
-						<mui.IconButton onClick={onRefresh} size="small" title="Refresh">
+						<mui.IconButton onClick={onRefresh} size="small" title={tr({ id: "Refresh" })}>
 							<RefreshIcon />
 						</mui.IconButton>
 					)}
@@ -499,7 +506,7 @@ const DataTable = (props) => {
 														<mui.TextField
 															size="small"
 															fullWidth
-															placeholder={`Filter...`}
+															placeholder={tr({ id: "table.filter" })}
 															value={pendingFilters[header.id] ?? ""}
 															onChange={(e) =>
 																setPendingFilters({
@@ -542,7 +549,7 @@ const DataTable = (props) => {
 														<mui.TextField
 															size="small"
 															fullWidth
-															placeholder={`Filter...`}
+															placeholder={tr({ id: "table.filter" })}
 															value={header.column.getFilterValue() ?? ""}
 															onChange={(e) =>
 																header.column.setFilterValue(e.target.value)
@@ -608,11 +615,12 @@ const DataTable = (props) => {
 };
 
 const CustomNoRowsOverlay = () => {
+	const { formatMessage: tr } = useIntl();
 	return (
 		<StyledGridOverlay>
 			<NoData style={{ width: 80, height: 80, marginBottom: 16 }} />
 			<mui.Typography variant="body1" color="text.secondary">
-				No Rows
+				{tr({ id: "table.noRows" })}
 			</mui.Typography>
 		</StyledGridOverlay>
 	);

@@ -22,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { withZeroSeconds } from "../utils/commons";
+import { isPlayerAccount } from "../utils/roles";
 const useStyles = makeStyles({
 	root: {
 		// overflow: "visible",
@@ -48,13 +49,17 @@ const MatchDialog = ({ open, instance, close, save, handleChange, canPickGroup =
 			classes={{ paperScrollPaper: classes.root }}
 			open={open}
 			onClose={close}>
-			<DialogTitle>{instance?.id ? "Edit Match" : "Create Match"}</DialogTitle>
+			<DialogTitle>
+				{instance?.id
+					? tr({ id: "match.editTitle" })
+					: tr({ id: "match.createTitle" })}
+			</DialogTitle>
 			<form>
 				<DialogContent className={classes.root} sx={{ width: 500 }}>
 					<Stack spacing={3}>
 						<TextField
 							margin="dense"
-							label="Name"
+							label={tr({ id: "name" })}
 							type="text"
 							fullWidth
 							variant="standard"
@@ -66,7 +71,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange, canPickGroup =
 						/>
 						<TextField
 							margin="dense"
-							label="Description"
+							label={tr({ id: "description" })}
 							type="text"
 							fullWidth
 							variant="standard"
@@ -77,7 +82,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange, canPickGroup =
 							}}
 						/>
 						<DateTimePicker
-							label="Start Time"
+							label={tr({ id: "start-time" })}
 							value={startTime}
 							onChange={(newValue) => {
 								handleChange({ start_time: withZeroSeconds(newValue) });
@@ -112,7 +117,7 @@ const MatchDialog = ({ open, instance, close, save, handleChange, canPickGroup =
 									}}
 								/>
 							}
-							label="Active"
+							label={tr({ id: "active" })}
 							labelPlacement="start"
 						/>
 						{/* Match mode is fixed at creation (the game service builds
@@ -267,7 +272,11 @@ const AddTeamMatchDialog = ({ open, close, teams, handleAdd }) => {
 							);
 						}}
 						renderInput={(params) => (
-							<TextField {...params} label="Team" variant="standard" />
+							<TextField
+								{...params}
+								label={tr({ id: "hexudon.standings.team" })}
+								variant="standard"
+							/>
 						)}
 						onChange={(_, values) => setSelectedTeams(values)}
 					/>
@@ -303,8 +312,13 @@ const ManageTeamMatchDialog = ({
 	const [selectedTeamsToAdd, setSelectedTeamsToAdd] = useState([]);
 	const [selectedTeamsToRemove, setSelectedTeamsToRemove] = useState([]);
 
+	// Staff accounts are excluded: the backend filters them out of a bulk add
+	// (and refuses a single one), because an admin's/manager's token
+	// administers the game instead of playing it. Offering them here just
+	// produced silently-skipped selections.
 	const availableTeams = allTeams.filter(
 		(item) =>
+			isPlayerAccount(item) &&
 			!teams?.find((team) => team.id === item.id) &&
 			(groupId == null || Number(item.group_id) === Number(groupId))
 	);
@@ -356,7 +370,7 @@ const ManageTeamMatchDialog = ({
 											size="small"
 											variant="outlined"
 											onClick={() => setSelectedTeamsToAdd(availableTeams)}>
-											Select All ({availableTeams.length})
+											{tr({ id: "selectAll" }, { count: availableTeams.length })}
 										</Button>
 									)}
 								{selectedTeamsToAdd.length > 0 && (
@@ -365,7 +379,7 @@ const ManageTeamMatchDialog = ({
 										variant="outlined"
 										color="secondary"
 										onClick={() => setSelectedTeamsToAdd([])}>
-										Deselect All
+										{tr({ id: "deselectAll" })}
 									</Button>
 								)}
 							</Stack>
@@ -389,7 +403,7 @@ const ManageTeamMatchDialog = ({
 							renderInput={(params) => (
 								<TextField
 									{...params}
-									placeholder="Select teams to add"
+									placeholder={tr({ id: "match.pickTeamsToAdd" })}
 									variant="outlined"
 									size="small"
 								/>
@@ -428,7 +442,7 @@ const ManageTeamMatchDialog = ({
 												variant="outlined"
 												color="error"
 												onClick={() => setSelectedTeamsToRemove(teams)}>
-												Select All ({teams.length})
+												{tr({ id: "selectAll" }, { count: teams.length })}
 											</Button>
 										)}
 										{selectedTeamsToRemove.length > 0 && (
@@ -437,7 +451,7 @@ const ManageTeamMatchDialog = ({
 												variant="outlined"
 												color="secondary"
 												onClick={() => setSelectedTeamsToRemove([])}>
-												Deselect All
+												{tr({ id: "deselectAll" })}
 											</Button>
 										)}
 									</Stack>
@@ -463,7 +477,7 @@ const ManageTeamMatchDialog = ({
 									renderInput={(params) => (
 										<TextField
 											{...params}
-											placeholder="Select teams to remove"
+											placeholder={tr({ id: "match.pickTeamsToRemove" })}
 											variant="outlined"
 											size="small"
 										/>

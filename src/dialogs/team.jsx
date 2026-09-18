@@ -44,13 +44,15 @@ const TeamDialog = ({ open, instance, close, save, handleChange }) => {
 			open={open}
 			onClose={close}>
 			<DialogTitle>
-				{(instance || {}).id ? "Edit Team" : "Create Team"}
+				{(instance || {}).id
+					? tr({ id: "team.editTitle" })
+					: tr({ id: "team.createTitle" })}
 			</DialogTitle>
 			<form>
 				<DialogContent className={classes.root}>
 					<TextField
 						margin="dense"
-						label="Name"
+						label={tr({ id: "name" })}
 						type="text"
 						fullWidth
 						variant="standard"
@@ -62,7 +64,7 @@ const TeamDialog = ({ open, instance, close, save, handleChange }) => {
 					/>
 					<TextField
 						margin="dense"
-						label="Account"
+						label={tr({ id: "Account" })}
 						type="text"
 						fullWidth
 						variant="standard"
@@ -77,10 +79,10 @@ const TeamDialog = ({ open, instance, close, save, handleChange }) => {
 						variant="standard"
 						sx={{ m: 0, minWidth: 120 }}
 						fullWidth>
-						<InputLabel id="role">Role</InputLabel>
+						<InputLabel id="role">{tr({ id: "team.role" })}</InputLabel>
 						<Select
 							labelId="role"
-							label="Role"
+							label={tr({ id: "team.role" })}
 							type="text"
 							name="role"
 							value={role}
@@ -127,7 +129,7 @@ const TeamDialog = ({ open, instance, close, save, handleChange }) => {
 					{!(instance || {}).id && (
 						<TextField
 							margin="dense"
-							label="Password"
+							label={tr({ id: "Password" })}
 							type="password"
 							fullWidth
 							variant="standard"

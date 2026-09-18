@@ -7,6 +7,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayIcon from "@mui/icons-material/PlayArrow";
 import { api } from "../api/commons";
+import { useFetchData } from "../api";
 import { SERVICE_API } from "../config/env";
 import PageToolbar from "../components/page-toolbar";
 import Context from "../context";
@@ -65,11 +66,88 @@ const loadConfig = () => {
 
 const fmt = (n) => (Math.round(n * 100) / 100).toString();
 
+/**
+ * Round picker shown when the page is opened without a round (the sidebar link
+ * has no round in its URL). It used to be a dead-end alert: the standings were
+ * unreachable unless the operator happened to walk in through
+ * Tournaments -> Rounds -> ... first, which is exactly what nobody does while
+ * reading results out loud.
+ *
+ * Uses the endpoints already available to staff: GET /tournament, then
+ * GET /round?eq_tournament_id=.
+ */
+const RoundPicker = ({ onPick }) => {
+	const { formatMessage: tr } = useIntl();
+	const [tournamentId, setTournamentId] = useState("");
+	const { data: tournaments, loading: loadingTournaments } = useFetchData({
+		path: "/tournament",
+		name: "Tournament",
+	});
+	const { data: rounds, loading: loadingRounds } = useFetchData({
+		path: "/round",
+		name: "Round",
+		isFetch: !!tournamentId,
+		config: { params: { eq_tournament_id: tournamentId } },
+	});
+
+	// One tournament: pre-select it, so the operator only picks a round.
+	useEffect(() => {
+		if (!tournamentId && tournaments?.length === 1) {
+			setTournamentId(tournaments[0].id);
+		}
+	}, [tournaments, tournamentId]);
+
+	return (
+		<mui.Box sx={{ p: 3 }}>
+			<mui.Stack spacing={2} sx={{ maxWidth: 560 }}>
+				<mui.Alert severity="info">{tr({ id: "standings.pickRound" })}</mui.Alert>
+				{loadingTournaments && <mui.LinearProgress />}
+				<mui.TextField
+					select
+					size="small"
+					label={tr({ id: "Tournaments" })}
+					value={tournamentId}
+					onChange={(e) => setTournamentId(e.target.value)}
+				>
+					{(tournaments || []).map((item) => (
+						<mui.MenuItem key={item.id} value={item.id}>
+							{item.name}
+						</mui.MenuItem>
+					))}
+				</mui.TextField>
+				{!!tournamentId && (
+					<>
+						{loadingRounds && <mui.LinearProgress />}
+						{!loadingRounds && !rounds?.length && (
+							<mui.Alert severity="warning">
+								{tr({ id: "standings.noRounds" })}
+							</mui.Alert>
+						)}
+						<mui.Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+							{(rounds || []).map((item) => (
+								<mui.Button
+									key={item.id}
+									variant="outlined"
+									onClick={() => onPick(item)}
+								>
+									{item.name}
+								</mui.Button>
+							))}
+						</mui.Stack>
+					</>
+				)}
+			</mui.Stack>
+		</mui.Box>
+	);
+};
+
 const RoundStandings = () => {
 	const { formatMessage: tr } = useIntl();
-	const { round } = useContext(Context);
+	const { round, updateContext } = useContext(Context);
 	const searchParams = useSearch({ strict: false });
-	const roundId = searchParams.roundId || round?.id;
+	// A round picked on this page (below) is remembered in context, exactly as
+	// walking in through the Rounds page would have set it.
+	const roundId = searchParams.roundId || searchParams.round_id || round?.id;
 
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -247,9 +325,10 @@ const RoundStandings = () => {
 	// hook conditional, which React rejects on the next render.
 	if (!roundId) {
 		return (
-			<mui.Box sx={{ p: 3 }}>
-				<mui.Alert severity="info">{tr({ id: "standings.pickRound" })}</mui.Alert>
-			</mui.Box>
+			<>
+				<PageToolbar title={tr({ id: "standings.title" })} />
+				<RoundPicker onPick={(picked) => updateContext({ round: picked })} />
+			</>
 		);
 	}
 

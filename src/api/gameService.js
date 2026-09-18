@@ -1,5 +1,6 @@
 import axios from "axios";
 import { GAME_SERVICE_API } from "../config/env";
+import { redirectToLogin } from "./commons";
 
 // Client for the HEXUDON game service (FastAPI, production/procon26-hexudon).
 // It shares the team-manager JWT (same signing secret) but, unlike the
@@ -13,7 +14,20 @@ gameClient.interceptors.request.use((config) => {
 	return config;
 });
 
-gameClient.interceptors.response.use((response) => response.data);
+gameClient.interceptors.response.use(
+	(response) => response.data,
+	(error) => {
+		// The token is shared with the team-manager, so an expired/revoked one
+		//401s here too. Without this the play screen kept polling every 3 s and
+		// showing the engine's auth error forever instead of sending the team
+		// back to sign in -- handled exactly like the manager client
+		// (shared logic in api/commons.js).
+		if (error.response?.status === 401) {
+			if (!redirectToLogin()) error.handled = true;
+		}
+		return Promise.reject(error);
+	},
+);
 
 export const getGameError = (e) => {
 	const detail = e.response?.data?.detail;
@@ -29,6 +43,10 @@ export const getGameError = (e) => {
 
 // True when the endpoint simply doesn't exist on the running service
 // (used to feature-detect the optional replay/actions-history endpoints).
+// These are the ENGINE's own codes: FastAPI answers 405 for an unrouted method
+// and 404 for an unknown path. It has nothing to do with the team-manager's
+// authorisation codes (those are 403 "forbidden" / 400 "bad id"), so this must
+// not be widened to cover them.
 export const isEndpointMissing = (e) =>
 	e.response?.status === 404 || e.response?.status === 405;
 
@@ -119,16 +137,14 @@ export const getCompetitiveState = (gameId) =>
 export const submitCompetitiveActions = (gameId, day, actions) =>
 	gameClient.post("/game/competitive/actions", { game_id: gameId, day, actions });
 
-// Admin only. Reset a game to agent selection + delete every team's submissions,
-// so the whole match is replayed from scratch. Plain practice = one game per team
-// (call per team game). For a TIMED match, pass `startsAt` (epoch seconds) to
-// re-anchor the schedule to a new Day-1 time; practice games are self-paced so
-// it's ignored.
-export const resetGame = (gameId, startsAt) =>
-	gameClient.post(
-		"/game/reset",
-		startsAt != null ? { game_id: gameId, startsAt } : { game_id: gameId },
-	);
+// NOTE: there is deliberately NO resetGame() here.
+//
+// An admin reset goes through the team-manager -- POST /question/:id/reset
+// (api/question.js) -- which knows whether a question is one shared game or N
+// per-team games, holds the engine's SERVICE token (a group manager's token is
+// not an engine admin), re-anchors `question_data.startsAt`, and does the
+// fan-out server-side. Calling /game/reset from the browser burst one request
+// per team against the engine's 5/s read budget and reported partial resets.
 
 // Team only. Reset your OWN practice game back to agent selection so you can
 // play it again (clears your submissions across all days).

@@ -1,9 +1,11 @@
 import { Paper, Chip, Box, Typography } from "@mui/material";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import { useIntl } from "react-intl";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useApi, useFetchData } from "../api";
+import { api } from "../api/commons";
+import { SERVICE_API } from "../config/env";
 import TeamDialog from "../dialogs/team";
 import { GroupMembersDialog } from "../dialogs/group";
 import PageToolbar from "../components/page-toolbar";
@@ -26,6 +28,8 @@ const Teams = () => {
 	const superadmin = isSuperAdmin(me);
 	const manager = isManager(me);
 	const [selectedTeamIds, setSelectedTeamIds] = useState([]);
+	// The manager's own group name, straight from the group endpoint.
+	const [myGroupName, setMyGroupName] = useState("");
 	const search = useSearch({ strict: false });
 	const { apiCreate, apiEdit, useConfirmDelete } = useApi("/team", "Team");
 	const apiDeleteTeam = useConfirmDelete();
@@ -42,6 +46,23 @@ const Teams = () => {
 			},
 		},
 	});
+
+	useEffect(() => {
+		const groupId = managerGroupId(me);
+		if (!manager || groupId == null) return undefined;
+		let cancelled = false;
+		(async () => {
+			try {
+				const group = await api.get(`${SERVICE_API}/group/${groupId}`);
+				if (!cancelled && group?.name) setMyGroupName(group.name);
+			} catch {
+				/* cosmetic: the member rows' joined group name is the fallback */
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [manager, me]);
 
 	// Predefined colors for chips based on match id
 	const chipColors = [
@@ -211,16 +232,31 @@ const Teams = () => {
 		setCurrentTeam({ ...currentTeam, ...changes });
 	};
 
-	// The manager's own group, for the membership dialog. The list endpoint
-	// already returns only this group's rows, so its name is on any of them.
+	// The manager's own group, for the membership dialog and the page title.
+	//
+	// The JWT carries `group_id` but no group NAME, so it is read from
+	// GET /group/:id (scoped server-side: a manager only ever gets its own).
+	// The member rows' joined `group` is the fallback, and the id is the last
+	// resort -- the manager's OWN account name used to be, which labelled the
+	// page "Nguyen Van A" instead of the school.
 	const myGroup = manager
-		? { id: managerGroupId(me), name: teams.find((t) => t.group)?.group?.name || me?.name }
+		? {
+				id: managerGroupId(me),
+				name:
+					myGroupName ||
+					teams.find((t) => t.group)?.group?.name ||
+					`#${managerGroupId(me)}`,
+			}
 		: null;
 
 	return (
 		<>
 			<PageToolbar
-				title={manager ? tr({ id: "group.myMembers" }) : tr({ id: "Teams" })}
+				title={
+					manager
+						? `${tr({ id: "group.myMembers" })} — ${myGroup?.name ?? ""}`
+						: tr({ id: "Teams" })
+				}
 				showNew={superadmin}
 				showEdit={superadmin && (selectedTeamIds || []).length === 1}
 				showDelete={superadmin && (selectedTeamIds || []).length}

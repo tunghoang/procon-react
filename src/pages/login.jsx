@@ -18,6 +18,7 @@ import { jwtDecode } from "jwt-decode";
 import Context from "../context";
 import { apiSignIn } from "../api";
 import { isStaff } from "../utils/roles";
+import { parseRedirect } from "../utils/redirect";
 
 const Login = () => {
 	const { formatMessage } = useIntl();
@@ -59,10 +60,14 @@ const Login = () => {
 				// fall back to the response fields
 			}
 
-			// Check if there's a redirect URL
-			if (search?.redirect) {
-				const redirectPath = decodeURIComponent(search.redirect);
-				navigate({ to: redirectPath });
+			// Check if there's a redirect URL. It is a location, not a route
+			// name: "/admin/questions?round_id=7" must be navigated as
+			// {to: "/admin/questions", search: {round_id: "7"}}, or the router
+			// looks for a route literally called "…?round_id=7" and renders the
+			// 404 page. parseRedirect also refuses off-site targets.
+			const target = parseRedirect(search?.redirect);
+			if (target) {
+				navigate({ to: target.to, search: target.search });
 			} else if (staff) {
 				navigate({ to: "/tournament" });
 			} else {

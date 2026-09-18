@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import { DashboardNavbar } from "../../components/dashboard-navbar";
 import { useIntl } from "react-intl";
-import { useApi, useFetchData } from "../../api";
-import { UserAnswerDialog, ScoreDataDialog } from "../../dialogs/answer";
+import { useFetchData } from "../../api";
+import { ScoreDataDialog } from "../../dialogs/answer";
 import CardData from "../../components/card-data";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import Context from "../../context";
@@ -34,7 +34,6 @@ const UserQuestion = () => {
 
 	const [dialogName, setDialogName] = useState("");
 	const [currentItem, setCurrentItem] = useState(null);
-	const [payload, setPayload] = useState(null);
 	const { formatMessage: tr } = useIntl();
 	const { data: questions, loading: qloading } = useFetchData({
 		path: "/question",
@@ -45,11 +44,7 @@ const UserQuestion = () => {
 			},
 		},
 	});
-	const {
-		data: answers,
-		refetch,
-		loading: aloading,
-	} = useFetchData({
+	const { data: answers, loading: aloading } = useFetchData({
 		path: "/answer",
 		name: "Answer",
 		config: {
@@ -58,19 +53,13 @@ const UserQuestion = () => {
 			},
 		},
 	});
-	const { apiCreate } = useApi("/answer", "Answer");
-
+	// No POST /answer path here on purpose: HEXUDON teams submit their day
+	// plans straight to the game service from the play screen. The legacy
+	// UserAnswerDialog (a raw answer-JSON form for a previous contest year) had
+	// no way left to open -- nothing ever set dialogName to it -- so it is gone
+	// along with its create call.
 	const closeDialog = () => {
 		setDialogName("");
-	};
-
-	const saveInstance = async () => {
-		const result = await apiCreate(payload);
-		if (result) await refetch();
-		setDialogName("");
-	};
-	const changeInstance = (changes) => {
-		setPayload({ ...payload, ...changes });
 	};
 
 	if (!matchId) {
@@ -83,7 +72,7 @@ const UserQuestion = () => {
 				<Box sx={{ pt: 10, minHeight: "100vh" }} className="UserQuestion">
 					<Container maxWidth="lg">
 						<Typography variant="h5" color="error">
-							Please select a match to view questions
+							{tr({ id: "questions.pickMatch" })}
 						</Typography>
 					</Container>
 				</Box>
@@ -104,7 +93,7 @@ const UserQuestion = () => {
 						verticalAlign: "middle",
 						lineHeight: "300px",
 					}}>
-					No questions available
+					{tr({ id: "questions.none" })}
 				</Typography>
 			);
 
@@ -126,16 +115,19 @@ const UserQuestion = () => {
 									}}>
 									<div className="data-item">
 										<span>ID:</span> {question.id}
-										<Tooltip title="Copy ID">
+										<Tooltip title={tr({ id: "questions.copyId" })}>
 											<IconButton
 												size="small"
 												onClick={(e) => {
 													e.stopPropagation();
 													try {
 														navigator.clipboard.writeText(question.id);
-														showMessage("Copied ID to clipboard!", "success");
+														showMessage(tr({ id: "questions.idCopied" }), "success");
 													} catch (err) {
-														window.prompt("Copy this ID (Ctrl+C, Enter):", question.id);
+														window.prompt(
+															tr({ id: "questions.copyIdPrompt" }),
+															question.id,
+														);
 													}
 												}}
 												sx={{ ml: 0.5 }}
@@ -222,15 +214,6 @@ const UserQuestion = () => {
 					</Grid>
 				</Container>
 			</Box>
-			{dialogName === "UserAnswerDialog" && (
-				<UserAnswerDialog
-					open={dialogName === "UserAnswerDialog"}
-					instance={currentItem}
-					close={closeDialog}
-					save={saveInstance}
-					handleChange={changeInstance}
-				/>
-			)}
 			{dialogName === "ScoreDataDialog" && (
 				<ScoreDataDialog
 					open={dialogName === "ScoreDataDialog"}

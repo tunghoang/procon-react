@@ -17,6 +17,7 @@ import Context from "../../context";
 import CardData from "../../components/card-data";
 import LoadingPage from "../../components/loading-page";
 import { formatDateTime } from "../../utils/commons";
+import { showMessage } from "../../api/commons";
 import TournamentIcon from "@mui/icons-material/EmojiEvents";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
@@ -60,11 +61,16 @@ const Competition = () => {
 				</Typography>
 			);
 
-		// Group matches by tournament and round
+		// Group matches by tournament and round.
+		// `round`/`round.tournament` are joined rows: a match whose round was
+		// deleted (or which the list endpoint returned without the join) has
+		// neither, and dereferencing them threw -- blanking the team's whole
+		// match list instead of hiding one card.
 		const grouped = {};
 		activeMatches.forEach((match) => {
-			const tournamentName = match.round.tournament.name;
-			const roundName = match.round.name;
+			const tournamentName =
+				match.round?.tournament?.name || tr({ id: "competition.unknownTournament" });
+			const roundName = match.round?.name || tr({ id: "competition.unknownRound" });
 			const key = `${tournamentName}|||${roundName}`;
 
 			if (!grouped[key]) {
@@ -99,8 +105,15 @@ const Competition = () => {
 				<Grid container spacing={3}>
 					{group.matches.map((match) => {
 						const openMatch = () => {
-							const matchTournamentId = match.round.tournament.id;
-							const matchRoundId = match.round.id;
+							const matchTournamentId = match.round?.tournament?.id;
+							const matchRoundId = match.round?.id;
+							// Without the round/tournament ids there is no questions
+							// URL to build; say so instead of navigating to
+							// "/tournament/undefined/...".
+							if (!matchTournamentId || !matchRoundId) {
+								showMessage(tr({ id: "competition.matchUnavailable" }), "warning", 5000);
+								return;
+							}
 							navigate({
 								to: `/tournament/$tournamentId/round/$roundId/match/$matchId/questions`,
 								params: {

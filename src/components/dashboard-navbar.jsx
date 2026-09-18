@@ -43,13 +43,21 @@ export const DashboardNavbar = (props) => {
 	const { formatMessage: tr } = useIntl();
 	const navigate = useNavigate();
 	const [dialogName, setDialogName] = useState("");
-	const [password, setPassword] = useState({ password: "" });
+	// `current_password` is required by PUT /team/password when an account
+	// changes its OWN password.
+	const [password, setPassword] = useState({
+		current_password: "",
+		password: "",
+	});
 
 	const handleCheckTime = async () => {
 		try {
 			const res = await api.get(`${SERVICE_API}/question/time`);
 			showMessage(
-				`Ping: ${Math.abs(Date.now() - new Date(res.time))} ms`,
+				tr(
+					{ id: "nav.pingResult" },
+					{ ms: Math.abs(Date.now() - new Date(res.time)) },
+				),
 				"success",
 				2000,
 			);
@@ -58,25 +66,33 @@ export const DashboardNavbar = (props) => {
 		}
 	};
 
+	const emptyPassword = { current_password: "", password: "" };
+
 	const closeDialog = () => {
-		setPassword({ password: "" });
+		setPassword(emptyPassword);
 		setDialogName("");
 	};
 
 	const savePassword = async () => {
 		try {
-			await api.put(`${SERVICE_API}/team/password`, password);
-			showMessage("Changed password successfully", "success", 2000);
-		} catch (e) {
-			showMessage(getError(e), "error");
-		} finally {
-			setPassword({ password: "" });
+			// Exactly {current_password, password}: the endpoint verifies the
+			// current one before writing the new hash.
+			await api.put(`${SERVICE_API}/team/password`, {
+				current_password: password.current_password,
+				password: password.password,
+			});
+			showMessage(tr({ id: "password.changed" }), "success", 2000);
+			setPassword(emptyPassword);
 			setDialogName("");
+		} catch (e) {
+			// Keep the dialog open on a wrong current password so the user can
+			// retype it instead of reopening and starting over.
+			showMessage(getError(e), "error");
 		}
 	};
 
-	const changePassword = (password) => {
-		setPassword(password);
+	const changePassword = (changes) => {
+		setPassword((prev) => ({ ...prev, ...changes }));
 	};
 
 	const toggleSidebar = () => {
@@ -131,7 +147,7 @@ export const DashboardNavbar = (props) => {
 									// prompt instead of a clipboard call that may or may not
 									// actually work.
 									const token = localStorage.getItem("token");
-									window.prompt("Copy this token (Ctrl+C, Enter):", token || "");
+									window.prompt(tr({ id: "nav.copyTokenPrompt" }), token || "");
 								}}>
 								<VpnKeyIcon />
 							</IconButton>
@@ -213,6 +229,7 @@ export const DashboardNavbar = (props) => {
 				close={closeDialog}
 				save={savePassword}
 				handleChange={changePassword}
+				requireCurrent
 			/>
 		</>
 	);

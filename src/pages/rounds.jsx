@@ -11,7 +11,7 @@ import { DashboardNavbar } from "../components/dashboard-navbar";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
 import { apiBulkAddTeams, apiBulkRemoveTeams } from "../api/match";
-import { api } from "../api/commons";
+import { api, getError, showMessage } from "../api/commons";
 import { SERVICE_API } from "../config/env";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import Context from "../context";
@@ -21,6 +21,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CardData from "../components/card-data";
 import LoadingPage from "../components/loading-page";
 import { isSuperAdmin, isStaff } from "../utils/roles";
+import { sharedGroupId } from "../utils/match-group";
 
 const Rounds = () => {
 	const { tournamentId } = useParams({ strict: false });
@@ -66,54 +67,70 @@ const Rounds = () => {
 	const handleManageTeams = async (round) => {
 		setSelectedRound(round);
 		setLoadingMatches(true);
+		let matches = null;
 		try {
 			const response = await api.get(
 				`${SERVICE_API}/match`,
 				{ params: { eq_round_id: round.id } }
 			);
-			setRoundMatches(response.data || []);
+			matches = response.data || [];
 		} catch (error) {
-			console.error("Failed to fetch matches:", error);
-			setRoundMatches([]);
+			// A silent console.error left the dialog open and claiming the round
+			// had no matches, which reads as "nothing to roster" rather than
+			// "the request failed".
+			showMessage(getError(error), "error", 6000);
 		}
 		setLoadingMatches(false);
+		if (matches === null) {
+			setRoundMatches([]);
+			return;
+		}
+		// This dialog adds the SAME teams to EVERY match in the round, so a
+		// round whose matches belong to different groups has no valid roster at
+		// all -- the backend would reject the batch as a whole. Refuse before
+		// opening, exactly as the Matches page's bulk dialog does.
+		const { mixed } = sharedGroupId(matches);
+		if (mixed) {
+			setRoundMatches([]);
+			showMessage(tr({ id: "roundTeams.mixedGroups" }), "warning", 8000);
+			return;
+		}
+		setRoundMatches(matches);
 		setShowTeamsDialog(true);
 	};
 
-	const handleBulkAddTeams = async (teams) => {
-		if (!roundMatches.length || !teams.length) return;
-
+	/** Re-read the round's matches so the dialog shows the new rosters. */
+	const reloadRoundMatches = async () => {
+		if (!selectedRound?.id) return;
 		try {
-			const matchIds = roundMatches.map((m) => m.id);
-			const teamIds = teams.map((t) => t.id);
-			await apiBulkAddTeams(matchIds, teamIds);
-			// Refetch matches to update the dialog
 			const response = await api.get(
 				`${SERVICE_API}/match`,
 				{ params: { eq_round_id: selectedRound.id } }
 			);
 			setRoundMatches(response.data || []);
 		} catch (error) {
-			console.error("Failed to add teams:", error);
+			showMessage(getError(error), "error", 6000);
 		}
+	};
+
+	// api/match.js already toasts the outcome (including a 502 partial sync and
+	// any staff accounts the backend skipped), so these only have to refresh --
+	// and say so when the refresh itself fails, instead of a console.error
+	// nobody sees.
+	const handleBulkAddTeams = async (teams) => {
+		if (!roundMatches.length || !teams.length) return;
+		const matchIds = roundMatches.map((m) => m.id);
+		const teamIds = teams.map((t) => t.id);
+		await apiBulkAddTeams(matchIds, teamIds);
+		await reloadRoundMatches();
 	};
 
 	const handleBulkRemoveTeams = async (teams) => {
 		if (!roundMatches.length || !teams.length) return;
-
-		try {
-			const matchIds = roundMatches.map((m) => m.id);
-			const teamIds = teams.map((t) => t.id);
-			await apiBulkRemoveTeams(matchIds, teamIds);
-			// Refetch matches to update the dialog
-			const response = await api.get(
-				`${SERVICE_API}/match`,
-				{ params: { eq_round_id: selectedRound.id } }
-			);
-			setRoundMatches(response.data || []);
-		} catch (error) {
-			console.error("Failed to remove teams:", error);
-		}
+		const matchIds = roundMatches.map((m) => m.id);
+		const teamIds = teams.map((t) => t.id);
+		await apiBulkRemoveTeams(matchIds, teamIds);
+		await reloadRoundMatches();
 	};
 
 	if (loading) return <LoadingPage />;
@@ -219,6 +236,9 @@ const Rounds = () => {
 				roundName={selectedRound?.name}
 				matches={roundMatches}
 				loading={loadingMatches}
+				// Every match in the round shares this group (a mixed round never
+				// opens the dialog), so the candidate list can be narrowed to it.
+				groupId={sharedGroupId(roundMatches).groupId}
 				handleAdd={handleBulkAddTeams}
 				handleRemove={handleBulkRemoveTeams}
 			/>

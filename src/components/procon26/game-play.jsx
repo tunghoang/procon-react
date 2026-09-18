@@ -27,6 +27,8 @@ import {
 } from "../../api/gameService";
 import { api, showMessage } from "../../api/commons";
 import { formatCountdown } from "../../utils/commons";
+import { submittedKindsOf } from "../../utils/agent-kinds";
+import { initialConfigMemo, planConfigRefetch } from "../../utils/config-refetch";
 import { SERVICE_API } from "../../config/env";
 import { validatePlan } from "./game-handler";
 import HexBoard from "./hex-board";
@@ -40,6 +42,10 @@ import LoadingPage from "../loading-page";
 import { isStaff } from "../../utils/roles";
 
 const POLL_MS = 3000;
+// A finished match never changes again: keep a tab open on the final standings
+// without spending the engine's per-token read budget every 3 s (that budget is
+// shared with the teams still playing other questions).
+const FINISHED_POLL_MS = 30000;
 
 // Epoch seconds -> local clock time (matches the answers dialog's format).
 const formatClock = (epochSeconds) =>
@@ -107,6 +113,10 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	const ownTeamId = decodedTeam?.id !== undefined ? String(decodedTeam.id) : null;
 
 	const [questionConfig, setQuestionConfig] = useState(null); // parsed question_data
+	const [matchId, setMatchId] = useState(null); // the question's match, for the roster
+	// {teamId: name} from the match roster, so standings and the spectator list
+	// show team NAMES instead of raw engine ids.
+	const [teamNames, setTeamNames] = useState({});
 	const [teamConfig, setTeamConfig] = useState(null); // GET /game/config (team only)
 	const [state, setState] = useState(null);
 	const [dayInfo, setDayInfo] = useState(null); // GET /game/day (team only)
@@ -153,9 +163,13 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 				// Single-object endpoint: api.get returns the body directly
 				// (doGet's extra .data unwrap is for {count, data} lists only).
 				const question = await api.get(`${SERVICE_API}/question/${gameId}`);
-				if (!cancelled && question?.question_data) {
+				if (cancelled) return;
+				if (question?.question_data) {
 					setQuestionConfig(JSON.parse(question.question_data));
 				}
+				// Keep the match id: its roster is the only place team NAMES
+				// exist (the engine speaks ids only).
+				if (question?.match_id) setMatchId(question.match_id);
 			} catch (e) {
 				if (!cancelled) setLoadError(e.response?.data?.message || e.message);
 			}
@@ -165,11 +179,54 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 		};
 	}, [gameId, mapConfigOverride]);
 
-	// Team-only /game/config (own agents). Retried while it hasn't loaded (the
-	// effect re-runs on each state poll) so a transient failure never strands
-	// the selection panel; admins never call it (it 403s for them).
+	// Match roster -> team names. Same call the practice screen already makes
+	// (pages/user/game.jsx); failure is tolerated because names are cosmetic --
+	// the tables fall back to the engine's ids.
 	useEffect(() => {
-		if (isAdmin || teamConfig || !gameId) return undefined;
+		if (!matchId) return undefined;
+		let cancelled = false;
+		(async () => {
+			try {
+				const match = await api.get(`${SERVICE_API}/match/${matchId}`);
+				if (cancelled) return;
+				const names = {};
+				(match?.teams || []).forEach((entry) => {
+					names[String(entry.id)] = entry.name;
+				});
+				setTeamNames(names);
+			} catch {
+				/* names are cosmetic: fall back to raw team ids */
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [matchId]);
+
+	// Team-only /game/config (own agents). Admins never call it (it 403s).
+	//
+	// Re-fetched on EVERY state poll while it hasn't loaded (so a transient
+	// failure never strands the selection panel) AND while the payload is still
+	// the redacted `{board_withheld: true}` one. Fetching it once was the P0:
+	// the config is served redacted during the lead-in, the board is published
+	// when the pre-match window opens, and a screen that never asked again kept
+	// the plan editor hidden and then dereferenced the missing `map` at Day 1 --
+	// a blank page until the team pressed F5.
+	//
+	// The decision itself lives in utils/config-refetch.js (with a node test):
+	// storing a config re-runs this effect, so "re-ask once per poll while
+	// withheld" is easy to turn into a request-per-render loop.
+	const configMemo = useRef(initialConfigMemo());
+	useEffect(() => {
+		const { fetch: shouldFetch, memo } = planConfigRefetch({
+			isAdmin,
+			gameId,
+			teamConfig,
+			state,
+			memo: configMemo.current,
+		});
+		configMemo.current = memo;
+		if (!shouldFetch) return undefined;
 		let cancelled = false;
 		getGameConfig(gameId)
 			.then((cfg) => {
@@ -236,11 +293,15 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 		}
 	}, [gameId, isAdmin]);
 
+	// Poll cadence: 3 s while anything can still change, 30 s once the match is
+	// finished (state AND result are then frozen, so the fast poll bought
+	// nothing and cost every other team's rate-limit budget).
+	const pollMs = state?.status === "finished" ? FINISHED_POLL_MS : POLL_MS;
 	useEffect(() => {
 		refreshState();
-		const timer = setInterval(refreshState, POLL_MS);
+		const timer = setInterval(refreshState, pollMs);
 		return () => clearInterval(timer);
-	}, [refreshState]);
+	}, [refreshState, pollMs]);
 
 	// --- optional history endpoints (feature-detected) -------------------------
 	useEffect(() => {
@@ -296,20 +357,26 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 	//
 	// The selection deadline comes from the ENGINE (state.selection_deadline_in,
 	// re-anchored per poll like dayEndsAt) so it always matches the window the
-	// engine actually enforces. Only if the service doesn't send it do we derive
-	// it from the config -- and then from a REAL configured limit, never an
-	// invented default: the old `?? 60` silently counted 60 s on any game whose
-	// stored init body omitted agent_selection_time_limit, regardless of what
-	// the match was configured with.
+	// engine actually enforces; the fallback below uses the config's own
+	// startsAt.
+	//
+	// `configuredSelectionSeconds` is only the window's LENGTH, used to say when
+	// the board goes out (startsAt - N). It stays null when the stored init body
+	// omits agent_selection_time_limit rather than inventing a 60 s default,
+	// which used to be displayed as if it were configured.
 	const configuredSelectionSeconds =
 		mapConfig?.agent_selection_time_limit ??
 		questionConfig?.agent_selection_time_limit ??
 		null;
+	// The window is [startsAt - N, startsAt): it CLOSES at startsAt, which is
+	// when Day 1 opens. The old fallback added the limit instead of subtracting
+	// it, so a service that didn't send selection_deadline_in showed a window
+	// running N seconds past the moment the engine had already closed it.
 	const selectionEndsAt =
 		selectionDeadlineAt ??
-		(questionConfig && configuredSelectionSeconds !== null
-			? questionConfig.startsAt + configuredSelectionSeconds
-			: null);
+		questionConfig?.startsAt ??
+		mapConfig?.startsAt ??
+		null;
 	// Read per poll, not per second: a 1 s tick in GamePlay would re-render the
 	// whole board (CountdownChip is a separate component for exactly that
 	// reason). Worst case the picker unlocks one poll late; the engine is the
@@ -466,6 +533,12 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 								onSubmit={handleKinds}
 								submitting={submitting}
 								opensIn={state.selection_opens_in ?? 0}
+								// Start from what the engine already holds for this
+								// team, not from all-patrol: selection can be
+								// re-sent until the window closes. /game/state
+								// spells the kinds "patrol"/"refuel", so the
+								// conversion goes through utils/agent-kinds.js.
+								submittedKinds={submittedKindsOf(ownTeamState)}
 							/>
 						) : (
 							<LoadingPage />
@@ -482,7 +555,15 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 					</Alert>
 				)}
 
-				{state.status === "in_progress" && !isAdmin && dayInformation && (
+				{/* The board is published when the pre-match window opens, but a
+				    team can be sitting on the redacted config for one more poll
+				    when Day 1 starts. Say so instead of mounting an editor that
+				    has no map to validate against. */}
+				{state.status === "in_progress" && !isAdmin && boardWithheld && (
+					<Alert severity="info">{tr({ id: "hexudon.boardLoading" })}</Alert>
+				)}
+
+				{state.status === "in_progress" && !isAdmin && !boardWithheld && dayInformation && (
 					dayInformation.agents.length ? (
 						<PlanEditor
 							mapConfig={mapConfig}
@@ -509,7 +590,12 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 						{Object.entries(state.teams || {}).map(([teamId, teamState]) => (
 							<Box key={teamId}>
 								<Typography variant="body2">
-									<b>{tr({ id: "hexudon.standings.team" })} {teamId}</b>
+									{/* Name from the match roster; the engine only knows
+									    ids, and "Team 37" means nothing on a projector. */}
+									<b>
+										{tr({ id: "hexudon.standings.team" })}{" "}
+										{teamNames[String(teamId)] || teamId}
+									</b>
 									{" — "}
 									{tr({ id: "hexudon.standings.distinct" })}:{" "}
 									{(teamState.distinct_types || []).length},{" "}
@@ -534,14 +620,14 @@ const GamePlay = ({ gameId, mapConfigOverride = null }) => {
 								<Typography variant="subtitle2" sx={{ pt: 1 }}>
 									{tr({ id: "hexudon.standings.live" })}
 								</Typography>
-								<Standings result={result} ownTeamId={null} />
+								<Standings result={result} ownTeamId={null} teamNames={teamNames} />
 							</>
 						)}
 					</Stack>
 				)}
 
 				{state.status === "finished" && (
-					<Standings result={result} ownTeamId={ownTeamId} />
+					<Standings result={result} ownTeamId={ownTeamId} teamNames={teamNames} />
 				)}
 			</Paper>
 

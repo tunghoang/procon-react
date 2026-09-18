@@ -17,6 +17,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useIntl } from "react-intl";
 import { useFetchData } from "../api";
+import { isPlayerAccount } from "../utils/roles";
 import { useState } from "react";
 
 const BulkAddTeamsToRoundDialog = ({
@@ -27,6 +28,11 @@ const BulkAddTeamsToRoundDialog = ({
 	loading = false,
 	handleAdd,
 	handleRemove,
+	// The group every match in this round belongs to, or null when they are all
+	// ungrouped. The caller refuses to open the dialog for a round whose
+	// matches MIX groups (there is no roster that would be valid for all of
+	// them), so a single id is enough here.
+	groupId = null,
 }) => {
 	const { formatMessage: tr } = useIntl();
 	const { data: allTeams } = useFetchData({ path: "/team", name: "Team" });
@@ -43,8 +49,15 @@ const BulkAddTeamsToRoundDialog = ({
 		return matches.every((match) => match.teams?.some((t) => t.id === team.id));
 	});
 
+	// Same two rules as the per-match dialog: a group match only takes that
+	// group's members, and STAFF accounts can never be rostered (the backend
+	// filters them out of a bulk add and names them in `skipped_staff`), so
+	// neither belongs in the picker.
 	const availableTeams = allTeams.filter(
-		(team) => !teamsInAllMatches.find((t) => t.id === team.id)
+		(team) =>
+			isPlayerAccount(team) &&
+			!teamsInAllMatches.find((t) => t.id === team.id) &&
+			(groupId == null || Number(team.group_id) === Number(groupId))
 	);
 
 	const handleAddTeams = async () => {
@@ -88,8 +101,18 @@ const BulkAddTeamsToRoundDialog = ({
 						{/* Info about matches */}
 						<Box>
 							<Typography variant="body2" color="text.secondary">
-								Round này có <strong>{matches.length}</strong> match(es). Teams
-								được chọn sẽ được thêm vào tất cả các matches.
+								{/* The ONLY rich-text message in the app: `roundTeams.intro`
+								    carries a <b> tag, so it must be formatted by a
+								    component's own `useIntl()` (which can build React
+								    elements) and never by the standalone `t()` helper in
+								    src/i18n.js -- that one returns a plain string. */}
+								{tr(
+									{ id: "roundTeams.intro" },
+									{
+										count: matches.length,
+										b: (chunks) => <strong key="n">{chunks}</strong>,
+									},
+								)}
 							</Typography>
 							{matches.length > 0 && (
 								<Box sx={{ mt: 1 }}>
@@ -101,9 +124,10 @@ const BulkAddTeamsToRoundDialog = ({
 										{matches.map((match) => (
 											<Chip
 												key={match.id}
-												label={`${match.name} (${
-													match.teams?.length || 0
-												} teams)`}
+												label={`${match.name} (${tr(
+													{ id: "match.teamCount" },
+													{ count: match.teams?.length || 0 },
+												)})`}
 												size="small"
 												variant="outlined"
 												sx={{ mb: 0.5 }}
@@ -122,7 +146,7 @@ const BulkAddTeamsToRoundDialog = ({
 								alignItems="center"
 								sx={{ mb: 1 }}>
 								<Typography variant="subtitle2" color="primary">
-									➕ Thêm teams vào tất cả matches:
+									➕ {tr({ id: "roundTeams.addToAll" })}
 								</Typography>
 								<Stack direction="row" spacing={1}>
 									{selectedTeamsToAdd.length < availableTeams.length &&
@@ -131,7 +155,7 @@ const BulkAddTeamsToRoundDialog = ({
 												size="small"
 												variant="outlined"
 												onClick={() => setSelectedTeamsToAdd(availableTeams)}>
-												Select All ({availableTeams.length})
+												{tr({ id: "selectAll" }, { count: availableTeams.length })}
 											</Button>
 										)}
 									{selectedTeamsToAdd.length > 0 && (
@@ -140,7 +164,7 @@ const BulkAddTeamsToRoundDialog = ({
 											variant="outlined"
 											color="secondary"
 											onClick={() => setSelectedTeamsToAdd([])}>
-											Deselect All
+											{tr({ id: "deselectAll" })}
 										</Button>
 									)}
 								</Stack>
@@ -169,7 +193,10 @@ const BulkAddTeamsToRoundDialog = ({
 												<Typography variant="body2">{option.name}</Typography>
 												{matchCount > 0 && (
 													<Typography variant="caption" color="text.secondary">
-														Đã có trong {matchCount}/{matches.length} matches
+														{tr(
+															{ id: "roundTeams.alreadyIn" },
+															{ count: matchCount, total: matches.length },
+														)}
 													</Typography>
 												)}
 											</Box>
@@ -179,7 +206,7 @@ const BulkAddTeamsToRoundDialog = ({
 								renderInput={(params) => (
 									<TextField
 										{...params}
-										placeholder="Chọn teams để thêm..."
+										placeholder={tr({ id: "roundTeams.pickToAdd" })}
 										variant="outlined"
 										size="small"
 									/>
@@ -193,7 +220,7 @@ const BulkAddTeamsToRoundDialog = ({
 									color="primary"
 									size="small"
 									onClick={handleAddTeams}>
-									{tr({ id: "Add" })} ({selectedTeamsToAdd.length}) teams
+									{tr({ id: "Add" })} ({selectedTeamsToAdd.length})
 								</Button>
 							)}
 						</Box>
@@ -209,7 +236,7 @@ const BulkAddTeamsToRoundDialog = ({
 										alignItems="center"
 										sx={{ mb: 1 }}>
 										<Typography variant="subtitle2" color="error">
-											➖ Xóa teams khỏi tất cả matches:
+											➖ {tr({ id: "roundTeams.removeFromAll" })}
 										</Typography>
 										<Stack direction="row" spacing={1}>
 											{selectedTeamsToRemove.length <
@@ -221,7 +248,7 @@ const BulkAddTeamsToRoundDialog = ({
 													onClick={() =>
 														setSelectedTeamsToRemove(teamsInAnyMatch)
 													}>
-													Select All ({teamsInAnyMatch.length})
+													{tr({ id: "selectAll" }, { count: teamsInAnyMatch.length })}
 												</Button>
 											)}
 											{selectedTeamsToRemove.length > 0 && (
@@ -230,7 +257,7 @@ const BulkAddTeamsToRoundDialog = ({
 													variant="outlined"
 													color="secondary"
 													onClick={() => setSelectedTeamsToRemove([])}>
-													Deselect All
+													{tr({ id: "deselectAll" })}
 												</Button>
 											)}
 										</Stack>
@@ -266,7 +293,10 @@ const BulkAddTeamsToRoundDialog = ({
 															color={
 																isInAll ? "success.main" : "text.secondary"
 															}>
-															Có trong {matchCount}/{matches.length} matches
+															{tr(
+																{ id: "roundTeams.inMatches" },
+																{ count: matchCount, total: matches.length },
+															)}
 															{isInAll && " ✓"}
 														</Typography>
 													</Box>
@@ -276,7 +306,7 @@ const BulkAddTeamsToRoundDialog = ({
 										renderInput={(params) => (
 											<TextField
 												{...params}
-												placeholder="Chọn teams để xóa..."
+												placeholder={tr({ id: "roundTeams.pickToRemove" })}
 												variant="outlined"
 												size="small"
 											/>
@@ -292,7 +322,6 @@ const BulkAddTeamsToRoundDialog = ({
 											startIcon={<DeleteIcon />}
 											onClick={handleRemoveTeams}>
 											{tr({ id: "Remove" })} ({selectedTeamsToRemove.length})
-											teams
 										</Button>
 									)}
 								</Box>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Chip, Stack, TextField, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
-import { projectFuelNoRefuel, validatePlan } from "./game-handler";
+import { hasBoard, projectFuelNoRefuel, validatePlan } from "./game-handler";
 
 /**
  * Official day-plan editor. The plan is entered directly as `number[][]` (one
@@ -32,6 +32,11 @@ const PlanEditor = ({
 	const [jsonError, setJsonError] = useState(null);
 
 	const agents = dayInformation?.agents || [];
+	// A team's /game/config is redacted until the board is published, so the
+	// editor can be mounted with no map at all (e.g. the very first render of
+	// Day 1, before the re-fetched config has arrived). Everything below reads
+	// mapConfig.map, so bail out with a placeholder rather than throwing.
+	const boardReady = hasBoard(mapConfig);
 
 	const validation = useMemo(
 		() => validatePlan(mapConfig, dayInformation, plan, requiredSteps),
@@ -82,6 +87,10 @@ const PlanEditor = ({
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [plan]);
+
+	if (!boardReady) {
+		return <Alert severity="info">{tr({ id: "hexudon.boardLoading" })}</Alert>;
+	}
 
 	return (
 		<Stack spacing={1.5}>

@@ -3,6 +3,7 @@ import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useIntl } from "react-intl";
 import { getPracticeScore, getGameError } from "../../api/gameService";
+import { runPool, withRetryOn429 } from "../../utils/pool";
 import Standings from "./standings";
 
 const ZERO = {
@@ -28,6 +29,9 @@ const PracticeLeaderboard = ({ questionId, teams = [], ownTeamId = null }) => {
 	const [detail, setDetail] = useState({});
 	const [error, setError] = useState(null);
 	const [loading, setLoading] = useState(false);
+	// Set while a request is waiting out a 429's Retry-After, so the board says
+	// "rate limited, retrying" instead of quietly showing someone a zero.
+	const [throttled, setThrottled] = useState(false);
 
 	const teamNames = useMemo(() => {
 		const m = {};
@@ -40,24 +44,31 @@ const PracticeLeaderboard = ({ questionId, teams = [], ownTeamId = null }) => {
 	const load = useCallback(async () => {
 		if (!teams.length) return;
 		setLoading(true);
+		setThrottled(false);
 		const merged = {};
 		let firstError = null;
-		await Promise.all(
-			teams.map(async (t) => {
-				const tid = String(t.id);
-				try {
-					const res = await getPracticeScore(`${questionId}:${tid}`);
-					merged[tid] = res?.detail?.[tid] || { ...ZERO };
-				} catch (e) {
-					// A team that hasn't started yet (game missing / still selecting)
-					// simply ranks with zeros rather than dropping off the board.
-					merged[tid] = { ...ZERO };
-					if (!firstError) firstError = getGameError(e);
-				}
-			}),
-		);
+		// One request per team, but at most 3 in flight: the engine's read
+		// budget is 5/s (burst 10) per token, so a `Promise.all` over a 12-team
+		// roster came back part-429 and every throttled team showed as zeros --
+		// i.e. a WRONG leaderboard, not just a slow one.
+		await runPool(teams, async (t) => {
+			const tid = String(t.id);
+			try {
+				const res = await withRetryOn429(
+					() => getPracticeScore(`${questionId}:${tid}`),
+					{ onRateLimited: () => setThrottled(true) },
+				);
+				merged[tid] = res?.detail?.[tid] || { ...ZERO };
+			} catch (e) {
+				// A team that hasn't started yet (game missing / still selecting)
+				// simply ranks with zeros rather than dropping off the board.
+				merged[tid] = { ...ZERO };
+				if (!firstError) firstError = getGameError(e);
+			}
+		});
 		setDetail(merged);
 		setError(firstError);
+		setThrottled(false);
 		setLoading(false);
 	}, [questionId, teams]);
 
@@ -96,6 +107,9 @@ const PracticeLeaderboard = ({ questionId, teams = [], ownTeamId = null }) => {
 					{tr({ id: "practice.spectate.refresh" })}
 				</Button>
 			</Stack>
+			{throttled && (
+				<Alert severity="info">{tr({ id: "hexudon.rateLimited" })}</Alert>
+			)}
 			{error && <Alert severity="warning">{error}</Alert>}
 			<Standings result={result} ownTeamId={ownTeamId} teamNames={teamNames} />
 		</Stack>

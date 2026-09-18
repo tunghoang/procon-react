@@ -11,6 +11,7 @@ import PracticePlay from "../../components/procon26/practice-play";
 import PracticeSpectate from "../../components/procon26/practice-spectate";
 import CompetitivePracticePlay from "../../components/procon26/competitive-play";
 import LoadingPage from "../../components/loading-page";
+import ErrorBoundary from "../../components/error-boundary";
 import { api, showMessage } from "../../api/commons";
 import { SERVICE_API } from "../../config/env";
 import { copyText } from "../../utils/commons";
@@ -155,9 +156,15 @@ const UserGame = () => {
 						</Tooltip>
 					</Stack>
 
-					{!gameId && <Typography color="error">Missing game id</Typography>}
+					{!gameId && (
+						<Typography color="error">{tr({ id: "hexudon.missingId" })}</Typography>
+					)}
 					{gameId && loadError && <Alert severity="error">{loadError}</Alert>}
 					{gameId && !loadError && !meta && <LoadingPage />}
+					{/* Any render-time throw below used to blank the whole page
+					    (no navbar, no way back) mid-match; the boundary turns it
+					    into a message with a reload button. */}
+					<ErrorBoundary>
 					{/* Timed competitive: one shared game. */}
 					{gameId && meta && !meta.isPractice && <GamePlay gameId={gameId} />}
 					{/* Competitive practice: ONE shared self-paced timeline (bare
@@ -188,6 +195,7 @@ const UserGame = () => {
 								noReset={false}
 							/>
 						))}
+					</ErrorBoundary>
 				</Container>
 			</Box>
 		</>

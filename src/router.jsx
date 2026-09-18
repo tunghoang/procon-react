@@ -4,6 +4,7 @@ import {
 	createRoute,
 	redirect,
 	Outlet,
+	useRouterState,
 } from "@tanstack/react-router";
 import Tournaments from "./pages/tournaments";
 import Matches from "./pages/matches";
@@ -14,7 +15,6 @@ import Questions from "./pages/questions";
 import Answers from "./pages/answers";
 import ScoreSummary from "./pages/score-summary";
 import RoundStandings from "./pages/round-standings";
-import Reset from "./pages/reset";
 import Login from "./pages/login";
 import NotFound from "./pages/not-found";
 import Forbidden from "./pages/forbidden";
@@ -24,6 +24,7 @@ import UserGame from "./pages/user/game";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { DashboardLayout } from "./components/dashboard-layout";
 import { RequireAdmin } from "./components/require-admin";
+import ErrorBoundary from "./components/error-boundary";
 
 // Root route
 const rootRoute = createRootRoute({
@@ -36,14 +37,29 @@ const rootRoute = createRootRoute({
 	notFoundComponent: NotFound,
 });
 
+/** The admin pages, each mounted behind its own error boundary instance. */
+const AdminOutlet = () => {
+	const pathname = useRouterState({ select: (state) => state.location.pathname });
+	return (
+		<ErrorBoundary key={pathname}>
+			<Outlet />
+		</ErrorBoundary>
+	);
+};
+
 // Admin layout route
 const adminLayoutRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: "admin-layout",
+	// The boundary sits INSIDE the layout so a page-level render error keeps
+	// the sidebar and navbar (i.e. a way out) instead of blanking the console
+	// mid-match, which is what a throw in questions.jsx/matches.jsx used to do.
+	// `key` resets it on navigation: without that, one broken page would keep
+	// showing the fallback after the admin moved to a working one.
 	component: () => (
 		<RequireAdmin>
 			<DashboardLayout>
-				<Outlet />
+				<AdminOutlet />
 			</DashboardLayout>
 		</RequireAdmin>
 	),
@@ -166,12 +182,6 @@ const adminRoundStandingsRoute = createRoute({
 	component: RoundStandings,
 });
 
-const adminResetRoute = createRoute({
-	getParentRoute: () => adminLayoutRoute,
-	path: "/admin/reset",
-	component: Reset,
-});
-
 // Special routes
 const forbiddenRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -220,7 +230,6 @@ const routeTree = rootRoute.addChildren([
 		adminAnswersRoute,
 		adminScoreSummaryRoute,
 		adminRoundStandingsRoute,
-		adminResetRoute,
 	]),
 	forbiddenRoute,
 	notFoundRoute,

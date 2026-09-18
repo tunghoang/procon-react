@@ -9,7 +9,7 @@ import { useParams, useSearch } from "@tanstack/react-router";
 import { useContext, useState } from "react";
 import { useIntl } from "react-intl";
 import { useApi, useFetchData } from "../api";
-import { api } from "../api/commons";
+import { api, showMessage } from "../api/commons";
 import { apiBulkAddTeams, apiBulkRemoveTeams } from "../api/match";
 import { SERVICE_API } from "../config/env";
 import DataTable from "../components/DataTable/data-table";
@@ -19,6 +19,108 @@ import { ManageTeamMatchDialog, MatchDialog } from "../dialogs/match";
 import { formatDateTime } from "../utils/commons";
 import { TimeIs } from "../components/time-is";
 import { isStaff, isSuperAdmin } from "../utils/roles";
+import { sharedGroupId } from "../utils/match-group";
+
+// Generate diverse color based on team id
+const getTeamColor = (id) => {
+	const colors = [
+		"#1976d2", // blue
+		"#d32f2f", // red
+		"#388e3c", // green
+		"#f57c00", // orange
+		"#7b1fa2", // purple
+		"#0097a7", // cyan
+		"#c2185b", // pink
+		"#5d4037", // brown
+		"#455a64", // blue grey
+		"#00897b", // teal
+		"#6a1b9a", // deep purple
+		"#303f9f", // indigo
+	];
+	return colors[id % colors.length];
+};
+
+// Teams Cell Component with Popover.
+// Defined at module level: as an inner function of <Matches> it was a NEW
+// component type on every render, so React threw away the popover's state
+// (and its DOM) each time the table re-rendered.
+const TeamsCell = ({ teams }) => {
+	const { formatMessage: tr } = useIntl();
+	const [anchorEl, setAnchorEl] = useState(null);
+
+	if (!teams || teams.length === 0) {
+		return (
+			<mui.Typography
+				variant="caption"
+				sx={{
+					color: "error.main",
+					fontWeight: "bold",
+				}}>
+				{tr({ id: "match.noTeams" })}
+			</mui.Typography>
+		);
+	}
+
+	const handlePopoverOpen = (event) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handlePopoverClose = () => {
+		setAnchorEl(null);
+	};
+
+	const open = Boolean(anchorEl);
+
+	return (
+		<>
+			<mui.Stack
+				direction="row"
+				alignItems="center"
+				spacing={0.5}
+				sx={{ cursor: "pointer" }}
+				onMouseEnter={handlePopoverOpen}
+				onMouseLeave={handlePopoverClose}>
+				<VisibilityIcon fontSize="small" color="action" />
+				<mui.Typography variant="body2" color="text.secondary">
+					{tr({ id: "match.teamCount" }, { count: teams.length })}
+				</mui.Typography>
+			</mui.Stack>
+			<mui.Popover
+				sx={{
+					pointerEvents: "none",
+				}}
+				open={open}
+				anchorEl={anchorEl}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "left",
+				}}
+				onClose={handlePopoverClose}
+				disableRestoreFocus>
+				<mui.Box sx={{ p: 2, maxWidth: 400 }}>
+					<mui.Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+						{teams.map((team) => (
+							<mui.Chip
+								key={team.id}
+								label={team.name}
+								size="small"
+								sx={{
+									backgroundColor: getTeamColor(team.id),
+									color: "#fff",
+									mb: 0.5,
+								}}
+							/>
+						))}
+					</mui.Stack>
+				</mui.Box>
+			</mui.Popover>
+		</>
+	);
+};
 
 const Matches = () => {
 	const routeParams = useParams({ strict: false });
@@ -96,103 +198,6 @@ const Matches = () => {
 			],
 		},
 	];
-
-	// Generate diverse color based on team id
-	const getTeamColor = (id) => {
-		const colors = [
-			"#1976d2", // blue
-			"#d32f2f", // red
-			"#388e3c", // green
-			"#f57c00", // orange
-			"#7b1fa2", // purple
-			"#0097a7", // cyan
-			"#c2185b", // pink
-			"#5d4037", // brown
-			"#455a64", // blue grey
-			"#00897b", // teal
-			"#6a1b9a", // deep purple
-			"#303f9f", // indigo
-		];
-		return colors[id % colors.length];
-	};
-
-	// Teams Cell Component with Popover
-	const TeamsCell = ({ teams }) => {
-		const [anchorEl, setAnchorEl] = useState(null);
-
-		if (!teams || teams.length === 0) {
-			return (
-				<mui.Typography
-					variant="caption"
-					sx={{
-						color: "error.main",
-						fontWeight: "bold",
-					}}>
-					No teams
-				</mui.Typography>
-			);
-		}
-
-		const handlePopoverOpen = (event) => {
-			setAnchorEl(event.currentTarget);
-		};
-
-		const handlePopoverClose = () => {
-			setAnchorEl(null);
-		};
-
-		const open = Boolean(anchorEl);
-
-		return (
-			<>
-				<mui.Stack
-					direction="row"
-					alignItems="center"
-					spacing={0.5}
-					sx={{ cursor: "pointer" }}
-					onMouseEnter={handlePopoverOpen}
-					onMouseLeave={handlePopoverClose}>
-					<VisibilityIcon fontSize="small" color="action" />
-					<mui.Typography variant="body2" color="text.secondary">
-						{teams.length} {teams.length === 1 ? "team" : "teams"}
-					</mui.Typography>
-				</mui.Stack>
-				<mui.Popover
-					sx={{
-						pointerEvents: "none",
-					}}
-					open={open}
-					anchorEl={anchorEl}
-					anchorOrigin={{
-						vertical: "bottom",
-						horizontal: "left",
-					}}
-					transformOrigin={{
-						vertical: "top",
-						horizontal: "left",
-					}}
-					onClose={handlePopoverClose}
-					disableRestoreFocus>
-					<mui.Box sx={{ p: 2, maxWidth: 400 }}>
-						<mui.Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-							{teams.map((team) => (
-								<mui.Chip
-									key={team.id}
-									label={team.name}
-									size="small"
-									sx={{
-										backgroundColor: getTeamColor(team.id),
-										color: "#fff",
-										mb: 0.5,
-									}}
-								/>
-							))}
-						</mui.Stack>
-					</mui.Box>
-				</mui.Popover>
-			</>
-		);
-	};
 
 	const columns = [
 		{
@@ -416,8 +421,11 @@ const Matches = () => {
 			if (matchesWithoutTeams.length > 0) {
 				const matchNames = matchesWithoutTeams.map((m) => m.name).join(", ");
 				openConfirmDialog(
-					"⚠️ Some Matches Have No Teams",
-					`The following ${matchesWithoutTeams.length} match(es) have no teams assigned: ${matchNames}. Are you sure you want to activate them?`,
+					tr({ id: "match.bulkNoTeamsTitle" }),
+					tr(
+						{ id: "match.bulkNoTeamsConfirm" },
+						{ count: matchesWithoutTeams.length, matches: matchNames },
+					),
 					async () => {
 						await performBulkToggle(activate);
 						closeConfirmDialog();
@@ -429,8 +437,11 @@ const Matches = () => {
 
 		// If no warning needed, show normal confirmation
 		openConfirmDialog(
-			`${activate ? "Activate" : "Deactivate"} Matches`,
-			`Are you sure you want to ${action} ${selectedMatchIds.length} selected match(es)?`,
+			tr({ id: activate ? "match.activateTitle" : "match.deactivateTitle" }),
+			tr(
+				{ id: activate ? "match.activateConfirm" : "match.deactivateConfirm" },
+				{ count: selectedMatchIds.length },
+			),
 			async () => {
 				await performBulkToggle(activate);
 				closeConfirmDialog();
@@ -477,9 +488,21 @@ const Matches = () => {
 		});
 		const allUniqueTeams = Array.from(allTeamsMap.values());
 
+		// A group match only accepts that group's members (the backend rejects
+		// outsiders for the WHOLE batch with a 400), so the bulk dialog has to
+		// respect the scope too. Offering every account made the obvious
+		// selection fail server-side with nothing added.
+		const { mixed, groupId } = sharedGroupId(selectedMatches);
+		if (mixed) {
+			// Mixed ownership: there is no roster that is valid for all of them.
+			showMessage(tr({ id: "match.bulkMixedGroups" }), "warning", 6000);
+			return;
+		}
+
 		setCurrentMatch({
 			id: "bulk",
 			teams: allUniqueTeams,
+			group_id: groupId,
 		});
 		setDialogName("BulkManageTeamMatchDialog");
 	};
@@ -505,6 +528,12 @@ const Matches = () => {
 	};
 
 	const saveInstance = async () => {
+		// Belt and braces: the Create button is disabled without a round, but a
+		// stale dialog could still get here.
+		if (!currentMatch.id && !roundId) {
+			showMessage(tr({ id: "match.pickRoundFirst" }), "warning", 5000);
+			return;
+		}
 		// Only send the editable columns -- not the whole row (which carries
 		// nested `teams`/`round`/timestamps). The backend would ignore the
 		// extras, but sending a stale `round_id` etc. is a needless risk.
@@ -540,6 +569,10 @@ const Matches = () => {
 		setCurrentMatch({ ...currentMatch, ...changes });
 	};
 
+	// api/match.js resolves to the server payload on success AND on a 502
+	// partial (`{partial: true}`): the team-match rows ARE written then, only
+	// the engine-side roster sync failed, so the table must be refetched either
+	// way. It used to return false there and leave a stale roster on screen.
 	const handleAction = async (teams, action) => {
 		const matchIds = [currentMatch.id];
 		const teamIds = teams.map((t) => t.id);
@@ -571,8 +604,8 @@ const Matches = () => {
 
 	const handleDeleteAllTeams = async () => {
 		openConfirmDialog(
-			"Delete All Teams",
-			`Are you sure you want to remove all teams from ${selectedMatchIds.length} selected match(es)?`,
+			tr({ id: "Delete All Teams" }),
+			tr({ id: "match.deleteAllTeamsConfirm" }, { count: selectedMatchIds.length }),
 			async () => {
 				try {
 					// Get all selected matches
@@ -608,6 +641,13 @@ const Matches = () => {
 			<PageToolbar
 				title={tr({ id: "Matches" })}
 				showNew={!isReadOnly}
+				// A match belongs to a round, and this page can be reached from
+				// the sidebar with no round in the URL -- creating one then
+				// posted `round_id: undefined` and failed on the server. Keep
+				// the button visible but disabled, with a tooltip that says what
+				// to do, instead of offering a doomed form.
+				newDisabled={!roundId}
+				newTooltip={!roundId ? tr({ id: "match.pickRoundFirst" }) : ""}
         showTimeIs={true}
 				showDelete={!isReadOnly && !!selectedMatchIds.length}
 				handleNew={clickNew}
@@ -616,19 +656,19 @@ const Matches = () => {
 					!isReadOnly && selectedMatchIds.length > 0
 						? [
 								{
-									label: "Manage Teams",
+									label: tr({ id: "Manage Teams" }),
 									fn: handleManageTeams,
 									color: "primary",
 									icon: <GroupsIcon />,
 								},
 								{
-									label: "Activate",
+									label: tr({ id: "Activate" }),
 									fn: () => handleBulkToggleActive(true),
 									color: "success",
 									icon: <ToggleOnIcon />,
 								},
 								{
-									label: "Deactivate",
+									label: tr({ id: "Deactivate" }),
 									fn: () => handleBulkToggleActive(false),
 									color: "warning",
 									icon: <ToggleOffIcon />,
@@ -687,6 +727,10 @@ const Matches = () => {
 				<ManageTeamMatchDialog
 					open={dialogName === "BulkManageTeamMatchDialog"}
 					close={closeDialog}
+					// Every selected match shares this group (handleManageTeams
+					// refuses a mixed selection), so the candidate list can be
+					// narrowed exactly like the single-match dialog's.
+					groupId={currentMatch.group_id ?? null}
 					teams={currentMatch.teams}
 					handleAdd={(teams) => handleBulkAction(teams, "add")}
 					handleDelete={(teams) => handleBulkAction(teams, "delete")}
@@ -700,12 +744,14 @@ const Matches = () => {
 					<mui.Typography>{confirmDialog.message}</mui.Typography>
 				</mui.DialogContent>
 				<mui.DialogActions>
-					<mui.Button onClick={closeConfirmDialog}>Cancel</mui.Button>
+					<mui.Button onClick={closeConfirmDialog}>
+						{tr({ id: "Cancel" })}
+					</mui.Button>
 					<mui.Button
 						onClick={confirmDialog.onConfirm}
 						color="error"
 						variant="contained">
-						Confirm
+						{tr({ id: "Confirm" })}
 					</mui.Button>
 				</mui.DialogActions>
 			</mui.Dialog>

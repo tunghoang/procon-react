@@ -21,3 +21,16 @@ export const isStaff = (team) => isSuperAdmin(team) || isManager(team);
 
 /** The manager's own group id (a number), or null for anyone else. */
 export const managerGroupId = (team) => (isManager(team) ? Number(team.group_id) : null);
+
+/**
+ * May this account be rostered onto a match? Mirrors the team-manager's
+ * `lib/scope.js#isPlayerAccount`.
+ *
+ * A superadmin's or group manager's token ADMINISTERS a game rather than
+ * playing it, and the engine's team-only endpoints refuse it -- so offering
+ * one in a roster picker only produces a rejected (or silently filtered)
+ * request. `is_admin`/`group_role` here are the columns on a /team row, not
+ * the caller's own JWT.
+ */
+export const isPlayerAccount = (team) =>
+	!!team && !team.is_admin && team.group_role !== "manager";

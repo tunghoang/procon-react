@@ -1,5 +1,6 @@
 import { doDelete, doGet, doPost, getError, showMessage } from "./commons";
 import { SERVICE_API } from "../config/env";
+import { t } from "../i18n";
 
 // Groups (schools) on the team-manager: /group, /group/:id/members,
 // /group/:id/candidates. Every call is scoped server-side -- a manager only
@@ -40,7 +41,10 @@ export const apiGroupAddMembers = async (groupId, teamIds) => {
 		const result = await doPost(`${GROUP_URL}/${groupId}/members`, null, {
 			team_ids: teamIds,
 		});
-		showMessage(`Added ${result?.added_count ?? teamIds.length} account(s) to the group.`, "success");
+		showMessage(
+			t("group.membersAdded", { count: result?.added_count ?? teamIds.length }),
+			"success",
+		);
 		return result;
 	} catch (e) {
 		showMessage(getError(e), "error", 6000);
@@ -52,7 +56,7 @@ export const apiGroupAddMembers = async (groupId, teamIds) => {
 export const apiGroupRemoveMember = async (groupId, teamId) => {
 	try {
 		const result = await doDelete(`${GROUP_URL}/${groupId}/members/${teamId}`);
-		showMessage("Account removed from the group.", "success");
+		showMessage(t("group.memberRemoved"), "success");
 		return result;
 	} catch (e) {
 		showMessage(getError(e), "error", 6000);

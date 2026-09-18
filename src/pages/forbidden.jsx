@@ -2,9 +2,11 @@ import React from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import BlockIcon from "@mui/icons-material/Block";
 import { useNavigate } from "@tanstack/react-router";
+import { useIntl } from "react-intl";
 
 export default function Forbidden() {
 	const navigate = useNavigate();
+	const { formatMessage: tr } = useIntl();
 	return (
 		<Box
 			component="main"
@@ -42,22 +44,21 @@ export default function Forbidden() {
 						color="textPrimary"
 						variant="h4"
 						sx={{ mb: 3 }}>
-						Access Forbidden
+						{tr({ id: "forbidden.title" })}
 					</Typography>
 					<Typography
 						align="center"
 						color="textSecondary"
 						variant="subtitle1"
 						sx={{ mb: 4 }}>
-						You don't have permission to access this page. This page is
-						restricted to administrators only.
+						{tr({ id: "forbidden.message" })}
 					</Typography>
 					<Button
 						onClick={() => navigate({ to: "/" })}
 						variant="contained"
 						size="large"
 						sx={{ minWidth: 200 }}>
-						Go to Home
+						{tr({ id: "notfound.home" })}
 					</Button>
 				</Box>
 			</Container>

@@ -8,6 +8,7 @@ import {
   getError,
   showMessage,
 } from "./commons";
+import { t } from "../i18n";
 
 import { SERVICE_API } from "../config/env";
 
@@ -29,7 +30,7 @@ export const useApi = (pathName, apiName) => {
     async (id, headers) => {
       try {
         const results = await doDelete(`${URL}/${id}`, headers);
-        showMessage(`${apiName} was successfully deleted.`, "success", 1000);
+        showMessage(t("api.deleted", { name: apiName }), "success", 1000);
         return results;
       } catch (e) {
         if (!e.handled) showMessage(getError(e), "error");
@@ -43,7 +44,7 @@ export const useApi = (pathName, apiName) => {
     const confirm = useConfirm();
     return async (ids) => {
       try {
-        await confirm({ title: "Are you sure want to delete?" });
+        await confirm({ title: t("confirm.deleteTitle") });
         return Promise.all(ids.map(async (id) => await apiDelete(id, headers)));
       } catch (e) {
         return false;
@@ -54,7 +55,7 @@ export const useApi = (pathName, apiName) => {
     async (payload, headers) => {
       try {
         const result = await doPost(URL, headers, payload);
-        showMessage(`${apiName} was sucessfully created.`, "success", 1000);
+        showMessage(t("api.created", { name: apiName }), "success", 1000);
         return result;
       } catch (e) {
         if (!e.handled) showMessage(getError(e), "error");
@@ -66,10 +67,14 @@ export const useApi = (pathName, apiName) => {
     async (id, payload, headers) => {
       try {
         const result = await doPut(`${URL}/${id}`, headers, payload);
-        showMessage(`Success Edit ${apiName}`, "success", 1000);
+        showMessage(t("api.updated", { name: apiName }), "success", 1000);
         return result;
       } catch (e) {
-        if (!e.handled) showMessage(`Error Edit ${apiName}: ${getError(e)}`, "error");
+        if (!e.handled)
+          showMessage(
+            t("api.updateFailed", { name: apiName, error: getError(e) }),
+            "error"
+          );
       }
     },
     [URL, apiName]
