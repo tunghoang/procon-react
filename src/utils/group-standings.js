@@ -34,7 +34,11 @@ export const DEFAULT_CONFIG = Object.freeze({
 
 /** Coefficient for match `n` (1-based); beyond the configured list keeps the +0.25 step. */
 export const coefFor = (coefs, n) => {
-	const v = Number(coefs?.[n - 1]);
+	const raw = coefs?.[n - 1];
+	// A cleared input stores "" and Number("") is 0 -- that must read as "not
+	// set" (default), not as a x0 multiplier. An explicit 0 is honoured.
+	if (raw === "" || raw === null || raw === undefined) return 1 + 0.25 * (n - 1);
+	const v = Number(raw);
 	if (Number.isFinite(v)) return v;
 	return 1 + 0.25 * (n - 1);
 };

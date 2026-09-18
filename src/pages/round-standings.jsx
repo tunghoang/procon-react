@@ -542,15 +542,15 @@ const RoundStandings = () => {
 		<>
 			<PageToolbar
 				title={tr({ id: "standings.title" })}
-				actions={[
-					{
-						key: "refresh",
-						icon: <RefreshIcon />,
-						onClick: () => fetchSummary(),
-						tooltip: tr({ id: "Refresh" }),
-					},
-				]}
 				customBtns={[
+					// PageToolbar has no `actions` prop, so the manual refresh is
+					// an ordinary button -- needed once auto-refresh is paused.
+					{
+						label: tr({ id: "Refresh" }),
+						icon: <RefreshIcon />,
+						fn: () => fetchSummary(),
+						color: "inherit",
+					},
 					{
 						label: autoRefresh
 							? tr({ id: "standings.autoOn" })

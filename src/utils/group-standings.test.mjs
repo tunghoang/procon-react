@@ -46,6 +46,9 @@ const data = {
 assert.strictEqual(coefFor([1, 1.25, 1.5, 1.75], 3), 1.5);
 assert.strictEqual(coefFor([1, 1.25, 1.5, 1.75], 5), 2, "beyond the list keeps the +0.25 step");
 assert.strictEqual(coefFor(["x"], 1), 1, "garbage -> 1");
+assert.strictEqual(coefFor([1, ""], 2), 1.25, "cleared input -> default, not x0");
+assert.strictEqual(coefFor([1, null], 2), 1.25, "null -> default");
+assert.strictEqual(coefFor([1, 0], 2), 0, "explicit 0 is honoured");
 
 // --- fixed scale, DNP = 0 (spreadsheet defaults) ---------------------------------
 {
